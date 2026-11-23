@@ -1,6 +1,7 @@
 // Servidor del panel Dropi multi-cuenta. Cada peticion lleva ?c=N; AsyncLocalStorage
 // hace que S() devuelva la cuenta activa (cache y ajustes quedan separados por cuenta).
 const { AsyncLocalStorage } = require('async_hooks');
+const crypto = require('crypto');
 const store = require('./_store');
 const mock = require('./_mock');
 
@@ -38,7 +39,10 @@ async function dropi(path, opts = {}) {
   });
   let r = await call({ Authorization: 'Bearer ' + token });
   if (r.status === 401 || r.status === 403) r = await call({ 'dropi-integration-key': token });
-  if (!r.ok) throw Object.assign(new Error('Dropi respondió ' + r.status), { code: 502 });
+  if (!r.ok) {
+    let msg = ''; try { const j = await r.json(); msg = String(j.message || j.error || j.msg || '').slice(0, 300); } catch (e) { /* sin cuerpo */ }
+    throw Object.assign(new Error('Dropi respondió ' + r.status + (msg ? ': ' + msg : '')), { code: 502, status: r.status });
+  }
   return r.json();
 }
 const rows = (j) => (Array.isArray(j) ? j : j.objects || j.data || j.orders || []);
@@ -186,6 +190,37 @@ function huella(list, tel) {
     .sort((a, b) => b.devoluciones + b.cancelados - (a.devoluciones + a.cancelados)).slice(0, 100);
 }
 
+// ---------- Subir pedidos a Dropi ----------
+const ORDER_PATH = () => process.env.DROPI_ORDER_PATH || '/integrations/orders/myorders';
+function validarPedido(b) {
+  const t = (v, max) => String(v ?? '').trim().slice(0, max);
+  let phone = String(b.phone || '').replace(/\D/g, '');
+  if (S().meta.wa && phone.length === S().meta.wa.length + 10 && phone.startsWith(S().meta.wa)) phone = phone.slice(S().meta.wa.length);
+  const o = { name: t(b.name, 60), surname: t(b.surname, 60), phone, dir: t(b.dir, 200), state: t(b.state, 60), city: t(b.city, 80), colonia: t(b.colonia, 80),
+    zip_code: String(b.zip_code || '').replace(/\D/g, ''), client_email: t(b.client_email, 100), dni: t(b.dni, 30), notes: t(b.notes, 300),
+    shop_order_id: t(b.shop_order_id, 60), shop_order_number: t(b.shop_order_number, 60), rate_type: b.rate_type };
+  for (const [k, l] of [['name', 'el nombre'], ['surname', 'el apellido'], ['dir', 'la dirección'], ['state', 'el estado'], ['city', 'la ciudad o municipio']]) if (!o[k]) return { error: 'Falta ' + l };
+  if (o.phone.length < 8 || o.phone.length > 15) return { error: 'Teléfono inválido (de 8 a 15 dígitos)' };
+  if (S().meta.mon === 'MXN' && !/^\d{5}$/.test(o.zip_code)) return { error: 'El código postal debe tener 5 dígitos' };
+  if (o.client_email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(o.client_email)) return { error: 'Correo inválido' };
+  if (!['CON RECAUDO', 'SIN RECAUDO'].includes(o.rate_type)) return { error: 'Elija el tipo de pago' };
+  const dc = b.distribution_company_id;
+  if (dc != null && dc !== '') { if (!Number.isInteger(Number(dc)) || Number(dc) < 1) return { error: 'Transportadora inválida' }; o.distribution_company_id = Number(dc); }
+  if (!Array.isArray(b.products) || !b.products.length || b.products.length > 20) return { error: 'Agregue de 1 a 20 productos' };
+  o.products = []; o.items = [];
+  for (const p of b.products) {
+    const id = Number(p.id), q = Number(p.quantity), pr = Number(p.price);
+    if (!Number.isInteger(id) || id < 1) return { error: 'Producto inválido' };
+    if (!Number.isInteger(q) || q < 1 || q > 50) return { error: 'Cantidad inválida (de 1 a 50)' };
+    if (!(pr >= 0) || pr > 10000000) return { error: 'Precio inválido' };
+    const it = { id, quantity: q, price: pr };
+    if (p.variation_id != null && p.variation_id !== '') { const v = Number(p.variation_id); if (!Number.isInteger(v) || v < 1) return { error: 'Variación inválida' }; it.variation_id = v; }
+    o.products.push(it); o.items.push({ n: t(p.name, 80) || ('Producto ' + id), q });
+  }
+  o.total = o.products.reduce((a, p) => a + p.price * p.quantity, 0);
+  return { ok: o };
+}
+
 // ---------- Ajustes guardados ----------
 const key = (name) => name + S().suf;
 const json = (res, code, body) => { res.status(code).json(body); };
@@ -260,6 +295,42 @@ async function route(req, res, q) {
         await store.set('settings', key('favs2'), st);
       }
       return json(res, 200, st);
+    }
+    if (a === 'productos') { // catalogo de Dropi para elegir productos al subir un pedido
+      const qq = String(q.q || '').trim().slice(0, 80);
+      const raw = DEMO() && !process.env[S().tokenVar] ? mock.products(qq) : rows(await dropi('/integrations/products/index', { method: 'POST', body: { keywords: qq, pageSize: 20, startData: 0 } }));
+      return json(res, 200, { productos: raw.slice(0, 20).map((p) => ({ id: p.id, name: String(p.name || '').slice(0, 120), price: num(p.sale_price), suggested: num(p.suggested_price ?? p.sale_price),
+        variations: (p.variations || []).map((v) => ({ id: v.id, label: String(v.label || v.sku || (v.attribute_values || v.attributes || []).map((x) => x.value || x.name || x).join(' / ') || ('Variación ' + v.id)).slice(0, 60) })) })) });
+    }
+    if (a === 'crear') { // subir un pedido a Dropi (real: le llega al cliente final)
+      const hist = await store.get('settings', key('ordenes'), []);
+      if (req.method === 'GET') return json(res, 200, { ordenes: hist.slice(0, 100).map(({ hash, ...x }) => x), demo: DEMO() && !process.env[S().tokenVar] });
+      if (req.method !== 'POST') return json(res, 405, { error: 'Método no permitido' });
+      const v = validarPedido(body); if (v.error) return json(res, 400, { error: v.error });
+      const o = v.ok, demo = DEMO() && !process.env[S().tokenVar];
+      const hash = crypto.createHash('sha256').update([o.phone, o.state, o.products.map((p) => p.id + ':' + (p.variation_id || 0) + ':' + p.quantity).join(',')].join('|')).digest('hex').slice(0, 24);
+      const dup = hist.find((h) => h.hash === hash && Date.now() - h.ts < 180000);
+      if (dup && !body.forzar) return json(res, 409, { error: 'Ya se envió un pedido igual hace menos de 3 minutos (mismo teléfono, estado y productos).', duplicado: true, id: dup.id });
+      const entry = { id: null, ts: Date.now(), fecha: new Date().toISOString().slice(0, 16).replace('T', ' '), hash, estado: o.state, items: o.items, total: o.total, rate: o.rate_type, demo, status: 'enviando' };
+      hist.unshift(entry); const save = () => store.set('settings', key('ordenes'), hist.slice(0, 200));
+      await save(); // se registra ANTES de enviar: si falla la red, un reintento rapido se detecta como posible duplicado
+      try {
+        if (demo) entry.id = 'DEMO-' + Date.now().toString().slice(-6);
+        else {
+          const payload = { type: 'FINAL_ORDER', type_service: 'normal', calculate_costs_and_shiping: true, rate_type: o.rate_type, name: o.name, surname: o.surname, phone: o.phone, dir: o.dir, state: o.state, city: o.city, products: o.products };
+          for (const k of ['client_email', 'dni', 'colonia', 'zip_code', 'notes', 'shop_order_id', 'shop_order_number', 'distribution_company_id']) if (o[k] !== '' && o[k] != null) payload[k] = o[k];
+          const j = await dropi(ORDER_PATH(), { method: 'POST', body: payload });
+          if (j && (j.isSuccess === false || j.success === false)) throw Object.assign(new Error('Dropi rechazó el pedido: ' + String(j.message || 'sin detalle').slice(0, 300)), { code: 422, status: 422 });
+          const d = (j && (j.objects || j.data)) || j || {};
+          entry.id = String(d.id ?? d.order_id ?? j.id ?? '') || null;
+        }
+        entry.status = 'creado'; S().cache = { ts: 0, data: null }; await save();
+        const { hash: _h, ...pub } = entry; return json(res, 200, { ok: true, orden: pub });
+      } catch (e) {
+        if (e.status && e.status < 500) { hist.splice(hist.indexOf(entry), 1); await save(); return json(res, e.code === 422 ? 422 : 502, { error: e.message, rechazado: true }); }
+        entry.status = 'incierto'; await save();
+        return json(res, 502, { error: (e.message || 'Error de red') + '. No se pudo confirmar si Dropi creó el pedido: revíselo en Resumen antes de reenviar.', incierto: true });
+      }
     }
     if (a === 'colores') { // color personalizado por estado (por cuenta)
       const cur = await store.get('settings', key('colores'), {});

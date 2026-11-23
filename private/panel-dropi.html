@@ -12,6 +12,7 @@ svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke
 .tabs button{display:flex;align-items:center;gap:7px;border:0;background:none;color:var(--mut);font:inherit;font-weight:500;padding:9px 15px;border-radius:10px;cursor:pointer;transition:.25s var(--ease)}
 .tabs button:hover{color:var(--text);background:var(--card2)}.tabs button.on{background:linear-gradient(135deg,var(--g2),var(--g) 60%,var(--gl));color:#fff;font-weight:600;box-shadow:0 8px 18px -8px rgba(4,120,87,.7)}
 #view>*{animation:fadein .35s both}
+.fg{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}.fl{display:grid;gap:5px;font-size:12px;font-weight:600;color:var(--mut)}.fl input,.fl select,.fl textarea{width:100%;font-weight:400;color:var(--text)}.req::after{content:" *";color:var(--red)}
 .k5{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}.v.bl{color:var(--blue)}.v.am{color:var(--amb)}
 .sec{margin-top:14px}.sec>h3,.hd{display:flex;align-items:center;gap:8px;margin-bottom:12px}.hd .sp{flex:1}.hd small{color:var(--mut);font-weight:400;font-size:12px}
 .attn{border-color:#e9c47a;background:linear-gradient(0deg,rgba(251,191,36,.07),rgba(251,191,36,.07)),var(--card)}
@@ -63,7 +64,7 @@ tr.hot td{background:rgba(190,18,60,.07)}tr.hot:hover td{background:rgba(190,18,
 <div class="tabs" id="tabs"></div><div id="view"><div class="empty">Cargando…</div></div>
 <script>
 const CTA=Number(new URLSearchParams(location.search).get('c'))||1,RET=5;
-let M={sym:'$',dec:2,wa:'',mon:'MXN',pen:0.2,base:''},D=null,tab='resumen',FAV={items:[],hide:[],dir:{},msg:''};
+let M={sym:'$',dec:2,wa:'',mon:'MXN',pen:0.2,base:''},D=null,tab=(['resumen','ofi','prov','nov','rend','pagos','nuevo'].includes(new URLSearchParams(location.search).get('t'))?new URLSearchParams(location.search).get('t'):'resumen'),FAV={items:[],hide:[],dir:{},msg:''};
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const nf=(n,d)=>Number(n||0).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
@@ -75,11 +76,11 @@ const money=n=>{const v=Number(n||0)*rate();return (v<0?'-':'')+(mode()==='pen'?
 const pct=n=>(n||0)+'%';
 const waLink=(t,txt)=>'https://wa.me/'+(String(t).startsWith(M.wa)?t:M.wa+t)+(txt?'?text='+encodeURIComponent(txt):'');
 const view=$('view');
-async function api(a,extra={},opt){const p=new URLSearchParams({a,c:CTA,d:$('per').value,...extra});const r=await fetch('/api/dropi?'+p,opt);const j=await r.json().catch(()=>({error:'Respuesta inválida'}));if(!r.ok)throw new Error(j.error||r.status);return j}
+async function api(a,extra={},opt){const p=new URLSearchParams({a,c:CTA,d:$('per').value,...extra});const r=await fetch('/api/dropi?'+p,opt);const j=await r.json().catch(()=>({error:'Respuesta inválida'}));if(!r.ok){const er=new Error(j.error||r.status);er.data=j;er.status=r.status;throw er}return j}
 const post=(a,body,extra)=>api(a,extra,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-const IC={chart:'<path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/>',building:'<rect width="16" height="20" x="4" y="2" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/>',truck:'<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>',bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',trend:'<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',wallet:'<path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>',clock:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',finger:'<path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"/><path d="M14 13.12c0 2.38 0 6.38-1 8.88M17.29 21.02c.12-.6.43-2.3.5-3.02M2 12a10 10 0 0 1 18-6M2 16h.01M21.8 16c.2-2 .131-5.354 0-6M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2M8.65 22c.21-.66.45-1.32.57-2M9 6.8a6 6 0 0 1 9 5.2v2"/>',wa:'<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',pencil:'<path d="M21.17 6.81a1 1 0 0 0-3.99-3.99L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5Z"/>',x:'<path d="M18 6 6 18M6 6l12 12"/>',star:'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',alert:'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4M12 17h.01"/>'};
+const IC={chart:'<path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/>',building:'<rect width="16" height="20" x="4" y="2" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/>',truck:'<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>',bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',trend:'<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',wallet:'<path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>',clock:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',finger:'<path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"/><path d="M14 13.12c0 2.38 0 6.38-1 8.88M17.29 21.02c.12-.6.43-2.3.5-3.02M2 12a10 10 0 0 1 18-6M2 16h.01M21.8 16c.2-2 .131-5.354 0-6M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2M8.65 22c.21-.66.45-1.32.57-2M9 6.8a6 6 0 0 1 9 5.2v2"/>',wa:'<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',pencil:'<path d="M21.17 6.81a1 1 0 0 0-3.99-3.99L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5Z"/>',x:'<path d="M18 6 6 18M6 6l12 12"/>',star:'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',plus:'<path d="M5 12h14M12 5v14"/>',send:'<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',alert:'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4M12 17h.01"/>'};
 const I=n=>`<svg class="i" viewBox="0 0 24 24">${IC[n]}</svg>`;
-const TABS=[['resumen','Resumen','chart'],['ofi','Oficina','building'],['prov','Proveedores','truck'],['nov','Novedades','bell'],['rend','Rendimiento','trend'],['pagos','Pagos','wallet']];
+const TABS=[['resumen','Resumen','chart'],['ofi','Oficina','building'],['prov','Proveedores','truck'],['nov','Novedades','bell'],['rend','Rendimiento','trend'],['pagos','Pagos','wallet'],['nuevo','Subir pedido','plus']];
 $('tabs').innerHTML=TABS.map(([k,v,i])=>`<button data-t="${k}">${I(i)}${v}</button>`).join('');
 $('tabs').onclick=e=>{const b=e.target.closest('[data-t]');if(b){tab=b.dataset.t;render()}};
 $('ref').onclick=()=>load(true);$('per').onchange=()=>load();
@@ -134,7 +135,7 @@ const srcTxt=()=>{if(M.pais)$('src').textContent='Fuente: Dropi '+M.pais+' · '+
 async function render(){
   document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
   if(!D)return;
-  try{await ({resumen,ofi,prov,nov,rend,pagos}[tab])();view.querySelectorAll('.card').forEach((c,i)=>c.style.setProperty('--i',Math.min(i,14)))}catch(e){view.innerHTML=`<div class="err">${esc(e.message)}</div>`}
+  try{await ({resumen,ofi,prov,nov,rend,pagos,nuevo}[tab])();view.querySelectorAll('.card').forEach((c,i)=>c.style.setProperty('--i',Math.min(i,14)))}catch(e){view.innerHTML=`<div class="err">${esc(e.message)}</div>`}
 }
 async function loadFav(){try{FAV=await api('favs')}catch(e){}return FAV}
 
@@ -317,6 +318,88 @@ async function pagos(){
   view.querySelectorAll('[data-pp]').forEach(c=>c.onchange=async()=>{await post('pagos',{ids:[c.dataset.pp],pagado:c.checked});pagos()});
   $('pm').onclick=async()=>{if(!rows.length)return;await post('pagos',{ids:rows.slice(0,300).map(p=>p.id),pagado:PG.f!=='pag'});pagos()};
 }
+
+/* ================= SUBIR PEDIDO ================= */
+const MX_ESTADOS=['Aguascalientes','Baja California','Baja California Sur','Campeche','Chiapas','Chihuahua','Ciudad de México','Coahuila','Colima','Durango','Estado de México','Guanajuato','Guerrero','Hidalgo','Jalisco','Michoacán','Morelos','Nayarit','Nuevo León','Oaxaca','Puebla','Querétaro','Quintana Roo','San Luis Potosí','Sinaloa','Sonora','Tabasco','Tamaulipas','Tlaxcala','Veracruz','Yucatán','Zacatecas'];
+const npNew=()=>({name:'',surname:'',phone:'',client_email:'',dni:'',state:'',city:'',colonia:'',zip_code:'',dir:'',rate_type:'CON RECAUDO',distribution_company_id:'',shop_order_id:'',shop_order_number:'',notes:'',items:[],ok:false,res:null});
+let NP=null;
+const mx=n=>'MX$ '+nf(n,2),penTxt=n=>'S/ '+nf(n*penRate(),2);
+function npErrors(){
+  const e=[],r=(k,l)=>{if(!String(NP[k]).trim())e.push('Falta '+l)};
+  r('name','el nombre');r('surname','el apellido');r('state','el estado');r('city','la ciudad o municipio');r('dir','la dirección');
+  let ph=String(NP.phone).replace(/\D/g,'');if(ph.length===12&&ph.startsWith(M.wa))ph=ph.slice(M.wa.length);
+  if(ph.length<8||ph.length>15)e.push('Teléfono inválido (10 dígitos)');
+  if(!/^\d{5}$/.test(String(NP.zip_code).replace(/\D/g,'')))e.push('Código postal de 5 dígitos');
+  if(NP.client_email&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(NP.client_email))e.push('Correo inválido');
+  if(NP.distribution_company_id&&!(Number.isInteger(Number(NP.distribution_company_id))&&Number(NP.distribution_company_id)>0))e.push('Transportadora inválida');
+  if(!NP.items.length)e.push('Agregue al menos un producto');
+  for(const i of NP.items){const q=Number(i.qty),p=Number(i.price);
+    if(!(Number.isInteger(q)&&q>=1&&q<=50))e.push('Cantidad de «'+i.name+'»: de 1 a 50');
+    if(i.price===''||!(p>=0))e.push('Precio de «'+i.name+'»');
+    if(i.variations.length&&!i.variation_id)e.push('Elija la variación de «'+i.name+'»')}
+  return e}
+function npSum(){
+  const el=$('npsum');if(!el)return;const e=npErrors(),sub=NP.items.reduce((a,i)=>a+(Number(i.price)||0)*(Number(i.qty)||0),0);
+  el.innerHTML=`<div class="kv"><span>Productos</span><b>${NP.items.reduce((a,i)=>a+(Number(i.qty)||0),0)}</b></div><div class="kv"><span>Subtotal productos</span><b>${mx(sub)}</b></div><div class="kv"><span>≈ en soles</span><b>${penTxt(sub)}</b></div>
+   <div class="kv"><span>Flete</span><b class="mut">lo calcula Dropi</b></div><div class="kv"><span>Pago</span><b>${NP.rate_type==='CON RECAUDO'?'Contra entrega':'Prepagado'}</b></div>
+   ${NP.rate_type==='CON RECAUDO'?`<p class="mut" style="font-size:12px;margin:8px 0 0">El cliente pagará al recibir: productos + flete.</p>`:''}
+   ${e.length?`<div class="err" style="margin-top:12px;font-size:12px"><b>Para enviar falta:</b><br>${e.slice(0,8).map(x=>'• '+esc(x)).join('<br>')}</div>`:'<p class="pos" style="margin:12px 0 0;font-weight:600">✓ Datos completos</p>'}
+   <label class="row" style="margin-top:12px;align-items:flex-start;gap:8px"><input type="checkbox" id="npok" ${NP.ok?'checked':''} style="margin-top:3px"><span style="font-size:12px">Revisé los datos. Entiendo que esto <b>crea un pedido real en Dropi</b> que se enviará al cliente.</span></label>
+   <button class="btn pri" id="npgo" style="width:100%;margin-top:12px;padding:11px" ${e.length||!NP.ok?'disabled':''}>${I('send')} Subir pedido a Dropi</button><div id="nperr"></div>`;
+  $('npok').onchange=ev=>{NP.ok=ev.target.checked;npSum()};$('npgo').onclick=()=>npEnviar(false)}
+function npCart(){
+  const el=$('cart');if(!el)return;
+  el.innerHTML=NP.items.map((i,k)=>`<div class="frow"><div style="flex:1;min-width:180px"><div class="nm">${esc(i.name)}</div><div class="sb">ID ${esc(i.id)}${i.suggested?' · sugerido '+mx(i.suggested):''}</div></div>
+   ${i.variations.length?`<label class="fl" style="margin:0"><span class="req">Variación</span><select data-ci="${k}" data-f="variation_id"><option value="">Elegir…</option>${i.variations.map(v=>`<option value="${esc(v.id)}" ${String(i.variation_id)===String(v.id)?'selected':''}>${esc(v.label)}</option>`).join('')}</select></label>`:''}
+   <label class="fl" style="margin:0"><span>Cantidad</span><input type="number" min="1" max="50" step="1" value="${esc(i.qty)}" data-ci="${k}" data-f="qty" style="width:80px"></label>
+   <label class="fl" style="margin:0"><span class="req">Precio de venta (MXN)</span><input type="number" min="0" step="0.01" value="${esc(i.price)}" data-ci="${k}" data-f="price" style="width:130px"></label>
+   <b style="min-width:90px;text-align:right">${mx((Number(i.price)||0)*(Number(i.qty)||0))}</b><button class="ic" style="background:var(--card2);border:1px solid var(--line)" data-cx="${k}" title="Quitar">${I('x')}</button></div>`).join('')||'<div class="empty">Busque un producto del catálogo de Dropi y agréguelo.</div>';
+  el.querySelectorAll('[data-ci]').forEach(i=>{const h=()=>{NP.items[i.dataset.ci][i.dataset.f]=i.value;npSum();const t=i.closest('.frow').querySelector('b');if(t){const it=NP.items[i.dataset.ci];t.textContent=mx((Number(it.price)||0)*(Number(it.qty)||0))}};i.oninput=h;i.onchange=h});
+  el.querySelectorAll('[data-cx]').forEach(b=>b.onclick=()=>{NP.items.splice(b.dataset.cx,1);npCart();npSum()})}
+async function npEnviar(forzar){
+  const b=$('npgo');b.disabled=true;b.innerHTML='Enviando…';
+  const body={...Object.fromEntries(['name','surname','phone','client_email','dni','state','city','colonia','zip_code','dir','rate_type','distribution_company_id','shop_order_id','shop_order_number','notes'].map(k=>[k,NP[k]])),
+    products:NP.items.map(i=>({id:i.id,name:i.name,price:Number(i.price),quantity:Number(i.qty),variation_id:i.variation_id||null})),forzar};
+  try{const r=await post('crear',body);NP.res=r.orden;nuevo()}
+  catch(e){
+    if(e.data&&e.data.duplicado&&!forzar&&confirm(e.message+'\n\n¿Enviarlo de todos modos?'))return npEnviar(true);
+    b.disabled=false;b.innerHTML=I('send')+' Subir pedido a Dropi';$('nperr').innerHTML=`<div class="err" style="margin-top:10px">${esc(e.message)}</div>`}}
+async function nuevo(){
+  let hist=[],demo=false;try{const h=await api('crear');hist=h.ordenes;demo=h.demo}catch(e){}
+  const histHTML=`<div class="card flat sec"><div class="hd"><h3>${I('clock')} Pedidos subidos desde VELTRIX</h3><span class="sp"></span><small>${hist.length} registros · sin datos del cliente</small></div>
+   <div class="scroll"><table class="tbl"><thead><tr><th>Fecha</th><th>ID Dropi</th><th>Estado</th><th>Productos</th><th>Total estimado</th><th>Pago</th><th>Resultado</th></tr></thead><tbody>
+   ${hist.map(h=>`<tr><td>${esc(h.fecha)}</td><td><span class="mono">${esc(h.id||'—')}</span></td><td>${esc(h.estado)}</td><td style="white-space:normal">${h.items.map(i=>esc(i.q+'× '+i.n)).join(', ')}</td><td>${mx(h.total)} <span class="mut">≈ ${penTxt(h.total)}</span></td><td>${h.rate==='CON RECAUDO'?'Contra entrega':'Prepagado'}</td>
+   <td>${h.demo?'<span class="chip">SIMULADO</span>':h.status==='creado'?'<span class="chip g">Creado</span>':h.status==='incierto'?'<span class="chip a">Verificar en Dropi</span>':'<span class="chip b">Enviando…</span>'}</td></tr>`).join('')||'<tr><td colspan=7 class="empty">Todavía no ha subido pedidos desde aquí</td></tr>'}</tbody></table></div></div>`;
+  if(NP&&NP.res){const r=NP.res;
+    view.innerHTML=`<div class="card flat" style="text-align:center;padding:30px"><div style="font-size:42px">✅</div><h2 style="margin:6px 0">${r.demo?'Pedido simulado':'Pedido creado en Dropi'}</h2>
+     <p class="mut">${r.demo?'Modo demostración: <b>no se envió nada</b> a Dropi.':'Dropi lo registró y la transportadora lo recogerá según su proceso.'}</p><p>ID: <span class="chip b mono" style="font-size:14px">${esc(r.id||'sin id devuelto')}</span> · Total estimado ${mx(r.total)} (≈ ${penTxt(r.total)}) + flete</p>
+     <p style="margin-top:16px"><button class="btn pri" id="npnew">Subir otro pedido</button></p></div>${histHTML}${foot(0,Date.now())}`;
+    $('npnew').onclick=()=>{NP=npNew();nuevo()};return}
+  if(!NP)NP=npNew();
+  const T=(k,l,o={})=>`<label class="fl"><span class="${o.req?'req':''}">${l}</span><input data-k="${k}" value="${esc(NP[k])}" ${o.type?`type="${o.type}"`:''} ${o.ph?`placeholder="${esc(o.ph)}"`:''} ${o.max?`maxlength="${o.max}"`:''} ${o.list?`list="${o.list}"`:''} ${o.mode?`inputmode="${o.mode}"`:''} autocomplete="off"></label>`;
+  view.innerHTML=`${demo?'<div class="err" style="background:var(--p-nov);color:var(--p-novt)">Modo demostración: esta cuenta no tiene token, los pedidos se <b>simulan</b> y no se envían a Dropi.</div>':''}
+  <div class="ofgrid"><div>
+   <div class="card flat"><div class="hd"><h3>${I('wallet')} 1 · Cliente</h3></div><div class="fg">${T('name','Nombre',{req:1,max:60})}${T('surname','Apellido',{req:1,max:60})}${T('phone','Teléfono (10 dígitos)',{req:1,max:20,mode:'tel',ph:'55 1234 5678'})}${T('client_email','Correo (opcional)',{type:'email',max:100})}${T('dni','Documento (opcional)',{max:30})}</div></div>
+   <div class="card flat sec"><div class="hd"><h3>${I('building')} 2 · Entrega</h3></div><datalist id="dl-est">${MX_ESTADOS.map(x=>`<option value="${esc(x)}">`).join('')}</datalist>
+    <div class="fg">${T('state','Estado',{req:1,list:'dl-est',max:60})}${T('city','Ciudad / municipio / alcaldía',{req:1,max:80})}${T('colonia','Colonia (opcional)',{max:80})}${T('zip_code','Código postal (5 dígitos)',{req:1,max:5,mode:'numeric',ph:'44100'})}</div>
+    <label class="fl" style="margin-top:12px"><span class="req">Dirección (calle, número, referencias)</span><textarea data-k="dir" rows="2" maxlength="200">${esc(NP.dir)}</textarea></label></div>
+   <div class="card flat sec"><div class="hd"><h3>${I('star')} 3 · Productos</h3></div><div class="row"><input id="ps" placeholder="Buscar producto del catálogo de Dropi…" style="flex:1;min-width:200px"><button class="btn pri" id="psb">Buscar</button></div>
+    <div id="pres" style="margin-top:10px"></div><div class="gl">EN EL PEDIDO</div><div id="cart"></div></div>
+   <div class="card flat sec"><div class="hd"><h3>${I('truck')} 4 · Pago y envío</h3></div><div class="fg">
+    <label class="fl"><span class="req">Tipo de pago</span><select data-k="rate_type"><option value="CON RECAUDO" ${NP.rate_type==='CON RECAUDO'?'selected':''}>Contra entrega (con recaudo)</option><option value="SIN RECAUDO" ${NP.rate_type==='SIN RECAUDO'?'selected':''}>Prepagado (sin recaudo)</option></select></label>
+    ${T('distribution_company_id','ID de transportadora (opcional)',{mode:'numeric',max:6,ph:'vacío = Dropi elige'})}${T('shop_order_id','ID de pedido de tu tienda (opcional)',{max:60})}${T('shop_order_number','N.º de pedido de tu tienda (opcional)',{max:60})}</div>
+    <label class="fl" style="margin-top:12px"><span>Notas internas (opcional)</span><textarea data-k="notes" rows="2" maxlength="300">${esc(NP.notes)}</textarea></label></div>
+  </div><div class="card flat" style="position:sticky;top:70px"><h3 style="margin-bottom:8px">Resumen</h3><div id="npsum"></div></div></div>${histHTML}`;
+  view.querySelectorAll('[data-k]').forEach(i=>{const h=()=>{NP[i.dataset.k]=i.value;npSum()};i.oninput=h;i.onchange=h});
+  const buscar=async()=>{const q=$('ps').value.trim(),o=$('pres');if(!q)return;o.innerHTML='<div class="mut">Buscando…</div>';
+    try{const r=await api('productos',{q});window.__res=r.productos;o.innerHTML=r.productos.map((p,k)=>`<div class="frow"><div style="flex:1"><div class="nm">${esc(p.name)}</div><div class="sb">ID ${esc(p.id)} · sugerido ${mx(p.suggested)}${p.variations.length?' · '+p.variations.length+' variaciones':''}</div></div><button class="btn sm" data-add="${k}">+ Agregar</button></div>`).join('')||'<div class="mut">Sin resultados</div>';
+      o.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{const p=window.__res[b.dataset.add],ex=NP.items.find(i=>i.id===p.id&&!p.variations.length);
+        if(ex)ex.qty=Number(ex.qty)+1;else NP.items.push({id:p.id,name:p.name,price:p.suggested||p.price||0,suggested:p.suggested,qty:1,variations:p.variations,variation_id:''});npCart();npSum()})}
+    catch(e){o.innerHTML=`<div class="err">${esc(e.message)}</div>`}};
+  $('psb').onclick=buscar;$('ps').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();buscar()}};
+  npCart();npSum();
+}
+
 addEventListener('storage',ev=>{if(ev.key==='vx_mode'||ev.key==='vx_pen'){srcTxt();render()}});
 load();
 </script></body></html>

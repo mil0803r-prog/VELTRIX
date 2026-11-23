@@ -112,6 +112,7 @@ iframe{width:100%;height:calc(100vh - 250px);min-height:520px;border:1px solid v
     <div id="db-extra"></div>
   </section>
   <section id="adm"><div class="bar2"><div class="seg" id="adm-bar"></div></div><iframe id="adm-if" title="Panel Dropi"></iframe></section>
+  <section id="ped"><div class="bar2"><div class="seg" id="ped-bar"></div></div><iframe id="ped-if" title="Subir pedido"></iframe></section>
   <section id="ras">
     <div class="card flat"><form class="row" id="rf2"><input id="rq" placeholder="Guía, número de pedido, teléfono o nombre…" style="flex:1;min-width:220px" required minlength="3" maxlength="60"><button class="btn pri">Rastrear</button></form></div>
     <div class="res" id="ras-out" style="margin-top:14px"></div></section>
@@ -147,7 +148,7 @@ usd:'<line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h
 trend:'<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',
 book:'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8M16 13H8M16 17H8"/>',
 calc:'<rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><path d="M16 10h.01M12 10h.01M8 10h.01M12 14h.01M8 14h.01M16 14v4M12 18h.01M8 18h.01"/>',
-search:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',chev:'<path d="m6 9 6 6 6-6"/>',
+plus:'<path d="M5 12h14M12 5v14"/>',search:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',chev:'<path d="m6 9 6 6 6-6"/>',
 sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2m-7.07-2.93 1.41-1.41m11.32-11.32 1.41-1.41M2 12h2m16 0h2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41"/>',
 moon:'<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',out:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/>',
 menu:'<path d="M4 6h16M4 12h16M4 18h16"/>',refresh:'<path d="M21 12a9 9 0 0 0-15-6.7L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 15 6.7l3-2.7"/><path d="M16 16h5v5"/>'};
@@ -156,6 +157,7 @@ $('ic-s').innerHTML=IC.search;$('burger').innerHTML=svg('menu');$('logout').inne
 const SEC=[
  {id:'dash',t:'Dashboard',ic:'grid',g:'',h:'Resumen de la <em>tienda</em>',s:'Cómo va tu negocio'},
  {id:'adm',t:'Admin Dropi',ic:'truck',g:'PEDIDOS',h:'Admin <em>Dropi</em>',s:'Pedidos, proveedores, favoritos y gestión'},
+ {id:'ped',t:'Subir pedido',ic:'plus',g:'PEDIDOS',h:'Subir <em>pedido</em>',s:'Cree pedidos en Dropi con todos los datos que pide'},
  {id:'ras',t:'Rastreo de guías',ic:'mp',g:'PEDIDOS',h:'Rastreo de <em>guías</em>',s:'Encuentre un pedido y vea sus movimientos'},
  {id:'din',t:'Dinero',ic:'usd',g:'FINANZAS',h:'Dinero y <em>retiros</em>',s:'Lo que ha sacado de cada cuenta'},
  {id:'net',t:'Utilidad neta',ic:'trend',g:'FINANZAS',h:'Utilidad <em>neta</em>',s:'Lo que queda después de la publicidad'},
@@ -163,7 +165,7 @@ const SEC=[
  {id:'calc',t:'Calculadora',ic:'calc',g:'HERRAMIENTAS',h:'Calculadora de <em>margen</em>',s:'Cuánto deja un producto con devoluciones'}];
 let ST={};try{ST=JSON.parse(localStorage.getItem('vx_db')||'{}')}catch(e){}
 const save=()=>{try{localStorage.setItem('vx_db',JSON.stringify(ST))}catch(e){}};
-ST.pins=ST.pins||['dash','adm','reg'];ST.col=ST.col||{};
+ST.pins=ST.pins||['dash','adm','ped','reg'];ST.col=ST.col||{};
 let CU=[],cur='dash',ACT=Number(ST.adm)||1;
 const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
 function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('on'),2200)}
@@ -209,7 +211,7 @@ $('nav').onclick=e=>{const p=e.target.closest('[data-pin]');if(p){e.stopPropagat
 function go(id){const s=SEC.find(x=>x.id===id);if(!s)return;cur=id;ST.cur=id;save();
   document.querySelectorAll('main section').forEach(x=>x.classList.toggle('on',x.id===id));
   $('h1').innerHTML=s.h;$('hsub').textContent=s.s;$('hi').innerHTML=svg(s.ic);$('main').scrollTo({top:0});document.body.classList.remove('nav-open');navHTML();
-  ({dash:()=>dash(),adm:openAdm,ras:()=>$('rq').focus(),din:loadDin,net:loadNet,reg:loadReg,calc:calc})[id]();observe()}
+  ({dash:()=>dash(),adm:openAdm,ped:openPed,ras:()=>$('rq').focus(),din:loadDin,net:loadNet,reg:loadReg,calc:calc})[id]();observe()}
 // ---------- barra de cuentas / segmentos con pastilla deslizante ----------
 function seg(id,items,active,cb){const el=$(id);el.innerHTML='<i class="pill-bg"></i>'+items.map(([k,v,t])=>`<button data-k="${esc(k)}" class="${String(k)===String(active)?'on':''}" ${t?`title="${esc(t)}"`:''}>${v}</button>`).join('');
   const move=()=>{const b=el.querySelector('button.on'),bg=el.querySelector('.pill-bg');if(b&&bg){bg.style.left=b.offsetLeft+'px';bg.style.width=b.offsetWidth+'px'}};
@@ -217,6 +219,7 @@ function seg(id,items,active,cb){const el=$(id);el.innerHTML='<i class="pill-bg"
   requestAnimationFrame(move);setTimeout(move,60)}
 const cuenta=n=>CU.find(c=>c.n===n)||{sym:'$',dec:2,mon:'MXN',nombre:'',pais:''};
 const accSeg=(id,cb)=>seg(id,CU.map(c=>[String(c.n),`${esc(c.nombre)} <span style="font-size:9px">${c.conectada?'●':'○'}</span>`,c.conectada?'':'Sin token en Vercel']),ACT,k=>{ACT=Number(k);ST.adm=ACT;save();cb()});
+function openPed(){accSeg('ped-bar',openPed);const f=$('ped-if'),u='/pedidos-dropi?c='+ACT+'&t=nuevo';if(!f.src.endsWith(u))f.src=u}
 function openAdm(){accSeg('adm-bar',openAdm);const f=$('adm-if'),u='/pedidos-dropi?c='+ACT;if(!f.src.endsWith(u))f.src=u}
 // ---------- dashboard ----------
 let LAST=null,busy=false;
@@ -325,7 +328,7 @@ function observe(){document.querySelectorAll('.rv:not(.in)').forEach(x=>io.obser
 document.addEventListener('pointermove',e=>{const c=e.target.closest&&e.target.closest('.card');if(c){const r=c.getBoundingClientRect();c.style.setProperty('--mx',e.clientX-r.left+'px');c.style.setProperty('--my',e.clientY-r.top+'px')}},{passive:true});
 // ---------- moneda: MXN <-> soles ----------
 function curSave(){try{localStorage.setItem('vx_mode',CUR.mode);localStorage.setItem('vx_pen',String(CUR.pen))}catch(e){}ST.mode=CUR.mode;save()}
-function rerender(){({dash:()=>dash(),adm:()=>{},ras:()=>{},din:loadDin,net:loadNet,reg:loadReg,calc:calc})[cur]();}
+function rerender(){({dash:()=>dash(),adm:()=>{},ped:()=>{},ras:()=>{},din:loadDin,net:loadNet,reg:loadReg,calc:calc})[cur]();}
 function curUI(){seg('cur-seg',[['pen','Soles S/'],['mxn','Pesos MXN']],CUR.mode,k=>{CUR.mode=k;curSave();rerender();toast(k==='pen'?'Mostrando en soles (S/)':'Mostrando en pesos (MXN)')});
   const el=$('cur');el.insertAdjacentHTML('beforeend',`<label title="Soles por cada 1 peso mexicano">1 MXN = S/ <input id="rate" type="number" min="0.001" max="99" step="0.001" value="${CUR.pen}"></label>`);
   $('rate').onchange=async e=>{const r=Number(e.target.value);if(!(r>0.001&&r<100)){e.target.value=CUR.pen;return toast('Tasa inválida')}

@@ -26,6 +26,7 @@ Guía para agregar otro país: [`docs/PLANTILLA-PANEL-PAIS.md`](docs/PLANTILLA-P
 | `VELTRIX_MXN_PEN` | Opcional: tasa inicial de soles por 1 peso mexicano (por defecto 0.20). Se edita desde el tablero. |
 | `DROPI_API_BASE_<n>` | Opcional: otra base de API para la cuenta n |
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Guardar retiros, favoritos, gestión y registro diario (sin esto usa memoria y se pierde) |
+| `DROPI_ORDER_PATH` | Opcional: ruta de Dropi para crear pedidos (por defecto `/integrations/orders/myorders`). |
 | `VELTRIX_DEMO` | `1` = datos simulados para cuentas sin token (solo pruebas) |
 
 El navegador nunca ve los tokens. No se guardan datos de clientes: se piden a Dropi en cada consulta (caché de 2 min).
@@ -41,3 +42,14 @@ npm test
 - Moneda: las cuentas son de México (MXN, base `https://api.dropi.mx`, WhatsApp 52). Todos los paneles se pueden ver **convertidos a soles (S/)** con el interruptor de la esquina superior; la tasa (soles por 1 MXN) se edita ahí y se guarda en el servidor. No es una tasa en vivo: actualícela cuando cambie.
 - Los países/monedas por cuenta están en `META` dentro de `api/_dropipanel.js`; el panel los lee de `a=cuentas`.
 - Los endpoints de Dropi usados son solo `/integrations/orders/myorders` y `/integrations/products/index`. Los campos de pedido se leyeron de la guía; **confirme con un token real** que coinciden (ver `slim()` y `costOf()`).
+
+## Subir pedidos a Dropi
+
+Sección **Subir pedido** (menú lateral, o pestaña dentro de Admin Dropi). Pide lo que exige Dropi: nombre, apellido, teléfono, estado, ciudad, dirección, código postal (5 dígitos en México), tipo de pago (con o sin recaudo) y uno o más productos con cantidad y precio (y variación si el producto la tiene). Opcionales: correo, documento, colonia, notas, referencias de tu tienda y transportadora fija.
+
+- Antes de enviar hay un resumen y una casilla de confirmación obligatoria: **cada envío crea un pedido real**.
+- Protección contra duplicados: mismo teléfono + estado + productos en menos de 3 minutos pide confirmación extra.
+- Si Dropi no responde (error de red/5xx) el pedido queda como "Verificar en Dropi" y **no** se reintenta solo.
+- El historial guarda solo ID, fecha, estado de destino, productos y total; **no** guarda nombre, teléfono ni dirección del cliente.
+- Sin token y con `VELTRIX_DEMO=1` los pedidos se simulan y no salen a Dropi.
+- **Antes de usarlo en serio, haga un pedido de prueba con su token** y confirme que Dropi lo acepta: los nombres de los campos siguen la API documentada de Dropi, pero no se probaron contra su cuenta. El flete lo calcula Dropi al crear.

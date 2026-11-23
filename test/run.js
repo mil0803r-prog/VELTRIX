@@ -35,5 +35,18 @@ const ck = { cookie: 'vx_s=' + auth.make() };
   r = await call(dropi, { headers: J, method: 'POST', query: { a: 'colores', c: '1' }, body: { estado: 'Mi Estado Ñ', cls: 'auto' } }); assert.ok(!r.body.colores['MI ESTADO N']);
   const ped = (await call(dropi, { headers: ck, query: { a: 'data', c: '1', d: 'all' } })).body;
   assert.ok(ped.estados.some((e) => e.estado === 'EN RUTA'), 'mock con EN RUTA');
+  const base = { name: 'Ana', surname: 'Pérez', phone: '+52 55 1234 5678', dir: 'Calle 1 #2, Col. Centro', state: 'Jalisco', city: 'Guadalajara', zip_code: '44100', rate_type: 'CON RECAUDO', products: [{ id: 100, name: 'X', price: 250, quantity: 2 }] };
+  const POST = (b, c = '2') => call(dropi, { headers: J, method: 'POST', query: { a: 'crear', c }, body: b });
+  for (const [mal, texto] of [[{ name: '' }, /nombre/], [{ phone: '123' }, /Teléfono/], [{ zip_code: '123' }, /postal/], [{ rate_type: 'X' }, /pago/], [{ products: [] }, /producto/i], [{ products: [{ id: 1, price: -1, quantity: 1 }] }, /Precio/], [{ products: [{ id: 1, price: 1, quantity: 0 }] }, /Cantidad/], [{ client_email: 'no' }, /Correo/]]) {
+    r = await POST({ ...base, ...mal }); assert.equal(r.code, 400); assert.match(r.body.error, texto);
+  }
+  r = await POST(base); assert.equal(r.code, 200); assert.ok(r.body.ok && /^DEMO-/.test(r.body.orden.id) && r.body.orden.total === 500 && r.body.orden.demo);
+  assert.ok(!JSON.stringify(r.body).includes('Ana') && !JSON.stringify(r.body).includes('Guadalajara'), 'sin datos del cliente en el historial');
+  r = await POST(base); assert.equal(r.code, 409); assert.ok(r.body.duplicado);
+  r = await POST({ ...base, forzar: true }); assert.equal(r.code, 200);
+  r = await POST({ ...base, products: [{ id: 101, price: 10, quantity: 1 }] }); assert.equal(r.code, 200);
+  r = await call(dropi, { headers: ck, query: { a: 'crear', c: '2' } }); assert.equal(r.body.ordenes.length, 3); assert.ok(!('hash' in r.body.ordenes[0]));
+  r = await call(dropi, { headers: ck, query: { a: 'crear', c: '3' } }); assert.equal(r.body.ordenes.length, 0, 'historial separado por cuenta');
+  r = await call(dropi, { headers: ck, query: { a: 'productos', c: '1', q: 'faja' } }); assert.equal(r.code, 200); assert.ok(r.body.productos[0].variations.length === 2 && r.body.productos[0].suggested > 0);
   console.log('OK: todas las pruebas pasaron');
 })().catch((e) => { console.error('FALLÓ:', e.message); process.exit(1); });

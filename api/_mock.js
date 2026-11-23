@@ -37,6 +37,7 @@ function orders(n) {
 }
 function products(q) {
   return PRODS.filter((x) => !q || x.toLowerCase().includes(String(q).toLowerCase()))
-    .map((nm, i) => ({ id: 100 + i, name: nm, sale_price: 90 + i * 15, sku: 'SKU' + i, img: '' }));
+    .map((nm, i) => ({ id: 100 + i, name: nm, sale_price: 90 + i * 15, suggested_price: 150 + i * 20, sku: 'SKU' + i, img: '',
+      variations: i % 3 === 0 ? [{ id: 1000 + i, sku: 'Talla M' }, { id: 2000 + i, sku: 'Talla G' }] : [] }));
 }
 module.exports = { orders, products };
