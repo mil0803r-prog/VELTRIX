@@ -22,5 +22,14 @@ const ck = { cookie: 'vx_s=' + auth.make() };
   r = await call(dropi, { headers: ck, query: { a: 'retiros', c: '2' } }); assert.equal(r.body.retiros.length, 0, 'retiros separados por cuenta');
   r = await call(dropi, { headers: { ...ck, 'content-type': 'application/json' }, method: 'POST', query: { a: 'retiros', c: '1' }, body: { monto: -1 } }); assert.equal(r.code, 400);
   r = await call(dropi, { headers: ck, query: { a: 'nada', c: '1' } }); assert.equal(r.code, 404);
+  for (const a of ['oficina', 'alertas', 'pagos', 'favs']) { r = await call(dropi, { headers: ck, query: { a, c: '1' } }); assert.equal(r.code, 200, a); }
+  r = await call(dropi, { headers: ck, query: { a: 'data', c: '1', d: 'all' } });
+  assert.ok(r.body.estados.length && r.body.zonas[0].utilidad !== undefined && r.body.kpis.diasMax >= 0 && r.body.productos[0].unidades > 0, 'datos del resumen');
+  const J = { ...ck, 'content-type': 'application/json' };
+  r = await call(dropi, { headers: J, method: 'POST', query: { a: 'favs', c: '1' }, body: { op: 'add', item: { name: 'Prod X', prov: 'Prov Y', wa: '52 55 1234 5678' } } });
+  assert.equal(r.body.dir['Prov Y'], '525512345678'); assert.equal(r.body.items[0].name, 'Prod X');
+  r = await call(dropi, { headers: J, method: 'POST', query: { a: 'pagos', c: '1' }, body: { ids: [1, 2], pagado: true } }); assert.ok(r.body.pagados['1']);
+  r = await call(dropi, { headers: J, method: 'POST', query: { a: 'pagos', c: '1' }, body: { ids: [1], pagado: false } }); assert.ok(!r.body.pagados['1'] && r.body.pagados['2']);
+  r = await call(dropi, { headers: J, method: 'POST', query: { a: 'gest', c: '1' }, body: { id: 9, estado: 'seguimiento', fecha: '2026-12-01' } }); assert.equal(r.body.notas['9'].fecha, '2026-12-01');
   console.log('OK: todas las pruebas pasaron');
 })().catch((e) => { console.error('FALLÓ:', e.message); process.exit(1); });

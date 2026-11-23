@@ -92,6 +92,9 @@ function inPeriod(list, d) {
   return list.filter((o) => new Date(o.created_at).getTime() >= from);
 }
 
+const ageDays = (d) => { const t = new Date(d).getTime(); return Number.isFinite(t) ? Math.max(0, Math.floor((Date.now() - t) / 864e5)) : 0; };
+const SIN_DESPACHAR = /PENDIENTE|GENERAD|INVENTARIO|PREPAR|ALISTAD|SIN DESPACH/;
+
 function slim(o) {
   const g = groupOf(o), total = num(o.total_order), ship = num(o.shipping_amount), cost = costOf(o);
   return {
@@ -100,6 +103,10 @@ function slim(o) {
     ciudad: o.city || '', depto: o.state || '', transp: o.distribution_company?.name || 'Sin transportadora',
     guia: o.shipping_guide || '', total, flete: ship, costo: cost,
     utilidad: g === 'cancelado' ? 0 : total - cost - ship, prod: prodOf(o), mov: lastMov(o),
+    prov: supplierOf(o), dir: String(o.dir || o.address || o.direction || '').slice(0, 160),
+    dias: g === 'proceso' || g === 'novedad' ? ageDays(o.created_at) : null,
+    ofi: (g === 'proceso' || g === 'novedad') && norm(o.status).includes('OFICINA'), diasOfi: ageDays(o.updated_at || o.created_at),
+    sinDespachar: g === 'proceso' && SIN_DESPACHAR.test(norm(o.status)),
   };
 }
 
@@ -107,7 +114,7 @@ function slim(o) {
 function build(list) {
   const k = { total: list.length, ventas: 0, ventasEntregadas: 0, entregados: 0, devueltos: 0, cancelados: 0, novedad: 0, proceso: 0, utilidad: 0, perdidaDev: 0, valorDevuelto: 0, porCobrar: 0, utilEnCurso: 0 };
   const tr = {}, zn = {}, dias = {}, pr = {};
-  let diasSum = 0, diasN = 0;
+  let diasSum = 0, diasN = 0, diasMax = 0; const est = {};
   for (const o of list) {
     const p = slim(o), g = p.grupo;
     if (g !== 'cancelado') k.ventas += p.total;
@@ -116,31 +123,38 @@ function build(list) {
     else if (g === 'cancelado') k.cancelados++;
     else if (g === 'novedad') { k.novedad++; k.porCobrar += p.total; k.utilEnCurso += p.utilidad; }
     else { k.proceso++; k.porCobrar += p.total; k.utilEnCurso += p.utilidad; }
+    const e = (est[p.estado || 'SIN ESTADO'] ||= { estado: p.estado || 'SIN ESTADO', grupo: g, n: 0 }); e.n++;
     let d = null;
-    if (g === 'entregado' && o.updated_at) { d = (new Date(o.updated_at) - new Date(o.created_at)) / 864e5; if (d >= 0) { diasSum += d; diasN++; } }
-    const t = (tr[p.transp] ||= { nombre: p.transp, total: 0, entregados: 0, devoluciones: 0, utilidad: 0, dias: 0, diasN: 0 });
+    if (g === 'entregado' && o.updated_at) { d = (new Date(o.updated_at) - new Date(o.created_at)) / 864e5; if (d >= 0) { diasSum += d; diasN++; if (d > diasMax) diasMax = d; } }
+    const t = (tr[p.transp] ||= { nombre: p.transp, total: 0, entregados: 0, devoluciones: 0, cancelados: 0, proceso: 0, novedad: 0, recaudo: 0, utilidad: 0, dias: 0, diasN: 0 });
+    if (g === 'cancelado') t.cancelados++; else if (g === 'proceso') t.proceso++; else if (g === 'novedad') t.novedad++;
+    if (g === 'entregado') t.recaudo += p.total;
     t.total++; t.utilidad += g === 'entregado' ? p.utilidad : 0;
     if (g === 'entregado') { t.entregados++; if (d != null && d >= 0) { t.dias += d; t.diasN++; } }
     if (g === 'devolucion') t.devoluciones++;
-    const z = (zn[p.depto || 'Sin dato'] ||= { nombre: p.depto || 'Sin dato', total: 0, entregados: 0, devoluciones: 0 });
+    const z = (zn[p.depto || 'Sin dato'] ||= { nombre: p.depto || 'Sin dato', total: 0, entregados: 0, devoluciones: 0, utilidad: 0, dias: 0, diasN: 0 });
+    if (g === 'entregado') { z.utilidad += p.utilidad; if (d != null && d >= 0) { z.dias += d; z.diasN++; } }
     z.total++; if (g === 'entregado') z.entregados++; if (g === 'devolucion') z.devoluciones++;
-    const dd = (dias[p.fecha] ||= { fecha: p.fecha, pedidos: 0, ventas: 0, entregados: 0, utilidad: 0 });
-    if (g === 'entregado') dd.utilidad += p.utilidad;
+    const dd = (dias[p.fecha] ||= { fecha: p.fecha, pedidos: 0, ventas: 0, recaudo: 0, entregados: 0, utilidad: 0 });
+    if (g === 'entregado') { dd.utilidad += p.utilidad; dd.recaudo += p.total; }
     dd.pedidos++; if (g !== 'cancelado') dd.ventas += p.total; if (g === 'entregado') dd.entregados++;
-    const pp = (pr[p.prod] ||= { nombre: p.prod, total: 0, entregados: 0, devoluciones: 0, utilidad: 0 });
+    const pp = (pr[p.prod] ||= { nombre: p.prod, prov: p.prov, total: 0, unidades: 0, entregados: 0, devoluciones: 0, utilidad: 0 });
+    pp.unidades += (o.orderdetails || []).reduce((a, x) => a + num(x.quantity || 1), 0) || 1;
     pp.total++; if (g === 'entregado') { pp.entregados++; pp.utilidad += p.utilidad; } if (g === 'devolucion') pp.devoluciones++;
   }
   const eff = (a, b) => (a + b ? Math.round((a / (a + b)) * 1000) / 10 : 0);
   k.efectividad = eff(k.entregados, k.devueltos);
   k.utilEsperada = Math.round(k.utilEnCurso * (k.efectividad / 100));
   k.diasPromedio = diasN ? Math.round((diasSum / diasN) * 10) / 10 : 0;
+  k.diasMax = Math.ceil(diasMax);
   const fin = (x) => ({ ...x, efectividad: eff(x.entregados, x.devoluciones) });
   return {
     kpis: k,
     transportadoras: Object.values(tr).map((t) => ({ ...fin(t), dias: t.diasN ? Math.round((t.dias / t.diasN) * 10) / 10 : 0 })).sort((a, b) => b.total - a.total),
-    zonas: Object.values(zn).map(fin).sort((a, b) => b.total - a.total),
+    zonas: Object.values(zn).map((z) => ({ ...fin(z), dias: z.diasN ? Math.round((z.dias / z.diasN) * 10) / 10 : null })).sort((a, b) => b.total - a.total),
+    estados: Object.values(est).sort((a, b) => b.n - a.n),
     tendencia: Object.values(dias).sort((a, b) => a.fecha.localeCompare(b.fecha)),
-    productos: Object.values(pr).map(fin).sort((a, b) => b.total - a.total).slice(0, 30),
+    productos: Object.values(pr).map(fin).sort((a, b) => b.unidades - a.unidades).slice(0, 60),
   };
 }
 
@@ -177,11 +191,12 @@ async function names() {
   const saved = await store.get('settings', 'nombres', {});
   return [1, 2, 3].map((n) => ({
     n, nombre: saved[n] || META[n].pais, pais: META[n].pais, mon: META[n].mon, sym: META[n].sym, dec: META[n].dec, wa: META[n].wa,
-    conectada: !!process.env[tokenVar(n)] || DEMO(),
+    base: CTAS[n].base.replace(/^https?:\/\//, ''), conectada: !!process.env[tokenVar(n)] || DEMO(),
   }));
 }
 
 async function route(req, res, q) {
+  const t0 = Date.now();
   const a = q.a || 'data', body = req.body && typeof req.body === 'object' ? req.body : {};
   try {
     if (a === 'cuentas') {
@@ -221,22 +236,36 @@ async function route(req, res, q) {
       } else if (req.method === 'DELETE') { delete cur[q.f]; await store.set('settings', 'registro', cur); }
       return json(res, 200, { registro: cur });
     }
-    if (a === 'favs') {
-      let cur = await store.get('settings', key('favs'), []);
+    if (a === 'favs') { // favoritos por proveedor, WhatsApp de cada proveedor y mensaje base
+      const st = await store.get('settings', key('favs2'), {});
+      st.items ||= []; st.hide ||= []; st.dir ||= {}; st.msg ||= '';
       if (req.method === 'POST') {
-        const it = body.item || {};
-        if (body.op === 'del') cur = cur.filter((x) => String(x.id) !== String(it.id));
-        else if (it.id && !cur.some((x) => String(x.id) === String(it.id))) cur.unshift({ id: it.id, name: String(it.name || '').slice(0, 120), price: num(it.price), img: String(it.img || '').slice(0, 300) });
-        await store.set('settings', key('favs'), cur.slice(0, 300));
+        const nm = (x) => String(x || '').slice(0, 120).trim(), digits = (x) => String(x || '').replace(/\D/g, '');
+        const setWa = (prov, wa) => { const w = digits(wa); if (!prov) return; if (!w) delete st.dir[prov]; else if (w.length >= 8 && w.length <= 15) st.dir[prov] = w; };
+        if (body.op === 'add') {
+          const it = body.item || {}, name = nm(it.name), prov = nm(it.prov);
+          if (!name) return json(res, 400, { error: 'Falta el producto' });
+          st.items = st.items.filter((x) => x.name.toLowerCase() !== name.toLowerCase()); st.items.unshift({ name, prov });
+          st.hide = st.hide.filter((h) => h.toLowerCase() !== name.toLowerCase()); setWa(prov, it.wa);
+        } else if (body.op === 'prov') {
+          const name = nm(body.name), prov = nm(body.prov); if (!name) return json(res, 400, { error: 'Falta el producto' });
+          st.items = st.items.filter((x) => x.name !== name); st.items.unshift({ name, prov }); setWa(prov, body.wa);
+        } else if (body.op === 'wa') setWa(nm(body.prov), body.wa);
+        else if (body.op === 'del') { const name = nm(body.name); st.items = st.items.filter((x) => x.name !== name); if (!st.hide.includes(name)) st.hide.push(name); st.hide = st.hide.slice(-500); }
+        else if (body.op === 'msg') st.msg = String(body.msg || '').slice(0, 300);
+        st.items = st.items.slice(0, 300);
+        await store.set('settings', key('favs2'), st);
       }
-      let found = null;
-      if (q.q) {
-        const r = DEMO() && !process.env[S().tokenVar] ? mock.products(q.q) : rows(await dropi('/integrations/products/index', { method: 'POST', body: { keywords: String(q.q), pageSize: 20, startData: 0 } }));
-        found = r.map((p) => ({ id: p.id, name: p.name, price: num(p.sale_price), img: (p.gallery && p.gallery[0] && p.gallery[0].urlS3) || p.img || '' }));
-      }
-      return json(res, 200, { favs: cur, resultados: found });
+      return json(res, 200, st);
     }
-
+    if (a === 'pagos') { // entregados marcados como ya pagados (manual)
+      const pg = await store.get('settings', key('pagos'), {});
+      if (req.method === 'POST') {
+        for (const id of (Array.isArray(body.ids) ? body.ids : []).slice(0, 500)) { if (body.pagado) pg[String(id)] = Date.now(); else delete pg[String(id)]; }
+        await store.set('settings', key('pagos'), pg);
+      }
+      return json(res, 200, { pagados: pg });
+    }
     if (a === 'rastreo') {
       const term = String(q.q || '').trim().toLowerCase();
       if (term.length < 3) return json(res, 400, { error: 'Escriba al menos 3 caracteres' });
@@ -244,12 +273,24 @@ async function route(req, res, q) {
       return json(res, 200, { resultados: hit.map((o) => ({ ...slim(o), movs: movs(o) })) });
     }
 
+    if (a === 'oficina') { // pedidos en la oficina de la transportadora (sin filtro de periodo)
+      const all = await allOrders(q.fresh === '1');
+      const items = all.map(slim).filter((p) => p.ofi).sort((x, y) => y.diasOfi - x.diasOfi).slice(0, 500);
+      return json(res, 200, { items, notas: await store.get('settings', key('gest'), {}), ms: Date.now() - t0, cache: new Date(S().cache.ts).toISOString() });
+    }
+    if (a === 'alertas') { // pedidos sin despachar por proveedor (sin filtro de periodo)
+      const items = (await allOrders()).map(slim).filter((p) => p.sinDespachar)
+        .map((p) => ({ id: p.id, prov: p.prov, dias: p.dias, estado: p.estado, cliente: p.cliente, guia: p.guia, transp: p.transp, prod: p.prod }))
+        .sort((x, y) => y.dias - x.dias).slice(0, 500);
+      return json(res, 200, { items });
+    }
+
     // Todo lo demas parte de los pedidos
     const list = inPeriod(await allOrders(q.fresh === '1'), q.d || '30');
     const meta = S().meta;
     if (a === 'data') {
       const b = build(list);
-      return json(res, 200, { cuenta: S().n, mon: meta.mon, ...b, pedidos: list.map(slim).sort((x, y) => y.fecha.localeCompare(x.fecha)).slice(0, 500), cache: new Date(S().cache.ts).toISOString() });
+      return json(res, 200, { cuenta: S().n, mon: meta.mon, ...b, pedidos: list.map(slim).sort((x, y) => y.fecha.localeCompare(x.fecha)).slice(0, 500), cache: new Date(S().cache.ts).toISOString(), ms: Date.now() - t0 });
     }
     if (a === 'prov') return json(res, 200, { proveedores: proveedores(list) });
     if (a === 'huella') return json(res, 200, q.tel ? { perfil: huella(list, q.tel) } : { clientes: huella(list) });
@@ -257,7 +298,7 @@ async function route(req, res, q) {
       let notas = await store.get('settings', key('gest'), {});
       if (req.method === 'POST') {
         if (!body.id) return json(res, 400, { error: 'Falta id' });
-        notas[String(body.id)] = { estado: String(body.estado || 'pendiente').slice(0, 20), nota: String(body.nota || '').slice(0, 300), ts: Date.now() };
+        notas[String(body.id)] = { estado: String(body.estado || 'pendiente').slice(0, 20), nota: String(body.nota || '').slice(0, 300), fecha: /^\d{4}-\d{2}-\d{2}$/.test(body.fecha || '') ? body.fecha : '', ts: Date.now() };
         await store.set('settings', key('gest'), notas);
       }
       const items = list.map(slim).filter((p) => p.grupo === 'novedad' || p.grupo === 'devolucion').sort((x, y) => y.fecha.localeCompare(x.fecha)).slice(0, 300);

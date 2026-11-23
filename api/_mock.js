@@ -16,13 +16,14 @@ function orders(n) {
     else if (r < 0.72) status = k.dev[Math.floor(R() * k.dev.length)];
     else if (r < 0.80) status = 'CANCELADO';
     else if (r < 0.88) status = 'NOVEDAD';
-    else status = r < 0.94 ? 'EN TRANSITO' : 'GUIA GENERADA';
+    else status = r < 0.92 ? 'EN OFICINA' : r < 0.96 ? 'EN TRANSITO' : r < 0.98 ? 'EN INVENTARIO' : 'GUIA GENERADA';
     const p = Math.floor(R() * PRODS.length), qty = 1 + Math.floor(R() * 2);
     const price = Math.round((120 + R() * 180) * mult), cost = Math.round(price * (0.35 + R() * 0.2));
     const ship = Math.round((28 + R() * 20) * mult);
     out.push({
       id: 10000 * n + i, status, created_at: created.toISOString(),
-      updated_at: new Date(created.getTime() + (2 + R() * 6) * 864e5).toISOString(),
+      updated_at: status === 'EN OFICINA' ? new Date(now - Math.floor(R() * 9) * 864e5).toISOString() : new Date(created.getTime() + (2 + R() * 6) * 864e5).toISOString(),
+      address: 'Calle ' + (1 + Math.floor(R() * 80)) + ' #' + (10 + Math.floor(R() * 90)) + '-' + (1 + Math.floor(R() * 60)) + ', Col. Centro',
       total_order: price * qty + ship, shipping_amount: ship,
       name: 'Cliente', surname: String(i), phone: '52' + String(10000000 + Math.floor(R() * 60) * 91731 % 89999999).padStart(10, '5'),
       state: k.deptos[Math.floor(R() * k.deptos.length)], city: 'Ciudad ' + (1 + Math.floor(R() * 9)),

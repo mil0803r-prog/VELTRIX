@@ -4,116 +4,290 @@
 <link rel="preload" as="font" type="font/woff2" href="/inter.woff2" crossorigin>
 <link rel="stylesheet" href="/theme.css">
 <style>
-body{padding:16px 18px 44px;height:auto;background-attachment:scroll}header{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
-header h1{font-size:21px;font-weight:650;letter-spacing:-.02em}header small{color:var(--mut)}
-.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
-.fav{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)}
-.tabs .btn{border-radius:99px}
-#view>*{animation:fadein .4s both}
+:root{--blue:#0369a1;--grey:#94a3a0}:root[data-theme=dark]{--blue:#38bdf8}
+body{padding:16px 18px 40px;height:auto;background-attachment:scroll}
+header{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}header h1{font-size:21px;font-weight:650;letter-spacing:-.02em}header small{color:var(--mut)}
+svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;vertical-align:-3px}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px;padding:5px;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);position:sticky;top:6px;z-index:5;backdrop-filter:blur(12px)}
+.tabs button{display:flex;align-items:center;gap:7px;border:0;background:none;color:var(--mut);font:inherit;font-weight:500;padding:9px 15px;border-radius:10px;cursor:pointer;transition:.25s var(--ease)}
+.tabs button:hover{color:var(--text);background:var(--card2)}.tabs button.on{background:linear-gradient(135deg,var(--g2),var(--g) 60%,var(--gl));color:#fff;font-weight:600;box-shadow:0 8px 18px -8px rgba(4,120,87,.7)}
+#view>*{animation:fadein .35s both}
+.k5{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}.v.bl{color:var(--blue)}.v.am{color:var(--amb)}
+.sec{margin-top:14px}.sec>h3,.hd{display:flex;align-items:center;gap:8px;margin-bottom:12px}.hd .sp{flex:1}.hd small{color:var(--mut);font-weight:400;font-size:12px}
+.attn{border-color:#e9c47a;background:linear-gradient(0deg,rgba(251,191,36,.07),rgba(251,191,36,.07)),var(--card)}
+.arow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 12px;margin-bottom:8px;background:var(--solid);border:1px solid var(--line);border-radius:12px}
+.arow .nm{font-weight:600}.arow .sb{font-size:12px;color:var(--mut)}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:600;background:var(--card2);border:1px solid var(--line);color:var(--mut);white-space:nowrap}
+.chip.g{background:var(--p-ok);color:var(--p-okt);border-color:transparent}.chip.r{background:var(--p-bad);color:var(--p-badt);border-color:transparent}.chip.a{background:var(--p-nov);color:var(--p-novt);border-color:transparent}.chip.b{background:#e0f2fe;color:#075985;border-color:transparent}
+:root[data-theme=dark] .chip.b{background:#0c2a3d;color:#7dd3fc}
+.chip.mono{font-family:ui-monospace,Menlo,monospace;font-weight:500}
+.ac{display:flex;gap:6px;align-items:center}.ic,.wab{display:inline-grid;place-items:center;min-width:32px;height:32px;border-radius:10px;border:0;cursor:pointer;font:inherit;font-size:12px;font-weight:600;transition:.2s}
+.ic.t-a{background:var(--p-nov);color:var(--p-novt)}.ic.t-b{background:#e0f2fe;color:#075985}:root[data-theme=dark] .ic.t-b{background:#0c2a3d;color:#7dd3fc}
+.ic:hover,.wab:hover{transform:translateY(-1px);filter:brightness(.96)}.ic:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.wab{background:var(--p-ok);color:var(--p-okt);text-decoration:none;padding:0 10px;gap:5px;grid-auto-flow:column}.wab.off{opacity:.55;cursor:default}
+.twocol{display:grid;gap:14px;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);margin-top:14px}
+.sem{padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--solid);margin-bottom:10px}
+.sem .top{display:flex;align-items:center;gap:9px;margin-bottom:9px}.sem .nm{font-weight:700}.sem .pc{margin-left:auto;font-weight:700;font-size:18px}
+.dt{width:11px;height:11px;border-radius:50%;display:inline-block;box-shadow:0 0 0 4px color-mix(in srgb,currentColor 18%,transparent)}
+.g{color:var(--gl)}.r{color:var(--red)}.a{color:var(--amb)}
+.stack{display:flex;height:9px;border-radius:6px;overflow:hidden;background:var(--gsoft)}.stack i{display:block;height:100%;animation:grow .9s var(--ease) both}
+.stats{display:flex;gap:14px;flex-wrap:wrap;margin-top:9px;font-size:12px;color:var(--mut)}.stats b{color:var(--text)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--mut);margin-top:6px}.legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px}
+.donut{display:grid;place-items:center;padding:6px 0 14px}.donut svg{width:190px;height:190px;transform:rotate(-90deg)}.donut circle{fill:none;stroke-width:24;animation:dash 1.1s var(--ease) both}
+@keyframes dash{from{stroke-dasharray:0 var(--C)}}
+.erow{display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px dashed var(--line)}.erow .n{margin-left:auto;font-weight:700}.erow .p{width:48px;text-align:right;color:var(--mut);font-size:12px}
+.combo{width:100%;height:auto}.combo text{font-size:11px;fill:var(--mut)}.combo .grid line{stroke:var(--line)}
+.combo .cb{fill:var(--g);opacity:.9;transform-origin:center bottom;transform-box:fill-box;animation:up .8s var(--ease) both}.combo .cb:hover{opacity:1;fill:var(--gl)}
+.combo .ln{fill:none;stroke:var(--blue);stroke-width:2.5;stroke-linecap:round;stroke-dasharray:3000;stroke-dashoffset:3000;animation:draw 2s var(--ease) .3s forwards}
+.combo .pt{fill:var(--solid);stroke:var(--blue);stroke-width:2}
+.dept{display:flex;align-items:flex-end;gap:8px;height:190px;padding-top:18px}.dept>div{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%}
+.dept b{font-size:11px;margin-bottom:3px}.dept i{width:100%;max-width:60px;background:linear-gradient(0deg,var(--g2),var(--gl));border-radius:6px 6px 0 0;animation:up .8s var(--ease) both;transform-origin:bottom}.dept span{font-size:9.5px;color:var(--mut);text-align:center;margin-top:6px;line-height:1.15;word-break:break-word;height:24px;overflow:hidden}
+.top8 .r8{display:flex;align-items:center;gap:12px;padding:10px 2px;border-bottom:1px solid var(--line)}.r8 .rk{width:18px;color:var(--mut);font-size:12px}.r8 .nm{flex:1;min-width:0}.r8 .u{font-weight:700;font-size:16px}.r8 .pd{color:var(--mut);font-size:11px;width:54px;text-align:right}
+.chips{display:flex;gap:8px;flex-wrap:wrap}.pc2{display:inline-flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid var(--line);border-radius:12px;background:var(--solid);cursor:pointer;transition:.2s;font-size:12px}.pc2:hover,.pc2.on{border-color:var(--gl);background:var(--gsoft)}
+.btn.sm{padding:4px 10px;font-size:12px;border-radius:8px}.btn.wa{background:var(--p-ok);color:var(--p-okt);border-color:transparent;text-decoration:none;display:inline-flex;align-items:center;gap:5px}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0;align-items:center}.filters input[type=text],.filters input:not([type]){flex:1;min-width:200px}
+tr.hot td{background:rgba(190,18,60,.07)}tr.hot:hover td{background:rgba(190,18,60,.12)}
+.foot{text-align:center;color:var(--mut);font-size:11.5px;margin:18px 0 4px}
+.sevs{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}.sev{border-left:4px solid var(--c);border-radius:14px}.sev .big{font-size:26px;font-weight:700;color:var(--c)}
+.ofgrid{display:grid;gap:14px;grid-template-columns:minmax(0,1fr) 290px;align-items:start}.kv{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px dashed var(--line)}.kv b{font-size:15px}
+.fchip{border:1px solid var(--line);background:var(--solid);color:var(--mut);border-radius:99px;padding:5px 13px;font:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:.2s}.fchip:hover{border-color:var(--gl)}.fchip.on{background:var(--g);color:#fff;border-color:transparent}
+.frow{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:var(--solid);margin-bottom:8px}.frow .nm{font-weight:600}.frow .sb{font-size:12px;color:var(--mut)}.frow input{width:190px}
+.gl{font-size:10.5px;font-weight:700;letter-spacing:.1em;color:var(--mut);margin:14px 0 6px}
+.modal{position:fixed;inset:0;background:var(--scrim);display:grid;place-items:center;z-index:50;padding:16px;animation:fadein .2s}.mb{background:var(--solid);border:1px solid var(--line);border-radius:16px;padding:20px;width:min(480px,100%);max-height:80vh;overflow:auto;box-shadow:0 30px 70px -20px rgba(0,0,0,.5);animation:rise .3s var(--ease)}
+.mb .btn{margin-top:14px;width:100%}.tl{border-left:2px solid var(--line);margin:10px 0 0 6px;padding-left:16px}.tl div{position:relative;padding:4px 0}.tl div::before{content:"";position:absolute;left:-22px;top:10px;width:9px;height:9px;border-radius:50%;background:var(--gl);box-shadow:0 0 0 3px var(--gsoft)}
+@media(max-width:1000px){.twocol,.ofgrid{grid-template-columns:1fr}}
 </style></head><body>
 <header><h1>Panel Dropi <span id="pais" class="pill"></span></h1><small id="src"></small><span class="sp"></span>
 <select id="per"><option value="7">7 días</option><option value="30" selected>30 días</option><option value="90">90 días</option><option value="all">Todo</option></select>
 <button class="btn" id="ref">Actualizar</button></header>
 <div class="tabs" id="tabs"></div><div id="view"><div class="empty">Cargando…</div></div>
 <script>
-const CTA=Number(new URLSearchParams(location.search).get('c'))||1;
-let M={sym:'$',dec:2,wa:'',mon:'MXN',pen:0.2},D=null,tab='resumen';
+const CTA=Number(new URLSearchParams(location.search).get('c'))||1,RET=5;
+let M={sym:'$',dec:2,wa:'',mon:'MXN',pen:0.2,base:''},D=null,tab='resumen',FAV={items:[],hide:[],dir:{},msg:''};
+const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const nf=(n,d)=>Number(n||0).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
 // Trabaja en pesos (MXN); se muestra en soles (PEN) o pesos segun el interruptor del tablero (localStorage vx_mode / vx_pen).
 const mode=()=>{try{return localStorage.getItem('vx_mode')==='mxn'?'mxn':'pen'}catch(e){return 'pen'}};
 const penRate=()=>{try{return Number(localStorage.getItem('vx_pen'))||M.pen||0.2}catch(e){return M.pen||0.2}};
-const money=n=>{const v=Number(n||0)*(mode()==='pen'?penRate():1);return (v<0?'-':'')+(mode()==='pen'?'S/ ':'MX$ ')+nf(Math.abs(v),2)};
+const rate=()=>mode()==='pen'?penRate():1;
+const money=n=>{const v=Number(n||0)*rate();return (v<0?'-':'')+(mode()==='pen'?'S/ ':'MX$ ')+nf(Math.abs(v),2)};
 const pct=n=>(n||0)+'%';
 const waLink=(t,txt)=>'https://wa.me/'+(String(t).startsWith(M.wa)?t:M.wa+t)+(txt?'?text='+encodeURIComponent(txt):'');
-const view=document.getElementById('view');
-async function api(a,extra={},opt){
-  const p=new URLSearchParams({a,c:CTA,d:document.getElementById('per').value,...extra});
-  const r=await fetch('/api/dropi?'+p,opt);const j=await r.json().catch(()=>({error:'Respuesta inválida'}));
-  if(!r.ok)throw new Error(j.error||r.status);return j;
-}
+const view=$('view');
+async function api(a,extra={},opt){const p=new URLSearchParams({a,c:CTA,d:$('per').value,...extra});const r=await fetch('/api/dropi?'+p,opt);const j=await r.json().catch(()=>({error:'Respuesta inválida'}));if(!r.ok)throw new Error(j.error||r.status);return j}
 const post=(a,body,extra)=>api(a,extra,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-const TABS=[['resumen','Resumen'],['pedidos','Pedidos'],['prov','Proveedores'],['favs','Favoritos'],['gest','Gestión'],['rend','Rendimiento']];
-document.getElementById('tabs').innerHTML=TABS.map(([k,v])=>`<button class="btn" data-t="${k}">${v}</button>`).join('');
-document.getElementById('tabs').onclick=e=>{const t=e.target.dataset.t;if(t){tab=t;render();}};
-document.getElementById('ref').onclick=()=>load(true);document.getElementById('per').onchange=()=>load();
+const IC={chart:'<path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/>',building:'<rect width="16" height="20" x="4" y="2" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/>',truck:'<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>',bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',trend:'<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',wallet:'<path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>',clock:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',finger:'<path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"/><path d="M14 13.12c0 2.38 0 6.38-1 8.88M17.29 21.02c.12-.6.43-2.3.5-3.02M2 12a10 10 0 0 1 18-6M2 16h.01M21.8 16c.2-2 .131-5.354 0-6M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2M8.65 22c.21-.66.45-1.32.57-2M9 6.8a6 6 0 0 1 9 5.2v2"/>',wa:'<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',pencil:'<path d="M21.17 6.81a1 1 0 0 0-3.99-3.99L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5Z"/>',x:'<path d="M18 6 6 18M6 6l12 12"/>',star:'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',alert:'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4M12 17h.01"/>'};
+const I=n=>`<svg class="i" viewBox="0 0 24 24">${IC[n]}</svg>`;
+const TABS=[['resumen','Resumen','chart'],['ofi','Oficina','building'],['prov','Proveedores','truck'],['nov','Novedades','bell'],['rend','Rendimiento','trend'],['pagos','Pagos','wallet']];
+$('tabs').innerHTML=TABS.map(([k,v,i])=>`<button data-t="${k}">${I(i)}${v}</button>`).join('');
+$('tabs').onclick=e=>{const b=e.target.closest('[data-t]');if(b){tab=b.dataset.t;render()}};
+$('ref').onclick=()=>load(true);$('per').onchange=()=>load();
+const GRC={entregado:'var(--gl)',proceso:'var(--blue)',novedad:'var(--amb)',devolucion:'var(--red)',cancelado:'var(--grey)'};
 const bar=v=>`<div class="bar"><i style="width:${Math.min(100,v||0)}%"></i></div>`;
 const pill=g=>`<span class="pill ${esc(g)}">${esc(g)}</span>`;
 const kpi=(l,v,s,c)=>`<div class="card kpi"><div class="l">${l}</div><div class="v ${c||''}">${v}</div><div class="s">${s||''}</div></div>`;
+const foot=(ms,cache)=>{const d=new Date(cache||Date.now());return `<div class="foot">Fuente: ${esc(M.base)}/integrations · Actualizado ${d.toLocaleDateString('es')}, ${d.toLocaleTimeString('es')} · ${ms??0} ms</div>`};
+const mdate=()=>new Date().toISOString().slice(0,10);
+function modal(h){const m=document.createElement('div');m.className='modal';m.innerHTML=`<div class="mb">${h}<button class="btn" data-x>Cerrar</button></div>`;m.onclick=e=>{if(e.target===m||e.target.dataset.x!==undefined)m.remove()};document.body.appendChild(m)}
+const acts=p=>`<div class="ac"><button class="ic t-a" data-mov="${esc(p.id)}" title="Movimientos de la guía">${I('clock')}</button><button class="ic t-b" data-hue="${esc(p.tel)}" title="Huella del cliente" ${p.tel?'':'disabled'}>${I('finger')}</button>${p.tel?`<a class="wab" target="_blank" rel="noopener" title="Escribir por WhatsApp" href="${esc(waLink(p.tel,'Hola '+(p.cliente||'')+', le escribimos por su pedido '+p.id))}">${I('wa')}</a>`:`<span class="wab off">${I('wa')} Sin número</span>`}</div>`;
+view.addEventListener('click',async e=>{
+  const m=e.target.closest('[data-mov]'),h=e.target.closest('[data-hue]');
+  try{
+    if(m){const id=m.dataset.mov,r=await api('rastreo',{q:id}),x=(r.resultados||[]).find(y=>String(y.id)===String(id));
+      modal(`<h3>Movimientos · pedido ${esc(id)}</h3><p class="mut">${x?esc(x.transp)+' · guía '+esc(x.guia||'—'):''}</p><div class="tl">${x&&x.movs.length?x.movs.map(v=>`<div><b>${esc(v.fecha)}</b> ${esc(v.texto)}</div>`).join(''):'<div class="mut">Sin movimientos registrados</div>'}</div>`)}
+    if(h&&h.dataset.hue){const r=await api('huella',{tel:h.dataset.hue}),x=r.perfil;
+      modal(`<h3>Huella del cliente</h3>${x?`<p>${esc(x.cliente)} · ${esc(x.tel)}</p><div class="k5" style="margin-top:10px">${kpi('Pedidos',x.total)}${kpi('Entregados',x.entregados,'','pos')}${kpi('Devueltos',x.devoluciones,'','neg')}${kpi('Cancelados',x.cancelados)}</div><p style="margin-top:12px">Riesgo: <b class="${x.riesgo==='alto'?'neg':x.riesgo==='medio'?'warn':'pos'}">${esc(x.riesgo)}</b></p>`:'<p class="mut">Sin historial para este teléfono en el período.</p>'}`)}
+  }catch(err){modal(`<div class="err">${esc(err.message)}</div>`)}
+});
 
 async function load(fresh){
   view.innerHTML='<div class="empty">Cargando…</div>';
   try{
     const cu=await api('cuentas');const c=cu.cuentas.find(x=>x.n===CTA);M={...c,pen:cu.pen};
-    document.getElementById('pais').textContent=c.nombre;
-    document.getElementById('src').textContent='Fuente: Dropi '+c.pais+' · '+(mode()==='pen'?'MXN convertido a soles (S/)':'pesos MXN')+' · datos en vivo, sin guardar clientes';
+    $('pais').textContent=c.nombre;srcTxt();
     D=await api('data',fresh?{fresh:1}:{});render();
-  }catch(e){view.innerHTML=`<div class="err">${esc(e.message)}</div>`;}
+  }catch(e){view.innerHTML=`<div class="err">${esc(e.message)}</div>`}
 }
+const srcTxt=()=>{if(M.pais)$('src').textContent='Fuente: Dropi '+M.pais+' · '+(mode()==='pen'?'MXN convertido a soles (S/)':'pesos MXN')+' · datos en vivo, sin guardar clientes'};
 async function render(){
-  document.querySelectorAll('#tabs .btn').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
   if(!D)return;
-  try{await ({resumen,pedidos,prov,favs,gest,rend}[tab])();view.querySelectorAll('.card').forEach((c,i)=>c.style.setProperty('--i',i));}catch(e){view.innerHTML=`<div class="err">${esc(e.message)}</div>`;}
+  try{await ({resumen,ofi,prov,nov,rend,pagos}[tab])();view.querySelectorAll('.card').forEach((c,i)=>c.style.setProperty('--i',Math.min(i,14)))}catch(e){view.innerHTML=`<div class="err">${esc(e.message)}</div>`}
 }
-function resumen(){
-  const k=D.kpis;
-  view.innerHTML=`<div class="grid">
-   ${kpi('Pedidos',k.total,k.proceso+' en proceso')}${kpi('Ventas',money(k.ventas),'sin cancelados')}
-   ${kpi('Entregados',k.entregados,pct(k.efectividad)+' efectividad','pos')}${kpi('Devoluciones',k.devueltos,'pérdida '+money(k.perdidaDev),'neg')}
-   ${kpi('Por cobrar',money(k.porCobrar),'en proceso y novedad','warn')}${kpi('Utilidad',money(k.utilidad),'total − costo − flete',k.utilidad>=0?'pos':'neg')}
-   ${kpi('Novedades',k.novedad,'requieren gestión','warn')}${kpi('Días promedio',k.diasPromedio,'a entregar')}</div>
-  <div class="cols"><div class="card"><h3>Tendencia diaria (pedidos)</h3><div class="chart">${trend()}</div></div>
-  <div class="card"><h3>Transportadoras</h3><table class="tbl"><tr><th>Nombre</th><th>Total</th><th>Efectividad</th><th></th></tr>
-   ${D.transportadoras.map(t=>`<tr><td>${esc(t.nombre)}</td><td>${t.total}</td><td>${pct(t.efectividad)}</td><td>${bar(t.efectividad)}</td></tr>`).join('')||'<tr><td colspan=4 class=empty>Sin datos</td></tr>'}</table></div>
-  <div class="card"><h3>Zonas (departamento)</h3><table class="tbl"><tr><th>Zona</th><th>Total</th><th>Efectividad</th><th></th></tr>
-   ${D.zonas.slice(0,8).map(t=>`<tr><td>${esc(t.nombre)}</td><td>${t.total}</td><td>${pct(t.efectividad)}</td><td>${bar(t.efectividad)}</td></tr>`).join('')}</table></div>
-  <div class="card"><h3>Productos</h3><table class="tbl"><tr><th>Producto</th><th>Pedidos</th><th>Efect.</th><th>Utilidad</th></tr>
-   ${D.productos.slice(0,8).map(t=>`<tr><td>${esc(t.nombre)}</td><td>${t.total}</td><td>${pct(t.efectividad)}</td><td class="${t.utilidad>=0?'pos':'neg'}">${money(t.utilidad)}</td></tr>`).join('')}</table></div></div>`;
+async function loadFav(){try{FAV=await api('favs')}catch(e){}return FAV}
+
+/* ================= RESUMEN ================= */
+function combo(t){
+  if(!t.length)return '<div class="empty">Sin datos</div>';t=t.slice(-60);
+  const W=1000,H=290,L=40,Rr=70,T=14,B=30,pw=W-L-Rr,ph=H-T-B,n=t.length,r=rate();
+  const nice=v=>{const e=Math.pow(10,Math.floor(Math.log10(v||1))),m=v/e;return(m<=1?1:m<=2?2:m<=5?5:10)*e};
+  const mP=Math.max(4,nice(Math.max(...t.map(x=>x.pedidos)))),mR=nice(Math.max(1,...t.map(x=>x.recaudo*r)));
+  const sw=pw/n,bw=Math.min(38,sw*.62),X=i=>L+sw*i+sw/2,yP=v=>T+ph-v/mP*ph,yR=v=>T+ph-v/mR*ph;
+  let g='',b='',pts=[],lab='';
+  for(let i=0;i<=4;i++){const y=T+ph-i*ph/4;g+=`<line x1="${L}" x2="${W-Rr}" y1="${y}" y2="${y}"/><text x="${L-8}" y="${y+4}" text-anchor="end">${nf(mP*i/4,mP<8?1:0)}</text><text x="${W-Rr+8}" y="${y+4}">${nf(mR*i/4,0)}</text>`}
+  const st=Math.ceil(n/16);
+  t.forEach((x,i)=>{const h=x.pedidos/mP*ph;b+=`<rect class="cb" style="animation-delay:${i*14}ms" x="${X(i)-bw/2}" y="${T+ph-h}" width="${bw}" height="${h}" rx="4"><title>${esc(x.fecha)}: ${x.pedidos} pedidos · ${esc(money(x.recaudo))}</title></rect>`;pts.push([X(i),yR(x.recaudo*r)]);if(i%st===0)lab+=`<text x="${X(i)}" y="${H-10}" text-anchor="middle">${esc(x.fecha.slice(5))}</text>`});
+  let d='M'+pts[0].join(',');for(let i=1;i<n;i++){const[a,b2]=pts[i-1],[c,e]=pts[i],m=(a+c)/2;d+=` C${m},${b2} ${m},${e} ${c},${e}`}
+  const dots=n<=31?pts.map(p=>`<circle class="pt" cx="${p[0]}" cy="${p[1]}" r="3"/>`).join(''):'';
+  return `<svg class="combo" viewBox="0 0 ${W} ${H}"><g class="grid">${g}</g>${b}<path class="ln" d="${d}"/>${dots}${lab}</svg><div class="legend" style="justify-content:center"><span><i style="background:var(--g)"></i>Pedidos</span><span><i style="background:var(--blue)"></i>Recaudo (${mode()==='pen'?'S/':'MX$'})</span></div>`}
+function donut(k){
+  const seg=[['entregado',k.entregados],['proceso',k.proceso],['novedad',k.novedad],['devolucion',k.devueltos],['cancelado',k.cancelados]].filter(x=>x[1]>0),tot=seg.reduce((a,x)=>a+x[1],0)||1,R=70,C=2*Math.PI*R;let acc=0;
+  return `<div class="donut"><svg viewBox="0 0 190 190">${seg.map(([g,v])=>{const l=v/tot*C,o=acc;acc+=l;return `<circle cx="95" cy="95" r="${R}" stroke="${GRC[g]}" stroke-dasharray="${Math.max(l-2,0)} ${C-l+2}" stroke-dashoffset="${-o}" style="--C:${C}"><title>${g}: ${v}</title></circle>`}).join('')}</svg></div>`}
+async function resumen(){
+  const k=D.kpis,P=D.pedidos;await loadFav();
+  const att=P.filter(p=>p.grupo==='novedad'||(p.grupo==='proceso'&&p.dias>=RET)).sort((a,b)=>(b.dias||0)-(a.dias||0)).slice(0,8);
+  const sem=t=>t.entregados+t.devoluciones===0?['Sin datos','mut','var(--grey)']:t.efectividad>=85?['Bueno','g','var(--gl)']:t.efectividad>=65?['Atención','a','var(--amb)']:['Crítico','r','var(--red)'];
+  const zsem=z=>{const f=z.entregados+z.devoluciones,dv=f?z.devoluciones/f*100:0;return !f?['Medio','a','Vigilar',dv]:dv<=15?['Bueno','g','COD OK',dv]:dv<=30?['Medio','a','Vigilar',dv]:['Malo','r','Cobrar anticipado',dv]};
+  const tot=t=>t||1;
+  const zonasTop=D.zonas.slice(0,12);const mxz=Math.max(1,...zonasTop.map(z=>z.total));
+  // proveedores con chips
+  const pv={};for(const p of P){const x=(pv[p.prov||'Sin proveedor']||={n:0,late:[]});x.n++;if((p.grupo==='proceso'||p.grupo==='novedad')&&p.dias>=RET)x.late.push(p)}
+  view.innerHTML=`<div class="k5">
+   ${kpi('En proceso',k.proceso,'recolectado / guía / ruta','bl')}${kpi('Novedades',k.novedad,'incidencias por resolver','am')}
+   ${kpi('Por cobrar',money(k.porCobrar),(k.proceso+k.novedad)+' en tránsito (COD)','bl')}${kpi('Entrega prom.',nf(k.diasPromedio,1)+' días','máx '+k.diasMax+' días')}
+   ${kpi('Pérdida devol.',money(k.perdidaDev),'flete de devoluciones','neg')}</div>
+  ${att.length?`<div class="card attn sec"><div class="hd"><h3>${I('alert')} Pedidos que requieren atención</h3><span class="sp"></span><small>${att.length} pedidos</small></div>${att.map(p=>`<div class="arow"><span class="chip ${p.grupo==='novedad'?'a':'b'}">${esc(p.estado)}</span><div><div class="nm">#${esc(p.id)} · ${esc(p.cliente)}</div><div class="sb">${esc(p.transp)} · ${esc(p.ciudad)}</div></div>${p.guia?`<span class="chip b mono">${esc(p.guia)}</span>`:''}<span class="chip ${p.dias>=10?'r':'a'}">${I('clock')} ${p.dias} d</span><span class="sp"></span>${acts(p)}</div>`).join('')}</div>`:''}
+  <div class="twocol">
+   <div class="card"><div class="hd"><h3>${I('truck')} Semáforo de transportadoras</h3><span class="sp"></span><small>efectividad = entregados ÷ finalizados</small></div>
+    ${D.transportadoras.map(t=>{const s=sem(t),T=tot(t.total),f=t.devoluciones+t.cancelados;return `<div class="sem"><div class="top"><span class="dt ${s[1]}" style="color:${s[2]};background:${s[2]}"></span><span class="nm">${esc(t.nombre)}</span><span class="chip ${s[1]==='mut'?'':s[1]}">${s[0]}</span><span class="pc" style="color:${s[2]}">${s[0]==='Sin datos'?'—':pct(t.efectividad)}</span></div>
+     <div class="stack"><i style="width:${t.entregados/T*100}%;background:var(--gl)"></i><i style="width:${t.proceso/T*100}%;background:var(--blue)"></i><i style="width:${t.novedad/T*100}%;background:var(--amb)"></i><i style="width:${f/T*100}%;background:var(--red)"></i></div>
+     <div class="stats"><span>Pedidos <b>${t.total}</b></span><span>Entregados <b class="g">${t.entregados}</b></span><span>Devueltos <b class="r">${t.devoluciones}</b></span><span>Cancelados <b>${t.cancelados}</b></span><span>En proceso <b class="a">${t.proceso}</b></span><span>Recaudo <b>${money(t.recaudo)}</b></span><span>Utilidad <b class="g">${money(t.utilidad)}</b></span></div></div>`}).join('')||'<div class="empty">Sin datos</div>'}
+    <div class="legend"><span><i style="background:var(--gl)"></i>Entregado</span><span><i style="background:var(--blue)"></i>En proceso</span><span><i style="background:var(--amb)"></i>Novedad</span><span><i style="background:var(--red)"></i>Devolución / Cancelado</span></div></div>
+   <div class="card"><div class="hd"><h3>${I('chart')} Pedidos por estado</h3></div>${donut(k)}
+    ${D.estados.map(e=>`<div class="erow">${pill(e.grupo)}<span>${esc(e.estado)}</span><span class="n">${e.n}</span><span class="p">${nf(e.n/(k.total||1)*100,1)}%</span></div>`).join('')}</div></div>
+  <div class="card sec"><div class="hd"><h3>Semáforo por zona</h3><span class="sp"></span><small>dónde conviene cobrar anticipado (alta devolución)</small></div><div class="scroll" style="max-height:330px"><table class="tbl"><thead><tr><th>Zona</th><th>Estado</th><th>Pedidos</th><th>Entrega</th><th>Devol.</th><th>Días</th><th>Utilidad</th><th>Recomendación</th></tr></thead><tbody>
+   ${D.zonas.map(z=>{const s=zsem(z);return `<tr><td><span class="dt" style="color:var(--${s[1]==='g'?'gl':s[1]==='a'?'amb':'red'});background:currentColor"></span> ${esc(z.nombre)}</td><td><span class="chip ${s[1]}">${s[0]}</span></td><td>${z.total}</td><td class="g">${nf(z.entregados/z.total*100,0)}%</td><td class="r">${nf(s[3],0)}%</td><td>${z.dias==null?'—':nf(z.dias,1)+' d'}</td><td class="${z.utilidad>=0?'g':'r'}">${money(z.utilidad)}</td><td><span class="chip ${s[1]}">${s[2]}</span></td></tr>`}).join('')}</tbody></table></div></div>
+  <div class="card sec"><div class="hd"><h3>${I('trend')} Tendencia diaria</h3><span class="sp"></span><small>pedidos y recaudo por día en el período</small></div>${combo(D.tendencia)}</div>
+  <div class="twocol" style="grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)">
+   <div class="card"><div class="hd"><h3>Pedidos por departamento</h3></div><div class="dept">${zonasTop.map((z,i)=>`<div title="${esc(z.nombre)}: ${z.total}"><b>${z.total}</b><i style="height:${z.total/mxz*100}%;animation-delay:${i*50}ms"></i><span>${esc(z.nombre)}</span></div>`).join('')||'<div class="empty">Sin datos</div>'}</div></div>
+   <div class="card top8"><div class="hd"><h3>${I('star')} Productos más vendidos</h3></div>${D.productos.slice(0,8).map((p,i)=>`<div class="r8"><span class="rk">${i+1}</span><span class="nm">${esc(p.nombre)}</span><span class="u">${p.unidades}</span><span class="pd">${p.total} ped.</span></div>`).join('')||'<div class="empty">Sin datos</div>'}</div></div>
+  <div class="card sec"><div class="hd"><h3>Pedidos y proveedores</h3><span class="sp"></span><small id="pcount"></small></div>
+   <div class="chips" id="pchips">${Object.entries(pv).sort((a,b)=>b[1].n-a[1].n).map(([nm,x])=>{const w=FAV.dir[nm],late=x.late.length;
+     const msg=late?`Hola ${nm}, tengo ${late} pedido(s) con retraso: ${x.late.slice(0,8).map(p=>'#'+p.id).join(', ')}. ¿Me confirman su estado? Gracias.`:`Hola ${nm}, ¿me ayudas con una consulta de mis pedidos?`;
+     return `<div class="pc2" data-pv="${esc(nm)}">${I('truck')}<b>${esc(nm)}</b><span class="chip b">${x.n}</span>${late?`<span class="chip r">${late} retraso${late>1?'s':''}</span>`:'<span class="chip g">al día</span>'}${w?`<a class="btn sm wa" target="_blank" rel="noopener" href="https://wa.me/${esc(w)}?text=${encodeURIComponent(msg)}">${I('wa')} ${late?'Avisar '+late:'Escribir'}</a>`:`<button class="btn sm wa" data-setwa="${esc(nm)}">${I('wa')} ${late?'Avisar '+late:'Escribir'}</button>`}</div>`}).join('')}</div>
+   <div class="filters"><input id="fq" placeholder="Buscar cliente, ciudad, dirección, guía, #id…"><select id="fe"><option value="">Todos los estados</option>${[...new Set(P.map(p=>p.estado))].sort().map(x=>`<option>${esc(x)}</option>`).join('')}</select>
+    <select id="ft"><option value="">Todas las transportadoras</option>${[...new Set(P.map(p=>p.transp))].sort().map(x=>`<option>${esc(x)}</option>`).join('')}</select>
+    <select id="fp"><option value="">Todos los proveedores</option>${Object.keys(pv).sort().map(x=>`<option>${esc(x)}</option>`).join('')}</select><label class="row mut"><input type="checkbox" id="fl"> Solo con retraso</label></div>
+   <div class="scroll"><table class="tbl"><thead><tr><th>#</th><th>Estado</th><th>Proveedor</th><th>Transportadora</th><th>Guía</th><th>Cliente</th><th>Ciudad</th><th>Dirección</th><th>Total</th><th>Utilidad</th><th>Fecha</th><th>Acción</th></tr></thead><tbody id="tb"></tbody></table></div></div>
+  ${foot(D.ms,D.cache)}`;
+  const late=p=>(p.grupo==='proceso'||p.grupo==='novedad')&&p.dias>=RET;
+  const f=()=>{const q=$('fq').value.toLowerCase(),e=$('fe').value,t=$('ft').value,pr=$('fp').value,l=$('fl').checked;
+    const r=P.filter(p=>(!e||p.estado===e)&&(!t||p.transp===t)&&(!pr||(p.prov||'Sin proveedor')===pr)&&(!l||late(p))&&(!q||[p.cliente,p.tel,p.guia,p.prod,p.ciudad,p.dir,String(p.id)].join(' ').toLowerCase().includes(q)));
+    $('pcount').textContent=Math.min(r.length,200)+' de '+P.length;
+    $('tb').innerHTML=r.slice(0,200).map(p=>`<tr class="${late(p)?'hot':''}"><td class="mut">${esc(p.id)}</td><td><span class="pill ${esc(p.grupo)}">${esc(p.estado)}</span></td><td>${esc(p.prov)}</td><td>${esc(p.transp)}</td><td><span class="mono mut">${esc(p.guia)}</span></td><td>${esc(p.cliente)}</td><td>${esc(p.ciudad)}</td><td class="mut" style="white-space:normal;min-width:180px">${esc(p.dir)}</td><td>${money(p.total)}</td><td class="${p.utilidad>=0?'g':'r'}">${money(p.utilidad)}</td><td>${esc(p.fecha)}</td><td>${acts(p)}</td></tr>`).join('')||'<tr><td colspan=12 class="empty">Sin pedidos</td></tr>'};
+  ['fq','fe','ft','fp'].forEach(i=>$(i).oninput=f);$('fl').onchange=f;f();
+  $('pchips').onclick=async e=>{const s=e.target.closest('[data-setwa]');if(s){e.stopPropagation();await setWa(s.dataset.setwa);return resumen()}
+    if(e.target.closest('a'))return;const c=e.target.closest('[data-pv]');if(c){$('fp').value=c.dataset.pv;f();$('tb').scrollIntoView({behavior:'smooth',block:'center'})}};
 }
-function trend(){const t=D.tendencia,mx=Math.max(1,...t.map(x=>x.pedidos));return t.map((x,i)=>`<i title="${esc(x.fecha)}: ${x.pedidos} pedidos" style="--n:${i};height:${x.pedidos/mx*100}%"></i>`).join('')||'<span class="mut">Sin datos</span>';}
-function pedidos(){
-  view.innerHTML=`<div class="row" style="margin-bottom:10px"><input id="q" placeholder="Buscar cliente, teléfono, guía, producto…" size="34">
-  <select id="gf"><option value="">Todos</option><option>entregado</option><option>devolucion</option><option>cancelado</option><option>novedad</option><option>proceso</option></select><span class="mut" id="cnt"></span></div>
-  <div class="card scroll"><table class="tbl"><thead><tr><th>ID</th><th>Fecha</th><th>Estado</th><th>Cliente</th><th>Ciudad</th><th>Transportadora</th><th>Producto</th><th>Total</th><th>Utilidad</th><th></th></tr></thead><tbody id="tb"></tbody></table></div>`;
-  const f=()=>{const q=document.getElementById('q').value.toLowerCase(),g=document.getElementById('gf').value;
-    const r=D.pedidos.filter(p=>(!g||p.grupo===g)&&(!q||[p.cliente,p.tel,p.guia,p.prod,p.ciudad,String(p.id)].join(' ').toLowerCase().includes(q)));
-    document.getElementById('cnt').textContent=r.length+' pedidos';
-    document.getElementById('tb').innerHTML=r.slice(0,300).map(p=>`<tr><td>${esc(p.id)}</td><td>${esc(p.fecha)}</td><td>${pill(p.grupo)} <span class="mut">${esc(p.estado)}</span></td><td>${esc(p.cliente)}</td><td>${esc(p.ciudad)}, ${esc(p.depto)}</td><td>${esc(p.transp)}</td><td>${esc(p.prod)}</td><td>${money(p.total)}</td><td class="${p.utilidad>=0?'pos':'neg'}">${money(p.utilidad)}</td><td>${p.tel?`<a target="_blank" rel="noopener" href="${esc(waLink(p.tel))}">WhatsApp</a>`:''}</td></tr>`).join('');};
-  document.getElementById('q').oninput=f;document.getElementById('gf').onchange=f;f();
+async function setWa(prov){const w=prompt('WhatsApp de '+prov+' (con código de país, solo números):');if(!w)return;try{await post('favs',{op:'wa',prov,wa:w});await loadFav()}catch(e){alert(e.message)}}
+
+/* ================= OFICINA ================= */
+let OF=null,OS={f:'todos',q:'',tr:'',ord:'dias'};
+const plazo=()=>Number(localStorage.getItem('vx_plazo'))||3;
+async function ofi(){OF=await api('oficina');ofiDraw(true)}
+function ofiDraw(first){
+  const P=plazo(),today=mdate(),N=OF.notas||{},est=p=>(N[p.id]||{}).estado||'sin gestionar';
+  const act=OF.items.filter(p=>est(p)!=='descartado');
+  const FIL={todos:act,devolver:act.filter(p=>p.diasOfi>P),recientes:act.filter(p=>p.diasOfi<=1),seg:act.filter(p=>est(p)==='seguimiento'&&((N[p.id]||{}).fecha||'')<=today),sin:act.filter(p=>est(p)==='sin gestionar'),espera:act.filter(p=>est(p)==='espera'),desc:OF.items.filter(p=>est(p)==='descartado')};
+  const LBL=[['todos','Todos'],['devolver','Por devolverse'],['recientes','Llegaron hace poco'],['seg','Seguimiento hoy'],['sin','Sin gestionar'],['espera','En espera'],['desc','Descartados']];
+  let rows=FIL[OS.f].filter(p=>(!OS.tr||p.transp===OS.tr)&&(!OS.q||[p.cliente,p.guia,p.ciudad,p.tel,String(p.id)].join(' ').toLowerCase().includes(OS.q)));
+  rows=[...rows].sort((a,b)=>OS.ord==='monto'?b.total-a.total:OS.ord==='dias-'?a.diasOfi-b.diasOfi:b.diasOfi-a.diasOfi);
+  const pas=act.filter(p=>p.diasOfi>P);
+  view.innerHTML=`<div class="ofgrid"><div class="card flat"><div class="hd"><h3>${I('building')} Pedidos en oficina</h3><span class="sp"></span><small>${OF.items.length} pedidos</small></div>
+   <div class="row" id="of-ch">${LBL.map(([k,l])=>`<button class="fchip ${OS.f===k?'on':''}" data-f="${k}">${l} (${FIL[k].length})</button>`).join('')}</div>
+   <div class="filters"><input id="oq" placeholder="Buscar cliente, guía, ciudad…" value="${esc(OS.q)}"><select id="otr"><option value="">Todas las transportadoras</option>${[...new Set(OF.items.map(p=>p.transp))].sort().map(x=>`<option ${OS.tr===x?'selected':''}>${esc(x)}</option>`).join('')}</select>
+    <select id="oord"><option value="dias" ${OS.ord==='dias'?'selected':''}>Más días primero</option><option value="dias-" ${OS.ord==='dias-'?'selected':''}>Menos días primero</option><option value="monto" ${OS.ord==='monto'?'selected':''}>Mayor monto primero</option></select>
+    <label class="row mut">Plazo <input id="opl" type="number" min="1" max="60" value="${P}" style="width:70px"> días</label></div>
+   ${rows.length?`<div class="scroll"><table class="tbl"><thead><tr><th>Cliente</th><th>Guía</th><th>Ciudad</th><th>Transportadora</th><th>Días</th><th>Monto</th><th>Gestión</th><th>Acción</th></tr></thead><tbody>
+   ${rows.map(p=>{const n=N[p.id]||{};return `<tr class="${p.diasOfi>P?'hot':''}"><td>${esc(p.cliente)}<div class="mut" style="font-size:11px">${esc(p.tel)}</div></td><td><span class="mono mut">${esc(p.guia)}</span></td><td>${esc(p.ciudad)}</td><td>${esc(p.transp)}</td><td><span class="chip ${p.diasOfi>P?'r':p.diasOfi>1?'a':'g'}">${p.diasOfi} d</span></td><td>${money(p.total)}</td>
+    <td><select data-g="${esc(p.id)}">${[['sin gestionar','Sin gestionar'],['contactado','Contactado'],['seguimiento','Seguimiento'],['espera','En espera'],['descartado','Descartado']].map(([v,l])=>`<option value="${v}" ${est(p)===v?'selected':''}>${l}</option>`).join('')}</select>${n.fecha&&est(p)==='seguimiento'?`<div class="mut" style="font-size:11px">hasta ${esc(n.fecha)}</div>`:''}</td><td>${acts(p)}</td></tr>`}).join('')}</tbody></table></div>`
+   :`<div class="empty">Sin pedidos en oficina con este filtro. Si esperabas ver alguno, depende del texto de estado que devuelve la transportadora ("oficina").</div>`}</div>
+   <div class="card flat"><h3 style="margin-bottom:8px">Resumen</h3><div class="kv"><span>En oficina</span><b>${act.length}</b></div><div class="kv"><span>Pasados del plazo</span><b class="r">${pas.length}</b></div><div class="kv"><span>Monto en riesgo</span><b class="r">${money(pas.reduce((a,p)=>a+p.total,0))}</b></div><div class="kv"><span>Sin gestionar</span><b class="a">${FIL.sin.length}</b></div>
+   <p class="mut" style="font-size:12px;margin:12px 0 0">Los resultados que registras se guardan en tu cuenta.</p></div></div>${foot(OF.ms,OF.cache)}`;
+  $('of-ch').onclick=e=>{const b=e.target.closest('[data-f]');if(b){OS.f=b.dataset.f;ofiDraw()}};
+  $('oq').oninput=e=>{OS.q=e.target.value.toLowerCase();const p=e.target.selectionStart;ofiDraw();const n=$('oq');n.focus();n.setSelectionRange(p,p)};
+  $('otr').onchange=e=>{OS.tr=e.target.value;ofiDraw()};$('oord').onchange=e=>{OS.ord=e.target.value;ofiDraw()};
+  $('opl').onchange=e=>{const v=Math.max(1,Math.min(60,Number(e.target.value)||3));localStorage.setItem('vx_plazo',v);ofiDraw()};
+  view.querySelectorAll('[data-g]').forEach(s=>s.onchange=async()=>{let fecha='';if(s.value==='seguimiento'){fecha=prompt('¿Hasta qué fecha dar seguimiento? (AAAA-MM-DD)',new Date(Date.now()+864e5).toISOString().slice(0,10))||'';if(!/^\d{4}-\d{2}-\d{2}$/.test(fecha)){ofiDraw();return}}
+    try{const r=await post('gest',{id:s.dataset.g,estado:s.value,fecha,nota:(OF.notas[s.dataset.g]||{}).nota||''});OF.notas=r.notas;ofiDraw()}catch(e){alert(e.message)}});
 }
+
+/* ================= PROVEEDORES ================= */
+let PS={sel:null,fq:'',fp:''};
 async function prov(){
-  const r=await api('prov');
-  view.innerHTML=`<div class="card scroll"><table class="tbl"><tr><th>Proveedor</th><th>Pedidos</th><th>Entregados</th><th>Devol.</th><th>Efectividad</th><th></th><th>Ventas</th><th>Costo</th></tr>
-  ${r.proveedores.map(p=>`<tr><td>${esc(p.nombre)}</td><td>${p.total}</td><td>${p.entregados}</td><td>${p.devoluciones}</td><td>${pct(p.efectividad)}</td><td>${bar(p.efectividad)}</td><td>${money(p.ventas)}</td><td>${money(p.costo)}</td></tr>`).join('')||'<tr><td colspan=8 class=empty>Sin datos</td></tr>'}</table></div>`;
+  const [al]=await Promise.all([api('alertas'),loadFav()]);
+  const N=Number(localStorage.getItem('vx_plazo_prov'))||3,g={};
+  for(const x of al.items){const a=(g[x.prov||'Sin proveedor']||={nm:x.prov||'Sin proveedor',items:[],max:0});a.items.push(x);a.max=Math.max(a.max,x.dias)}
+  const L=Object.values(g),crit=L.filter(x=>x.max>=N*2),aten=L.filter(x=>x.max>=N&&x.max<N*2),ok=L.filter(x=>x.max<N);
+  const cardS=(t,c,arr,col)=>`<div class="card sev" style="--c:${col}"><div class="l kpi" style="margin-bottom:4px"><div class="l">${t}</div></div><div class="big">${arr.length}</div><div class="chips" style="margin-top:8px">${arr.map(x=>`<span class="pc2 ${PS.sel===x.nm?'on':''}" data-sel="${esc(x.nm)}">${esc(x.nm)} <span class="chip ${c}">${x.items.length} · ${x.max} d</span></span>`).join('')||'<span class="mut">—</span>'}</div></div>`;
+  const fl=favList();const grp={};for(const f of fl){(grp[(f.prov||'SIN PROVEEDOR').toUpperCase()]||=[]).push(f)}
+  const q=PS.fq.toLowerCase(),vis=fl.filter(f=>(!PS.fp||(f.prov||'SIN PROVEEDOR').toUpperCase()===PS.fp)&&(!q||(f.name+' '+f.prov).toLowerCase().includes(q)));
+  const vg={};for(const f of vis)(vg[(f.prov||'SIN PROVEEDOR').toUpperCase()]||=[]).push(f);
+  const tpl=f=>(FAV.msg||'Hola, ¿me puedes enviar una foto o video de {producto}? Gracias.').replace(/\{producto\}/g,f.name).replace(/\{proveedor\}/g,f.prov||'');
+  const sel=PS.sel&&g[PS.sel];
+  view.innerHTML=`<div class="card flat"><div class="hd"><h3>${I('truck')} Pedidos sin despachar por proveedor</h3><span class="sp"></span><label class="row mut">Plazo <input id="pn" type="number" min="1" max="30" value="${N}" style="width:64px"> días</label></div>
+   <div class="sevs">${cardS('Críticos (' + N*2 + '+ días)','r',crit,'var(--red)')}${cardS('Atención ('+N+'+ días)','a',aten,'var(--amb)')}${cardS('Al día','g',ok,'var(--gl)')}</div>
+   <p class="mut" style="margin:12px 0 0;font-size:12px">Haz clic en un proveedor para ver sus pedidos.</p>
+   ${!crit.length&&!aten.length?`<div class="empty">Ningún proveedor con pedidos sin despachar hace ${N}+ días.</div>`:''}
+   ${sel?`<div class="scroll" style="margin-top:10px;max-height:260px"><table class="tbl"><thead><tr><th>#</th><th>Estado</th><th>Producto</th><th>Cliente</th><th>Guía</th><th>Días</th></tr></thead><tbody>${sel.items.map(x=>`<tr><td>${esc(x.id)}</td><td><span class="pill proceso">${esc(x.estado)}</span></td><td>${esc(x.prod)}</td><td>${esc(x.cliente)}</td><td><span class="mono mut">${esc(x.guia)}</span></td><td><span class="chip ${x.dias>=N*2?'r':x.dias>=N?'a':'g'}">${x.dias} d</span></td></tr>`).join('')}</tbody></table></div>`:''}</div>
+  <div class="card flat sec"><div class="hd"><h3>${I('star')} Productos favoritos</h3><small>${fl.length} productos</small><span class="sp"></span><button class="btn sm" id="fmsg">${I('pencil')} Mensaje</button></div>
+   <div class="filters" style="margin-top:0"><input id="a-n" placeholder="Producto"><input id="a-p" placeholder="Proveedor"><input id="a-w" placeholder="WhatsApp del proveedor" inputmode="tel"><button class="btn pri" id="a-b">Agregar</button></div>
+   <div class="filters"><input id="sq" placeholder="Buscar producto o proveedor…" value="${esc(PS.fq)}"></div>
+   <div class="row" id="pchip"><button class="fchip ${PS.fp?'':'on'}" data-p="">Todos los proveedores (${fl.length})</button>${Object.entries(grp).sort().map(([k,v])=>`<button class="fchip ${PS.fp===k?'on':''}" data-p="${esc(k)}">${esc(k.charAt(0)+k.slice(1).toLowerCase())} (${v.length})</button>`).join('')}</div>
+   ${Object.entries(vg).sort().map(([k,v])=>`<div class="gl">${esc(k)} · ${v.length}</div>${v.map(f=>{const w=FAV.dir[f.prov];return `<div class="frow"><div style="flex:1;min-width:200px"><div class="nm">${f.star?I('star')+' ':''}${esc(f.name)}</div><div class="sb">${esc(f.prov||'—')} · ${w?'📱 '+esc(w):'Sin WhatsApp del proveedor'}</div></div>
+     ${w?`<a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/${esc(w)}?text=${encodeURIComponent(tpl(f))}">${I('wa')} Pedir foto o video</a>`:`<input data-wi="${esc(f.prov)}" placeholder="WhatsApp del proveedor" inputmode="tel" ${f.prov?'':'disabled'}><button class="btn sm" data-ws="${esc(f.prov)}" ${f.prov?'':'disabled'}>${f.prov?'Guardar WhatsApp':'Falta el proveedor'}</button>`}
+     <button class="ic" style="background:var(--card2);border:1px solid var(--line)" data-ed="${esc(f.name)}" title="Cambiar proveedor / WhatsApp">${I('pencil')}</button><button class="ic" style="background:var(--card2);border:1px solid var(--line)" data-rm="${esc(f.name)}" title="Quitar">${I('x')}</button></div>`}).join('')}`).join('')||'<div class="empty">Sin productos</div>'}</div>${foot(D.ms,D.cache)}`;
+  view.querySelectorAll('[data-sel]').forEach(b=>b.onclick=()=>{PS.sel=PS.sel===b.dataset.sel?null:b.dataset.sel;prov()});
+  $('pn').onchange=e=>{localStorage.setItem('vx_plazo_prov',Math.max(1,Math.min(30,Number(e.target.value)||3)));prov()};
+  $('sq').oninput=e=>{PS.fq=e.target.value;const p=e.target.selectionStart;prov().then(()=>{const n=$('sq');n.focus();n.setSelectionRange(p,p)})};
+  $('pchip').onclick=e=>{const b=e.target.closest('[data-p]');if(b){PS.fp=b.dataset.p;prov()}};
+  $('fmsg').onclick=async()=>{const m=prompt('Mensaje para pedir foto o video. Puede usar {producto} y {proveedor}:',FAV.msg||'Hola, ¿me puedes enviar una foto o video de {producto}? Gracias.');if(m)try{await post('favs',{op:'msg',msg:m});prov()}catch(e){alert(e.message)}};
+  $('a-b').onclick=async()=>{const n=$('a-n').value.trim();if(!n)return $('a-n').focus();try{await post('favs',{op:'add',item:{name:n,prov:$('a-p').value,wa:$('a-w').value}});prov()}catch(e){alert(e.message)}};
+  view.querySelectorAll('[data-ws]').forEach(b=>b.onclick=async()=>{const w=view.querySelector(`[data-wi="${CSS.escape(b.dataset.ws)}"]`).value;if(!w.trim())return;try{await post('favs',{op:'wa',prov:b.dataset.ws,wa:w});prov()}catch(e){alert(e.message)}});
+  view.querySelectorAll('[data-rm]').forEach(b=>b.onclick=async()=>{if(confirm('¿Quitar "'+b.dataset.rm+'" de favoritos?')){await post('favs',{op:'del',name:b.dataset.rm});prov()}});
+  view.querySelectorAll('[data-ed]').forEach(b=>b.onclick=async()=>{const p=prompt('Proveedor de "'+b.dataset.ed+'":');if(p===null)return;const w=prompt('WhatsApp del proveedor (opcional, solo números con código de país):')||'';try{await post('favs',{op:'prov',name:b.dataset.ed,prov:p,wa:w});prov()}catch(e){alert(e.message)}});
 }
-async function favs(){
-  const r=await api('favs');
-  view.innerHTML=`<div class="row" style="margin-bottom:10px"><input id="fq" placeholder="Buscar en catálogo Dropi…" size="30"><button class="btn pri" id="fb">Buscar</button></div>
-  <div class="cols"><div class="card"><h3>Resultados</h3><div id="res" class="mut">Escriba un producto y busque.</div></div>
-  <div class="card"><h3>Favoritos (${r.favs.length})</h3><div id="fl">${r.favs.map(f=>favRow(f,'del')).join('')||'<div class="empty">Sin favoritos</div>'}</div></div></div>`;
-  const wire=()=>view.querySelectorAll('[data-op]').forEach(b=>b.onclick=async()=>{await post('favs',{op:b.dataset.op,item:JSON.parse(b.dataset.it)});favs();});
-  wire();
-  document.getElementById('fb').onclick=async()=>{const q=document.getElementById('fq').value.trim();if(!q)return;
-    const x=await api('favs',{q});document.getElementById('res').innerHTML=x.resultados.map(f=>favRow(f,'add')).join('')||'Sin resultados';wire();};
-}
-const favRow=(f,op)=>`<div class="fav"><div>${esc(f.name)}<div class="mut">${money(f.price)}</div></div><button class="btn" data-op="${op}" data-it="${esc(JSON.stringify({id:f.id,name:f.name,price:f.price,img:f.img||''}))}">${op==='add'?'★ Agregar':'Quitar'}</button></div>`;
-async function gest(){
+function favList(){const hide=new Set(FAV.hide||[]),man=new Map((FAV.items||[]).map(x=>[x.name.toLowerCase(),x])),out=(FAV.items||[]).map(x=>({name:x.name,prov:x.prov||'',star:true}));
+  for(const p of D.productos){if(hide.has(p.nombre)||man.has(p.nombre.toLowerCase()))continue;out.push({name:p.nombre,prov:p.prov||'',star:false})}return out}
+
+/* ================= NOVEDADES ================= */
+async function nov(){
   const r=await api('gest');
-  view.innerHTML=`<div class="card scroll"><table class="tbl"><tr><th>Pedido</th><th>Estado</th><th>Cliente</th><th>Último movimiento</th><th>Gestión</th><th>Nota</th><th></th></tr>
-  ${r.items.map(p=>{const n=r.notas[p.id]||{};return`<tr><td>${esc(p.id)}<div class="mut">${esc(p.guia)}</div></td><td>${pill(p.grupo)} <span class="mut">${esc(p.estado)}</span></td><td>${esc(p.cliente)}${p.tel?` <a target="_blank" rel="noopener" href="${esc(waLink(p.tel,'Hola, le escribimos por su pedido '+p.id))}">WA</a>`:''}</td><td class="mut">${esc(p.mov)}</td>
+  view.innerHTML=`<div class="card flat scroll"><div class="hd"><h3>${I('bell')} Novedades y devoluciones</h3><span class="sp"></span><small>${r.items.length} pedidos</small></div><table class="tbl"><tr><th>Pedido</th><th>Estado</th><th>Cliente</th><th>Último movimiento</th><th>Gestión</th><th>Nota</th><th></th><th>Acción</th></tr>
+  ${r.items.map(p=>{const n=r.notas[p.id]||{};return`<tr><td>${esc(p.id)}<div class="mut" style="font-size:11px">${esc(p.guia)}</div></td><td>${pill(p.grupo)} <span class="mut">${esc(p.estado)}</span></td><td>${esc(p.cliente)}</td><td class="mut" style="white-space:normal;min-width:160px">${esc(p.mov)}</td>
   <td><select data-s="${esc(p.id)}">${['pendiente','contactado','reagendado','resuelto'].map(o=>`<option ${n.estado===o?'selected':''}>${o}</option>`).join('')}</select></td>
-  <td><input data-n="${esc(p.id)}" value="${esc(n.nota||'')}" size="22" maxlength="300"></td><td><button class="btn" data-g="${esc(p.id)}">Guardar</button></td></tr>`}).join('')||'<tr><td colspan=7 class=empty>Nada por gestionar</td></tr>'}</table></div>`;
+  <td><input data-n="${esc(p.id)}" value="${esc(n.nota||'')}" size="22" maxlength="300"></td><td><button class="btn sm" data-g="${esc(p.id)}">Guardar</button></td><td>${acts(p)}</td></tr>`}).join('')||'<tr><td colspan=8 class=empty>Nada por gestionar</td></tr>'}</table></div>${foot(D.ms,D.cache)}`;
   view.querySelectorAll('[data-g]').forEach(b=>b.onclick=async()=>{const id=b.dataset.g;
-    await post('gest',{id,estado:view.querySelector(`[data-s="${id}"]`).value,nota:view.querySelector(`[data-n="${id}"]`).value});b.textContent='✓ Guardado';});
+    await post('gest',{id,estado:view.querySelector(`[data-s="${id}"]`).value,nota:view.querySelector(`[data-n="${id}"]`).value});b.textContent='✓ Guardado'});
 }
+
+/* ================= RENDIMIENTO ================= */
 async function rend(){
   const r=await api('huella'),t=D.transportadoras;
   view.innerHTML=`<div class="cols"><div class="card"><h3>Ranking de transportadoras</h3><table class="tbl"><tr><th>Nombre</th><th>Entregados</th><th>Devol.</th><th>Efect.</th><th>Días</th><th>Utilidad</th></tr>
   ${[...t].sort((a,b)=>b.efectividad-a.efectividad).map(x=>`<tr><td>${esc(x.nombre)}</td><td>${x.entregados}</td><td>${x.devoluciones}</td><td>${pct(x.efectividad)}</td><td>${x.dias}</td><td class="${x.utilidad>=0?'pos':'neg'}">${money(x.utilidad)}</td></tr>`).join('')}</table></div>
   <div class="card"><h3>Ventas por día</h3><div class="chart">${(()=>{const d=D.tendencia,m=Math.max(1,...d.map(x=>x.ventas));return d.map((x,i)=>`<i title="${esc(x.fecha)}: ${esc(money(x.ventas))}" style="--n:${i};height:${x.ventas/m*100}%"></i>`).join('')})()}</div></div></div>
-  <div class="card" style="margin-top:12px"><h3>Huella del cliente (riesgo por teléfono)</h3><div class="scroll"><table class="tbl"><tr><th>Teléfono</th><th>Cliente</th><th>Pedidos</th><th>Entreg.</th><th>Devol.</th><th>Cancel.</th><th>Riesgo</th></tr>
-  ${r.clientes.map(c=>`<tr><td>${esc(c.tel)}</td><td>${esc(c.cliente)}</td><td>${c.total}</td><td>${c.entregados}</td><td>${c.devoluciones}</td><td>${c.cancelados}</td><td class="${c.riesgo==='alto'?'neg':c.riesgo==='medio'?'warn':'pos'}">${esc(c.riesgo)}</td></tr>`).join('')||'<tr><td colspan=7 class=empty>Sin clientes de riesgo</td></tr>'}</table></div></div>`;
+  <div class="card" style="margin-top:14px"><h3>Huella del cliente (riesgo por teléfono)</h3><div class="scroll"><table class="tbl"><tr><th>Teléfono</th><th>Cliente</th><th>Pedidos</th><th>Entreg.</th><th>Devol.</th><th>Cancel.</th><th>Riesgo</th></tr>
+  ${r.clientes.map(c=>`<tr><td>${esc(c.tel)}</td><td>${esc(c.cliente)}</td><td>${c.total}</td><td>${c.entregados}</td><td>${c.devoluciones}</td><td>${c.cancelados}</td><td class="${c.riesgo==='alto'?'neg':c.riesgo==='medio'?'warn':'pos'}">${esc(c.riesgo)}</td></tr>`).join('')||'<tr><td colspan=7 class=empty>Sin clientes de riesgo</td></tr>'}</table></div></div>${foot(D.ms,D.cache)}`;
 }
-addEventListener('storage',ev=>{if(ev.key==='vx_mode'||ev.key==='vx_pen'){const e=document.getElementById('src');if(e&&M.pais)e.textContent='Fuente: Dropi '+M.pais+' · '+(mode()==='pen'?'MXN convertido a soles (S/)':'pesos MXN')+' · datos en vivo, sin guardar clientes';render()}});
+
+/* ================= PAGOS ================= */
+let PG={f:'por'};
+async function pagos(){
+  const pg=(await api('pagos')).pagados,k=D.kpis,ent=D.pedidos.filter(p=>p.grupo==='entregado'),paid=ent.filter(p=>pg[p.id]),pu=paid.reduce((a,p)=>a+p.utilidad,0);
+  const rows=ent.filter(p=>PG.f==='todos'||(PG.f==='pag'?pg[p.id]:!pg[p.id]));
+  view.innerHTML=`<div class="k5">${kpi('Utilidad de entregados',money(k.utilidad),k.entregados+' pedidos entregados','pos')}${kpi('Por cobrar (COD en tránsito)',money(k.porCobrar),(k.proceso+k.novedad)+' pedidos en tránsito','bl')}
+   ${kpi('Pérdida por devoluciones',money(k.perdidaDev),'flete de devoluciones','neg')}${kpi('Entregados ya pagados',paid.length,money(pu)+' de utilidad','pos')}${kpi('Entregados por pagar',Math.max(0,k.entregados-paid.length),money(k.utilidad-pu)+' de utilidad','am')}</div>
+  <div class="card flat sec"><div class="hd"><h3>${I('wallet')} Control de pagos</h3><span class="sp"></span><select id="pf"><option value="por" ${PG.f==='por'?'selected':''}>Por pagar</option><option value="pag" ${PG.f==='pag'?'selected':''}>Ya pagados</option><option value="todos" ${PG.f==='todos'?'selected':''}>Todos</option></select>
+   <button class="btn sm" id="pm">${PG.f==='pag'?'Desmarcar visibles':'Marcar visibles como pagados'}</button></div>
+   <p class="mut" style="font-size:12px;margin:-4px 0 10px">Dropi no informa por la API qué pedidos ya le pagaron; márquelos aquí a mano al recibir el depósito.${ent.length<k.entregados?` Se muestran los ${ent.length} entregados más recientes.`:''}</p>
+   <div class="scroll"><table class="tbl"><thead><tr><th></th><th>#</th><th>Fecha</th><th>Cliente</th><th>Transportadora</th><th>Total</th><th>Utilidad</th><th>Estado</th></tr></thead><tbody>
+   ${rows.slice(0,300).map(p=>`<tr><td><input type="checkbox" data-pp="${esc(p.id)}" ${pg[p.id]?'checked':''}></td><td>${esc(p.id)}</td><td>${esc(p.fecha)}</td><td>${esc(p.cliente)}</td><td>${esc(p.transp)}</td><td>${money(p.total)}</td><td class="g">${money(p.utilidad)}</td><td>${pg[p.id]?'<span class="chip g">Pagado</span>':'<span class="chip a">Por pagar</span>'}</td></tr>`).join('')||'<tr><td colspan=8 class="empty">Sin pedidos</td></tr>'}</tbody></table></div></div>${foot(D.ms,D.cache)}`;
+  $('pf').onchange=e=>{PG.f=e.target.value;pagos()};
+  view.querySelectorAll('[data-pp]').forEach(c=>c.onchange=async()=>{await post('pagos',{ids:[c.dataset.pp],pagado:c.checked});pagos()});
+  $('pm').onclick=async()=>{if(!rows.length)return;await post('pagos',{ids:rows.slice(0,300).map(p=>p.id),pagado:PG.f!=='pag'});pagos()};
+}
+addEventListener('storage',ev=>{if(ev.key==='vx_mode'||ev.key==='vx_pen'){srcTxt();render()}});
 load();
 </script></body></html>
