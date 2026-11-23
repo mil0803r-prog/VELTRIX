@@ -168,11 +168,13 @@ async function cityDraw(){
   w.innerHTML=cityBox(`<select id="np-city"><option value="">Municipalidad o delegación</option>${list.map(c=>`<option value="${esc(c.id)}" ${cur&&String(cur.id)===String(c.id)?'selected':''}>${esc(c.name)}</option>`).join('')}</select>`,list.length+' municipios en '+esc(NP.state));
   $('np-city').onchange=e=>{const c=list.find(x=>String(x.id)===e.target.value)||null;NP.city=c?c.name:'';NP.cityObj=c;clrCar();npSum();qDebounce()};
   carrDraw();npSum()}
-const qReady=()=>NP.cityObj&&/^\d{5}$/.test(String(NP.zip_code).replace(/\D/g,''))&&NP.items.length&&NP.items.every(i=>Number(i.qty)>=1&&i.price!==''&&Number(i.price)>=0&&(!i.variations.length||i.variation_id));
+const qReady=()=>NP.cityObj&&/^\d{5}$/.test(String(NP.zip_code).replace(/\D/g,''))&&NP.items.length&&NP.items.every(i=>Number(i.qty)>=1&&i.price!==''&&Number(i.price)>=0);
+const qVar=i=>i.variation_id||((i.variations.find(v=>v.stock!==0)||{}).id)||null; // para cotizar: la elegida o, si aún no elige, la primera con stock
+const zipOk=()=>/^\d{5}$/.test(String(NP.zip_code).replace(/\D/g,''));
 function qDebounce(){clearTimeout(QT);NP.quote=qReady()?{loading:true}:null;carrDraw();npSum();if(qReady())QT=setTimeout(cotizar,650)}
 async function cotizar(){
   const seq=++QSEQ;
-  try{const r=await post('cotizar',{cod:NP.rate_type==='CON RECAUDO',city:{id:NP.cityObj.id,cod_dane:NP.cityObj.cod_dane,zip_code:NP.cityObj.zip_code},zip_code:String(NP.zip_code).replace(/\D/g,''),sender_dane:SND&&SND.dane||'',products:NP.items.map(i=>({id:i.id,price:Number(i.price),quantity:Number(i.qty),variation_id:i.variation_id||null}))});
+  try{const r=await post('cotizar',{cod:NP.rate_type==='CON RECAUDO',city:{id:NP.cityObj.id,cod_dane:NP.cityObj.cod_dane,zip_code:NP.cityObj.zip_code},zip_code:String(NP.zip_code).replace(/\D/g,''),sender_dane:SND&&SND.dane||'',products:NP.items.map(i=>({id:i.id,price:Number(i.price),quantity:Number(i.qty),variation_id:qVar(i)}))});
     if(seq!==QSEQ)return;NP.quote={carriers:r.carriers,err:r.quoteError||'',needsSender:!!r.needsSender};
     const chosen=r.carriers.find(c=>(c.id&&String(c.id)===String(NP.distribution_company_id))||(NP.carrierName&&nrm(c.name)===nrm(NP.carrierName)));if((NP.distribution_company_id||NP.carrierName)&&chosen&&chosen.error)clrCar()}
   catch(e){if(seq!==QSEQ)return;NP.quote={err:e.message}}
@@ -213,17 +215,20 @@ function npSum(){
 function carrDraw(){
   const el=$('carr');if(!el)return;const Q=NP.quote,pay=NP.rate_type;
   let msg='',kind='';
-  if(!NP.cityObj)msg='Para cotizar, selecciona ciudad de destino.';
-  else if(!/^\d{5}$/.test(String(NP.zip_code).replace(/\D/g,'')))msg='Escribe el código postal (5 dígitos) para cotizar.';
-  else if(!NP.items.length)msg='Agrega productos para cotizar.';
-  else if(NP.items.some(i=>i.variations.length&&!i.variation_id))msg='Elige la variación de cada producto para cotizar.';
+  const miss=[];
+  if(!NP.cityObj)miss.push('la ciudad de destino');
+  if(!zipOk())miss.push('el código postal (5 dígitos)');
+  if(!NP.items.length)miss.push('al menos un producto');
+  else if(NP.items.some(i=>Number(i.qty)<1||i.price===''||!(Number(i.price)>=0)))miss.push('precio y cantidad de cada producto');
+  if(miss.length)msg='Para cotizar falta: '+miss.join(', ')+'.';
   else if(Q&&Q.loading){msg='Cotizando con las transportadoras…';kind='ok'}
   else if(Q&&Q.err)msg='No se pudo cotizar: '+Q.err+(Q.needsSender?'. Dropi pide la ciudad de origen del producto: indíquela abajo.':'. Dropi calculará el flete al crear la orden.');
+  const est=NP.items.filter(i=>i.variations.length&&!i.variation_id),estNote=!msg&&Q&&Q.carriers&&est.length?`<div class="cmsg ok" style="margin-top:6px">Cotización estimada: aún no elige la variación de «${esc(est[0].name)}»${est.length>1?' y otros':''}; se usó la primera con stock. Elíjala para confirmar el pedido.</div>`:'';
   const list=(Q&&Q.carriers&&Q.carriers.length)?Q.carriers:CAR.map(c=>({id:c.id,name:c.name,cost:null,error:null}));
   const row=(id,name,cost,err,auto,tray)=>{const sel=!!(NP.distribution_company_id||NP.carrierName),on=auto?!sel:((id&&String(NP.distribution_company_id||'')===String(id))||(NP.carrierName&&nrm(NP.carrierName)===nrm(name))),dis=!!err,why=err||'';
     return `<button type="button" class="crow ${on?'on':''} ${dis?'dis':''}" data-car="${esc(id||'')}" data-cname="${esc(auto?'':name)}" ${dis?'disabled':''} title="${esc(why)}"><i class="rd"></i>${auto?`<i class="av" style="background:var(--gsoft);color:var(--g)">${I('truck')}</i>`:`<i class="av" style="background:hsl(${hue(name)} 60% 90%);color:hsl(${hue(name)} 55% 28%)">${esc(initials(pretty(name)))}</i>`}<span class="cn">${esc(auto?name:pretty(name))}${tray?`<small style="color:var(--mut)">${esc(tray)}</small>`:''}${err?`<small>${esc(err)}</small>`:''}</span><span class="cp">${auto?'':cost!=null?`${mx(cost)}<small>≈ ${penTxt(cost)}</small>`:'MX$ - -'}</span></button>`};
   el.innerHTML=`${msg?`<div class="cmsg ${kind}">${kind?'':I('x')+' '}${esc(msg)}</div>`:''}
-   <div class="pays"><button type="button" class="pay ${pay==='CON RECAUDO'?'on':''}" data-pay="CON RECAUDO"><i class="rd"></i>Contra Entrega</button><button type="button" class="pay ${pay==='SIN RECAUDO'?'on':''}" data-pay="SIN RECAUDO"><i class="rd"></i>Pago Anticipado</button></div>
+   ${estNote}<div class="pays"><button type="button" class="pay ${pay==='CON RECAUDO'?'on':''}" data-pay="CON RECAUDO"><i class="rd"></i>Contra Entrega</button><button type="button" class="pay ${pay==='SIN RECAUDO'?'on':''}" data-pay="SIN RECAUDO"><i class="rd"></i>Pago Anticipado</button></div>
    <div class="clist">${row('','Automática (Dropi elige)',null,null,true)}${list.map(c=>row(c.id,c.name,c.cost,c.error,false,c.trayecto)).join('')}</div>
    ${!list.length?'<p class="mut" style="font-size:12px">No hay transportadoras para mostrar. Dropi elige según su configuración.</p>':''}`;
   el.querySelectorAll('[data-pay]').forEach(b=>b.onclick=()=>{if(NP.rate_type===b.dataset.pay)return;NP.rate_type=b.dataset.pay;CITIES={};clrCar();cityDraw();qDebounce()});
@@ -254,7 +259,7 @@ function npCart(){
     ${i.manual?`<label class="fl" style="margin-top:8px"><span>ID de variación (opcional)</span><input data-ci="${k}" data-f="variation_id" value="${esc(i.variation_id)}" inputmode="numeric" style="width:140px"></label>`:''}
     <div class="row" style="margin-top:10px;gap:14px"><label class="fl" style="margin:0"><span class="req">Precio de venta (MXN)</span><input type="number" min="0" step="0.01" value="${esc(i.price)}" data-ci="${k}" data-f="price" style="width:150px"></label>
      <label class="fl" style="margin:0"><span>Cantidad</span><input type="number" min="1" max="50" step="1" value="${esc(i.qty)}" data-ci="${k}" data-f="qty" style="width:90px"></label></div></div>`}).join('')||'<div class="empty">Agregue productos desde el catálogo, sus favoritos o por ID.</div>';
-  el.querySelectorAll('[data-ci]').forEach(i=>{const h=()=>{NP.items[i.dataset.ci][i.dataset.f]=i.value;npSum();qDebounce()};i.oninput=h;i.onchange=h});
+  el.querySelectorAll('[data-ci]').forEach(i=>{const h=()=>{const it=NP.items[i.dataset.ci],ch=String(it[i.dataset.f])!==i.value;it[i.dataset.f]=i.value;if(ch){npSum();qDebounce()}};i.oninput=h;i.onchange=h});
   el.querySelectorAll('[data-vk]').forEach(b=>b.onclick=()=>{const it=NP.items[b.dataset.vk],v=it.variations.find(x=>String(x.id)===b.dataset.vv);if(!v)return;
     const prev=it.suggested;it.variation_id=v.id;if(v.suggested>0){if(it.price===''||Number(it.price)===Number(prev))it.price=v.suggested;it.suggested=v.suggested}npCart();npSum();qDebounce()});
   el.querySelectorAll('[data-cx]').forEach(b=>b.onclick=()=>{NP.items.splice(b.dataset.cx,1);npCart();npSum();qDebounce()})}
@@ -336,7 +341,8 @@ async function nuevo(){
    <div class="card flat"><h3 class="co-t">Seleccione una transportadora:</h3><div id="carr"></div><div id="orig" style="margin-top:12px"></div></div>
    <div class="card flat" style="position:sticky;top:70px;align-self:start"><h3 class="co-t">Resumen de la orden:</h3><div id="npsum"></div></div>
   </div>${histHTML}`;
-  view.querySelectorAll('[data-k]').forEach(i=>{const h=()=>{NP[i.dataset.k]=i.value;npSum();if(i.dataset.k==='zip_code')qDebounce()};i.oninput=h;i.onchange=h});
+  // 'input' y 'change' llegan los dos al escribir: solo se reacciona (y se re-cotiza) si el valor realmente cambió; si no, el re-dibujado se comía el clic en la transportadora
+  view.querySelectorAll('[data-k]').forEach(i=>{const h=()=>{const ch=NP[i.dataset.k]!==i.value;NP[i.dataset.k]=i.value;if(ch){npSum();if(i.dataset.k==='zip_code')qDebounce()}};i.oninput=h;i.onchange=h});
   $('np-state').onchange=e=>{const d=DEPS.find(x=>x.name===e.target.value);NP.state=d?d.name:'';NP.depId=d?d.id:null;NP.city='';NP.cityObj=null;clrCar();cityDraw();qDebounce()};
   $('np-notes').onchange=e=>{NP.notasOn=e.target.checked;$('np-notes-box').style.display=e.target.checked?'':'none'};
   $('np-fp').onclick=async()=>{let t=String(NP.phone).replace(/\D/g,'');if(t.length<8)return modal('<p class="mut">Escriba primero el teléfono del cliente.</p>');
