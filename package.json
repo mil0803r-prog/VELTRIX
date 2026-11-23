@@ -5,7 +5,7 @@
   "description": "VELTRIX - plataforma de control Dropi multi-pais (tema verde)",
   "scripts": {
     "dev": "VELTRIX_DEMO=1 VELTRIX_PASSWORD=demo VELTRIX_SECRET=dev node dev.js",
-    "test": "node test/run.js"
+    "test": "node test/run.js && node test/real.js"
   },
   "engines": { "node": ">=18" }
 }

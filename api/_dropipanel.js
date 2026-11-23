@@ -221,11 +221,43 @@ function parseQuote(j) {
   let arr = Array.isArray(j) ? j : (j && (j.objects || j.data || j.carriers || j.options || j.result)) || [];
   if (arr && !Array.isArray(arr)) arr = Object.values(arr);
   return arr.filter((x) => x && typeof x === 'object').map((x) => {
-    const dc = x.distribution_company || x.distributionCompany || x.carrier_data || {};
-    const id = Number(dc.id ?? x.distribution_company_id ?? x.distributionCompanyId ?? x.id), cost = x.shipping_cost ?? x.shippingCost ?? x.price ?? x.precio ?? x.cost ?? x.valor ?? x.shipping_amount;
-    const name = String(dc.name || x.name || (typeof x.carrier === 'string' ? x.carrier : x.carrier && x.carrier.name) || x.transportadora || '').slice(0, 60);
-    return { id: Number.isInteger(id) && id > 0 ? id : null, name: name || 'Transportadora', cost: cost == null || cost === '' ? null : num(cost), error: x.error ? String(x.error).slice(0, 160) : null };
+    const dc = x.distributionCompany || x.distribution_company || x.carrier_data || {}, inner = x.objects && !Array.isArray(x.objects) && typeof x.objects === 'object' ? x.objects : {};
+    const id = Number(x.transportadora_id ?? dc.id ?? x.distribution_company_id ?? x.distributionCompanyId ?? x.id), cost = inner.precioEnvio ?? x.precioEnvio ?? x.shipping_cost ?? x.shippingCost ?? x.price ?? x.precio ?? x.cost ?? x.valor ?? x.shipping_amount;
+    const name = String(x.transportadora || dc.name || (typeof x.carrier === 'string' ? x.carrier : x.carrier && x.carrier.name) || x.name || '').slice(0, 60);
+    return { id: Number.isInteger(id) && id > 0 ? id : null, name: name || 'Transportadora', cost: cost == null || cost === '' ? null : num(cost), trayecto: String(inner.trayecto ?? x.trajectory ?? '').slice(0, 30), error: x.error ? String(x.error).slice(0, 200) : null };
   });
+}
+// Lista de transportadoras: servicio oficial /distribution_companies + las que ya aparecen en sus pedidos
+async function carriersList() {
+  const s = S(); if (s.carCache && Date.now() - s.carCache.ts < 3600000) return s.carCache.data;
+  const m = {};
+  if (DEMO() && !process.env[s.tokenVar]) for (const c of mock.quote(false, 1)) m[c.id] = { id: c.id, name: c.name, n: 0 };
+  {
+    if (!(DEMO() && !process.env[s.tokenVar])) for (const path of ['/integrations/distribution_companies', '/api/distribution_companies']) {
+      try { for (const c of rows(await dropi(path))) { const id = Number(c.id); if (id > 0 && c.name && !c.deleted_at) m[id] = { id, name: String(c.name).slice(0, 60), n: 0 }; } if (Object.keys(m).length) break; } catch (e) { /* prueba la siguiente ruta */ }
+    }
+    for (const o of await allOrders()) {
+      const dc = o.distribution_company || {}, id = Number(dc.id ?? o.distribution_company_id);
+      if (!Number.isInteger(id) || id < 1) continue;
+      (m[id] ||= { id, name: String(dc.name || ('Transportadora ' + id)).slice(0, 60), n: 0 }).n++;
+    }
+  }
+  const data = Object.values(m).sort((a, b) => b.n - a.n || a.name.localeCompare(b.name));
+  s.carCache = { ts: Date.now(), data }; return data;
+}
+// Ciudad de origen (de donde sale el producto): la pide el cotizador. Se busca en el detalle del producto.
+function findDane(o, d) {
+  if (!o || typeof o !== 'object' || d > 6) return '';
+  if ((typeof o.cod_dane === 'string' || typeof o.cod_dane === 'number') && String(o.cod_dane)) return String(o.cod_dane);
+  for (const k of Object.keys(o)) if (/^(warehouse_product|warehouse|warehouses|city|objects|data)$/.test(k)) {
+    const v = Array.isArray(o[k]) ? o[k].map((x) => findDane(x, d + 1)).find(Boolean) : findDane(o[k], d + 1); if (v) return v;
+  }
+  return '';
+}
+async function senderDane(pid) {
+  const s = S(); s.sd ||= {}; if (pid in s.sd) return s.sd[pid];
+  let d = ''; try { d = findDane(await dropi('/integrations/products/v2/' + Number(pid)), 0); } catch (e) { /* sin detalle */ }
+  return (s.sd[pid] = d);
 }
 function validarPedido(b) {
   const t = (v, max) => String(v ?? '').trim().slice(0, max);
@@ -380,22 +412,21 @@ async function route(req, res, q) {
       const prods = (Array.isArray(body.products) ? body.products : []).slice(0, 20).map((p) => ({ id: Number(p.id), quantity: Number(p.quantity), price: Number(p.price), variation_id: p.variation_id ? Number(p.variation_id) : null }));
       if (!prods.length || prods.some((p) => !(p.id >= 1) || !(p.quantity >= 1) || !(p.price >= 0))) return json(res, 400, { error: 'Productos inválidos' });
       const cod = !!body.cod, amount = Math.round(prods.reduce((x, p) => x + p.price * p.quantity, 0));
-      if (DEMO() && !process.env[S().tokenVar]) return json(res, 200, { carriers: mock.quote(cod, cid), demo: true });
+      if (DEMO() && !process.env[S().tokenVar]) return json(res, 200, { carriers: mock.quote(cod, cid), demo: true, sender: body.sender_dane || null });
+      const carriers = await carriersList().catch(() => []);
+      const sender = String(body.sender_dane || '').replace(/\D/g, '').slice(0, 12) || process.env.DROPI_SENDER_DANE || await senderDane(prods[0].id);
       const payload = { EnvioConCobro: cod, amount, ciudad_destino: { id: cid, cod_dane: String(body.city.cod_dane || ''), zip_code: String(body.city.zip_code || '') }, zip_code: zip,
         products: prods.map((p) => ({ id: p.id, type: p.variation_id ? 'VARIABLE' : 'SIMPLE', quantity: p.quantity, price: p.price, variation_id: p.variation_id })) };
-      if (process.env.DROPI_SENDER_DANE) payload.ciudad_remitente = { cod_dane: process.env.DROPI_SENDER_DANE };
-      const list = parseQuote(await dropi(QUOTE_PATH(), { method: 'POST', body: payload }));
-      return json(res, 200, { carriers: list });
+      if (sender) payload.ciudad_remitente = { cod_dane: String(sender) };
+      const byName = (nm) => { const k = norm(nm); const c = carriers.find((x) => norm(x.name) === k); return c ? c.id : null; };
+      const fallback = (err) => json(res, 200, { carriers: carriers.map((c) => ({ id: c.id, name: c.name, cost: null, error: null })), quoteError: err, needsSender: !sender, sender: sender || null });
+      let list;
+      try { list = parseQuote(await dropi(QUOTE_PATH(), { method: 'POST', body: payload })); } catch (e) { return fallback(e.message); }
+      if (!list.length) return fallback('Dropi no devolvió tarifas para este envío');
+      for (const c of list) if (!c.id) c.id = byName(c.name);
+      return json(res, 200, { carriers: list, sender: sender || null });
     }
-    if (a === 'transportadoras') { // transportadoras que ya aparecen en los pedidos de la cuenta (con su ID)
-      const m = {};
-      for (const o of await allOrders()) {
-        const dc = o.distribution_company || {}, id = Number(dc.id ?? o.distribution_company_id);
-        if (!Number.isInteger(id) || id < 1) continue;
-        const x = (m[id] ||= { id, name: String(dc.name || ('Transportadora ' + id)).slice(0, 60), n: 0 }); x.n++;
-      }
-      return json(res, 200, { transportadoras: Object.values(m).sort((a, b) => b.n - a.n) });
-    }
+    if (a === 'transportadoras') return json(res, 200, { transportadoras: await carriersList() });
     if (a === 'crear') { // subir un pedido a Dropi (real: le llega al cliente final)
       const hist = await store.get('settings', key('ordenes'), []);
       if (req.method === 'GET') return json(res, 200, { ordenes: hist.slice(0, 100).map(({ hash, ...x }) => x), demo: DEMO() && !process.env[S().tokenVar] });

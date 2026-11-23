@@ -1,6 +1,6 @@
 // Datos simulados (solo con VELTRIX_DEMO=1). Mismo formato que devuelve Dropi.
 function rng(seed) { let s = seed; return () => ((s = (s * 1664525 + 1013904223) % 4294967296) / 4294967296); }
-const MX = { deptos: ['CDMX', 'Jalisco', 'Nuevo León', 'Estado de México', 'Puebla', 'Veracruz'], carr: ['Estafeta', 'Paquetexpress', 'Redpack', 'J&T Express'], dev: ['DEVOLUCION', 'DEVOLUCION EN TRANSITO', 'RECHAZADO'] };
+const MX = { deptos: ['CDMX', 'Jalisco', 'Nuevo León', 'Estado de México', 'Puebla', 'Veracruz'], carr: ['Veloces', 'Tiui', 'Coordi', 'Ampm'], carrId: [6, 11, 5, 12], dev: ['DEVOLUCION', 'DEVOLUCION EN TRANSITO', 'RECHAZADO'] };
 const PRODS = ['Faja reductora', 'Corrector de postura', 'Masajeador cervical', 'Lámpara solar', 'Set de cuchillos', 'Cepillo alisador', 'Reloj inteligente', 'Organizador de cables'];
 const SUPS = ['Proveedor Norte', 'LogiStock', 'Mayorista Sur', 'DropHub'];
 
@@ -27,7 +27,7 @@ function orders(n) {
       total_order: price * qty + ship, shipping_amount: ship,
       name: 'Cliente', surname: String(i), phone: '52' + String(10000000 + Math.floor(R() * 60) * 91731 % 89999999).padStart(10, '5'),
       state: k.deptos[Math.floor(R() * k.deptos.length)], city: 'Ciudad ' + (1 + Math.floor(R() * 9)),
-      distribution_company: (() => { const ci = Math.floor(R() * k.carr.length); return { id: ci + 2, name: k.carr[ci] }; })(),
+      distribution_company: (() => { const ci = Math.floor(R() * k.carr.length); return { id: k.carrId[ci], name: k.carr[ci] }; })(),
       shipping_guide: 'G' + (500000 + i * 7),
       orderdetails: [{ quantity: qty, supplier_price: cost, product: { id: 100 + p, name: PRODS[p], user: { name: SUPS[p % SUPS.length] } } }],
       guia_movements: status === 'NOVEDAD' ? [{ description: 'Cliente no responde', created_at: created.toISOString() }] : [],

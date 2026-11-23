@@ -27,7 +27,7 @@ Guía para agregar otro país: [`docs/PLANTILLA-PANEL-PAIS.md`](docs/PLANTILLA-P
 | `DROPI_API_BASE_<n>` | Opcional: otra base de API para la cuenta n |
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Guardar retiros, favoritos, gestión y registro diario (sin esto usa memoria y se pierde) |
 | `DROPI_QUOTE_PATH` | Opcional: ruta del cotizador de flete (por defecto `/integrations/orders/cotizaEnvioTransportadoraV2`). |
-| `DROPI_SENDER_DANE` | Opcional: código de la ciudad del remitente para cotizar (el cotizador de Dropi lo pide en algunos países). |
+| `DROPI_SENDER_DANE` | Opcional: código DANE/ciudad de origen por defecto para cotizar. El cotizador de Dropi la exige; si no se define, se detecta del detalle del producto o se elige en pantalla. |
 | `DROPI_ORDER_PATH` | Opcional: ruta de Dropi para crear pedidos (por defecto `/integrations/orders/myorders`). |
 | `VELTRIX_DEMO` | `1` = datos simulados para cuentas sin token (solo pruebas) |
 

@@ -68,6 +68,7 @@ tr.hot td{background:rgba(190,18,60,.07)}tr.hot:hover td{background:rgba(190,18,
 .av{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;font-size:11px;font-weight:700;flex-shrink:0;font-style:normal}.av svg{width:16px;height:16px}.cn{flex:1;font-weight:500;min-width:0}.cn small{display:block;color:var(--red);font-size:11px;font-weight:400}.cp{text-align:right;font-weight:600;font-size:13px;color:var(--mut);white-space:nowrap}.cp small{display:block;font-weight:400;font-size:11px}
 .cmsg{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid color-mix(in srgb,var(--red) 35%,transparent);background:var(--p-bad);color:var(--p-badt);border-radius:10px;font-size:12px}.cmsg.ok{background:var(--gsoft);color:var(--g2);border-color:var(--line)}
 .rs-box{background:var(--card2);border-radius:12px;padding:12px 14px;margin-bottom:14px}.rs-h{display:flex;justify-content:space-between;font-size:12px;font-weight:700;border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:8px}.rs-p{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;padding:4px 0}.rs-v{font-size:11.5px;color:var(--mut);display:flex;align-items:center;gap:4px;margin-top:2px}.rs-t .kv{font-size:12.5px;padding:7px 0}
+.orig{border:1px dashed var(--line);border-radius:12px;padding:10px 12px;background:var(--card2)}.orig summary{cursor:pointer;font-weight:600;font-size:13px}
 .pcard{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px}.pimg{width:64px;height:64px;border-radius:10px;border:1px solid var(--line);background:var(--solid);object-fit:cover;flex-shrink:0}
 .fgrid{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(235px,1fr))}.fgrid.compact{grid-template-columns:repeat(auto-fill,minmax(185px,1fr))}
 .fcard{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow);transition:.3s var(--ease);animation:rise .5s var(--ease) both}.fcard:hover{transform:translateY(-3px);border-color:var(--gl)}
@@ -387,15 +388,17 @@ const initials=n=>String(n).split(/[\s-]+/).map(w=>w[0]).join('').slice(0,2).toU
 const hue=n=>{let h=0;for(const c of String(n))h=(h*31+c.charCodeAt(0))%360;return h};
 /* --- geografía y cotización --- */
 async function geoDeps(){if(DEPS.length)return;try{DEPS=(await api('geo',{t:'deps'})).departamentos||[]}catch(e){DEPS=[]}if(!DEPS.length)DEPS=MX_ESTADOS.map(n=>({id:null,name:n}))}
-async function geoCities(){if(!NP.depId)return [];const k=NP.depId+'|'+NP.rate_type;if(CITIES[k])return CITIES[k];try{CITIES[k]=(await api('geo',{t:'ciudades',dep:NP.depId,rate:NP.rate_type})).ciudades||[]}catch(e){CITIES[k]=[]}return CITIES[k]}
+async function geoCities(dep=NP.depId){if(!dep)return [];const k=dep+'|'+NP.rate_type;if(CITIES[k])return CITIES[k];try{CITIES[k]=(await api('geo',{t:'ciudades',dep,rate:NP.rate_type})).ciudades||[]}catch(e){CITIES[k]=[]}return CITIES[k]}
+let SND=null;try{SND=JSON.parse(localStorage.getItem('vx_snd_'+CTA)||'null')}catch(e){}
+const pretty=n=>{const t=String(n||'');return t.length<=4?t.toUpperCase():t.toLowerCase().replace(/(^|[\s-])(\S)/g,(m,a,b)=>a+b.toUpperCase())};
 function cityList(){const l=$('dl-city');if(!l)return;geoCities().then(c=>{l.innerHTML=c.map(x=>`<option value="${esc(x.name)}">`).join('');const inp=$('np-city');if(inp){inp.disabled=!NP.state;inp.placeholder=NP.state?(c.length?'Escriba o elija el municipio':'Escriba el municipio'):'Primero elija el estado'}
   if(NP.city){NP.cityObj=c.find(x=>nrm(x.name)===nrm(NP.city))||null}carrDraw()})}
 const qReady=()=>NP.cityObj&&/^\d{5}$/.test(String(NP.zip_code).replace(/\D/g,''))&&NP.items.length&&NP.items.every(i=>Number(i.qty)>=1&&i.price!==''&&Number(i.price)>=0&&(!i.variations.length||i.variation_id));
 function qDebounce(){clearTimeout(QT);NP.quote=qReady()?{loading:true}:null;carrDraw();npSum();if(qReady())QT=setTimeout(cotizar,650)}
 async function cotizar(){
   const seq=++QSEQ;
-  try{const r=await post('cotizar',{cod:NP.rate_type==='CON RECAUDO',city:{id:NP.cityObj.id,cod_dane:NP.cityObj.cod_dane,zip_code:NP.cityObj.zip_code},zip_code:String(NP.zip_code).replace(/\D/g,''),products:NP.items.map(i=>({id:i.id,price:Number(i.price),quantity:Number(i.qty),variation_id:i.variation_id||null}))});
-    if(seq!==QSEQ)return;NP.quote={carriers:r.carriers};
+  try{const r=await post('cotizar',{cod:NP.rate_type==='CON RECAUDO',city:{id:NP.cityObj.id,cod_dane:NP.cityObj.cod_dane,zip_code:NP.cityObj.zip_code},zip_code:String(NP.zip_code).replace(/\D/g,''),sender_dane:SND&&SND.dane||'',products:NP.items.map(i=>({id:i.id,price:Number(i.price),quantity:Number(i.qty),variation_id:i.variation_id||null}))});
+    if(seq!==QSEQ)return;NP.quote={carriers:r.carriers,err:r.quoteError||'',needsSender:!!r.needsSender};
     const sel=r.carriers.find(c=>c.id&&String(c.id)===String(NP.distribution_company_id));if(NP.distribution_company_id&&(!sel||sel.error))NP.distribution_company_id=''}
   catch(e){if(seq!==QSEQ)return;NP.quote={err:e.message}}
   carrDraw();npSum()}
@@ -434,20 +437,36 @@ function npSum(){
 /* --- columna 2: tipo de pago y transportadoras --- */
 function carrDraw(){
   const el=$('carr');if(!el)return;const Q=NP.quote,pay=NP.rate_type;
-  let msg='';
+  let msg='',kind='';
   if(!NP.cityObj)msg='Para cotizar, selecciona ciudad de destino.';
   else if(!/^\d{5}$/.test(String(NP.zip_code).replace(/\D/g,'')))msg='Escribe el código postal (5 dígitos) para cotizar.';
   else if(!NP.items.length)msg='Agrega productos para cotizar.';
   else if(NP.items.some(i=>i.variations.length&&!i.variation_id))msg='Elige la variación de cada producto para cotizar.';
-  const list=(Q&&Q.carriers)||CAR.map(c=>({id:c.id,name:c.name,cost:null,error:null}));
-  const row=(id,name,cost,err,auto)=>{const on=String(NP.distribution_company_id||'')===String(id||''),dis=!!err;
-    return `<button type="button" class="crow ${on?'on':''} ${dis?'dis':''}" data-car="${esc(id||'')}" ${dis?'disabled':''} title="${esc(err||'')}"><i class="rd"></i>${auto?`<i class="av" style="background:var(--gsoft);color:var(--g)">${I('truck')}</i>`:`<i class="av" style="background:hsl(${hue(name)} 60% 90%);color:hsl(${hue(name)} 55% 28%)">${esc(initials(name))}</i>`}<span class="cn">${esc(name)}${err?`<small>${esc(err)}</small>`:''}</span><span class="cp">${auto?'':cost!=null?`${mx(cost)}<small>≈ ${penTxt(cost)}</small>`:'MX$ - -'}</span></button>`};
-  el.innerHTML=`${msg?`<div class="cmsg">${I('x')} ${msg}</div>`:Q&&Q.loading?'<div class="cmsg ok">Cotizando con las transportadoras…</div>':Q&&Q.err?`<div class="cmsg">${I('x')} No se pudo cotizar: ${esc(Q.err)}. Dropi calculará el flete al crear la orden.</div>`:''}
+  else if(Q&&Q.loading){msg='Cotizando con las transportadoras…';kind='ok'}
+  else if(Q&&Q.err)msg='No se pudo cotizar: '+Q.err+(Q.needsSender?'. Dropi pide la ciudad de origen del producto: indíquela abajo.':'. Dropi calculará el flete al crear la orden.');
+  const list=(Q&&Q.carriers&&Q.carriers.length)?Q.carriers:CAR.map(c=>({id:c.id,name:c.name,cost:null,error:null}));
+  const row=(id,name,cost,err,auto,tray)=>{const noId=!auto&&!id,on=String(NP.distribution_company_id||'')===String(id||''),dis=!!err||noId,why=err||(noId?'Sin ID de transportadora: Dropi la asignará':'');
+    return `<button type="button" class="crow ${on&&!noId?'on':''} ${dis?'dis':''}" data-car="${esc(id||'')}" ${dis?'disabled':''} title="${esc(why)}"><i class="rd"></i>${auto?`<i class="av" style="background:var(--gsoft);color:var(--g)">${I('truck')}</i>`:`<i class="av" style="background:hsl(${hue(name)} 60% 90%);color:hsl(${hue(name)} 55% 28%)">${esc(initials(pretty(name)))}</i>`}<span class="cn">${esc(auto?name:pretty(name))}${tray?`<small style="color:var(--mut)">${esc(tray)}</small>`:''}${err?`<small>${esc(err)}</small>`:''}</span><span class="cp">${auto?'':cost!=null?`${mx(cost)}<small>≈ ${penTxt(cost)}</small>`:'MX$ - -'}</span></button>`};
+  el.innerHTML=`${msg?`<div class="cmsg ${kind}">${kind?'':I('x')+' '}${esc(msg)}</div>`:''}
    <div class="pays"><button type="button" class="pay ${pay==='CON RECAUDO'?'on':''}" data-pay="CON RECAUDO"><i class="rd"></i>Contra Entrega</button><button type="button" class="pay ${pay==='SIN RECAUDO'?'on':''}" data-pay="SIN RECAUDO"><i class="rd"></i>Pago Anticipado</button></div>
-   <div class="clist">${row('', 'Automática (Dropi elige)',null,null,true)}${list.map(c=>row(c.id,c.name,c.cost,c.error,false)).join('')}</div>
-   ${!list.length?'<p class="mut" style="font-size:12px">Las transportadoras aparecen al cotizar. Mientras tanto Dropi elige según su configuración.</p>':''}`;
+   <div class="clist">${row('','Automática (Dropi elige)',null,null,true)}${list.map(c=>row(c.id,c.name,c.cost,c.error,false,c.trayecto)).join('')}</div>
+   ${!list.length?'<p class="mut" style="font-size:12px">No hay transportadoras para mostrar. Dropi elige según su configuración.</p>':''}`;
   el.querySelectorAll('[data-pay]').forEach(b=>b.onclick=()=>{if(NP.rate_type===b.dataset.pay)return;NP.rate_type=b.dataset.pay;CITIES={};NP.distribution_company_id='';cityList();qDebounce()});
-  el.querySelectorAll('[data-car]').forEach(b=>b.onclick=()=>{NP.distribution_company_id=b.dataset.car;carrDraw();npSum()})}
+  el.querySelectorAll('[data-car]').forEach(b=>b.onclick=()=>{NP.distribution_company_id=b.dataset.car;carrDraw();npSum()});
+  const d=$('orig-d');if(d&&Q&&Q.needsSender)d.open=true}
+/* --- ciudad de origen (la pide el cotizador de Dropi) --- */
+function origDraw(){
+  const el=$('orig');if(!el)return;
+  el.innerHTML=`<details id="orig-d" class="orig" ${SND?'open':''}><summary>Ciudad de origen del producto${SND?': <b>'+esc(SND.city)+'</b>':''}</summary>
+   <p class="mut" style="font-size:12px;margin:6px 0 8px">El cotizador de Dropi la pide: es la ciudad desde donde sale el producto (bodega del proveedor). Si no la indica, se intenta detectar sola.</p>
+   <div class="fg2"><label class="fl"><span>Estado de origen</span><select id="sd-dep"><option value="">Elegir…</option>${DEPS.filter(d=>d.id!=null).map(d=>`<option value="${esc(d.id)}" ${SND&&String(SND.dep)===String(d.id)?'selected':''}>${esc(d.name)}</option>`).join('')}</select></label>
+    <label class="fl"><span>Municipio de origen</span><input id="sd-city" list="dl-sd" value="${esc(SND?SND.city:'')}" placeholder="Escriba el municipio" autocomplete="off"><datalist id="dl-sd"></datalist></label></div>
+   ${SND?`<button type="button" class="btn sm" id="sd-clr" style="margin-top:8px">Quitar origen</button>`:''}</details>`;
+  const fill=async()=>{const dep=$('sd-dep').value;$('dl-sd').innerHTML=dep?(await geoCities(Number(dep))).map(c=>`<option value="${esc(c.name)}">`).join(''):''};
+  $('sd-dep').onchange=()=>{fill();$('sd-city').value=''};fill();
+  $('sd-city').oninput=async e=>{const dep=Number($('sd-dep').value);if(!dep)return;const c=(await geoCities(dep)).find(x=>nrm(x.name)===nrm(e.target.value));
+    if(c&&c.cod_dane){SND={dep,city:c.name,dane:c.cod_dane};try{localStorage.setItem('vx_snd_'+CTA,JSON.stringify(SND))}catch(x){}$('orig-d').querySelector('summary').innerHTML='Ciudad de origen del producto: <b>'+esc(c.name)+'</b>';qDebounce()}};
+  const clr=$('sd-clr');if(clr)clr.onclick=()=>{SND=null;try{localStorage.removeItem('vx_snd_'+CTA)}catch(x){}origDraw();qDebounce()}}
 /* --- carrito de productos --- */
 function npCart(){
   const el=$('cart');if(!el)return;
@@ -539,7 +558,7 @@ async function nuevo(){
      <label class="row" style="margin-top:14px;gap:10px;cursor:pointer"><input type="checkbox" id="np-notes" ${NP.notasOn?'checked':''}> <span>¿Desea agregar notas para el proveedor?</span></label>
      <div id="np-notes-box" style="${NP.notasOn?'':'display:none'};margin-top:8px"><textarea data-k="notes" rows="2" maxlength="300" placeholder="Notas que se guardan en la orden">${esc(NP.notes)}</textarea></div></div>
     <div class="card flat sec"><h3 class="co-t">Seleccionar Productos</h3><div id="pmode"></div><div id="cart" style="margin-top:12px"></div></div></div>
-   <div class="card flat"><h3 class="co-t">Seleccione una transportadora:</h3><div id="carr"></div></div>
+   <div class="card flat"><h3 class="co-t">Seleccione una transportadora:</h3><div id="carr"></div><div id="orig" style="margin-top:12px"></div></div>
    <div class="card flat" style="position:sticky;top:70px;align-self:start"><h3 class="co-t">Resumen de la orden:</h3><div id="npsum"></div></div>
   </div>${histHTML}`;
   view.querySelectorAll('[data-k]').forEach(i=>{const h=()=>{NP[i.dataset.k]=i.value;npSum();if(i.dataset.k==='zip_code')qDebounce()};i.oninput=h;i.onchange=h});
@@ -548,7 +567,7 @@ async function nuevo(){
   $('np-notes').onchange=e=>{NP.notasOn=e.target.checked;$('np-notes-box').style.display=e.target.checked?'':'none'};
   $('np-fp').onclick=async()=>{let t=String(NP.phone).replace(/\D/g,'');if(t.length<8)return modal('<p class="mut">Escriba primero el teléfono del cliente.</p>');
     try{const r=await api('huella',{tel:t}),x=r.perfil;modal(`<h3>Huella del cliente</h3>${x?`<p>${esc(x.cliente)} · ${esc(x.tel)}</p><div class="k5" style="margin-top:10px">${kpi('Pedidos',x.total)}${kpi('Entregados',x.entregados,'','pos')}${kpi('Devueltos',x.devoluciones,'','neg')}${kpi('Cancelados',x.cancelados)}</div><p style="margin-top:12px">Riesgo: <b class="${x.riesgo==='alto'?'neg':x.riesgo==='medio'?'warn':'pos'}">${esc(x.riesgo)}</b></p>`:'<p class="mut">Este teléfono no tiene historial en el período: cliente nuevo.</p>'}`)}catch(e){modal(`<div class="err">${esc(e.message)}</div>`)}};
-  cityList();pmodeDraw();npCart();carrDraw();npSum();
+  cityList();pmodeDraw();npCart();carrDraw();origDraw();npSum();
 }
 
 addEventListener('storage',ev=>{if(ev.key==='vx_mode'||ev.key==='vx_pen'){srcTxt();render()}});

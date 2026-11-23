@@ -57,7 +57,7 @@ const ck = { cookie: 'vx_s=' + auth.make() };
   r = await call(dropi, { headers: ck, query: { a: 'productos', c: '1', id: '100' } });
   const v0 = r.body.productos[0].variations; assert.equal(v0.length, 6); assert.equal(v0[0].label, 'Color: Dorado'); assert.equal(v0[0].color, 'Dorado'); assert.equal(v0[1].stock, 0); assert.ok(v0[0].suggested > 0);
   assert.ok(/^https:/.test(r.body.productos[0].img), 'imagen https');
-  r = await call(dropi, { headers: ck, query: { a: 'transportadoras', c: '1' } }); assert.ok(r.body.transportadoras.length >= 2 && r.body.transportadoras.every((t) => t.id >= 1 && t.name && t.n > 0));
+  r = await call(dropi, { headers: ck, query: { a: 'transportadoras', c: '1' } }); assert.ok(r.body.transportadoras.length >= 2 && r.body.transportadoras.every((t) => t.id >= 1 && t.name && t.n >= 0));
   const { buildOrderPayload, parseQuote } = require('../api/_dropipanel');
   const pl = buildOrderPayload({ rate_type: 'CON RECAUDO', total: 520.4, state: 'Jalisco', city: 'Guadalajara', name: 'A', surname: 'B', dir: 'C', phone: '5512345678', zip_code: '44100', client_email: '', colonia: 'X', notes: '', shop_order_id: '', distribution_company_id: 6,
     products: [{ id: 1, price: 260.2, quantity: 2 }, { id: 2, price: 10, quantity: 1, variation_id: 77 }] });
@@ -76,5 +76,11 @@ const ck = { cookie: 'vx_s=' + auth.make() };
   r = await call(dropi, { headers: ck, query: { a: 'favoritos', c: '1' } }); assert.equal(r.code, 200); const fv = r.body.favoritos;
   assert.ok(fv.length >= 3 && fv.every((p) => p.d7.length === 7 && p.d30.length === 30 && /^https:/.test(p.img) && p.categoria && p.prov && p.stock >= 0), 'tarjetas de favoritos completas');
   assert.equal(fv[0].type, 'VARIABLE'); assert.ok(fv.some((p) => p.d30.some((d) => d.n > 0)), 'ventas propias por producto');
+  // forma real de la respuesta del cotizador de Dropi (documentación oficial) y la del conector
+  const real = parseQuote({ isSuccess: true, objects: [{ distributionCompany: { id: 1, name: 'SERVIENTREGA' }, transportadora: 'SERVIENTREGA', transportadora_id: 1, objects: { precioEnvio: 12050, trayecto: '' } }, { distributionCompany: { id: 2, name: 'ENVIA' }, transportadora: 'ENVIA', transportadora_id: 2, objects: { precioEnvio: 12800, trayecto: 'NACIONAL' } }] });
+  assert.deepEqual(real.map((c) => [c.id, c.name, c.cost, c.trayecto]), [[1, 'SERVIENTREGA', 12050, ''], [2, 'ENVIA', 12800, 'NACIONAL']]);
+  const mcp = parseQuote({ carriers: [{ carrier: 'VELOCES', shipping_cost: 16450, trajectory: '', error: null }, { carrier: 'TCC', shipping_cost: null, error: 'La transportadora no está disponible para este envío.' }] });
+  assert.deepEqual(mcp.map((c) => [c.id, c.name, c.cost, !!c.error]), [[null, 'VELOCES', 16450, false], [null, 'TCC', null, true]]);
+  r = await call(dropi, { headers: ck, query: { a: 'transportadoras', c: '1' } }); assert.ok(r.body.transportadoras.length >= 5 && r.body.transportadoras.every((t) => t.id > 0 && t.name), 'lista de transportadoras con ID aunque no haya pedidos');
   console.log('OK: todas las pruebas pasaron');
 })().catch((e) => { console.error('FALLÓ:', e.message); process.exit(1); });
