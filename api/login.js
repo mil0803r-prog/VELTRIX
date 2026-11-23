@@ -65,20 +65,23 @@ button.go svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2.4;stro
 <script>var p=document.getElementById('pw');document.getElementById('eye').onclick=function(){p.type=p.type==='password'?'text':'password';p.focus()}</script>
 </body></html>`;
 
+const MSG = { 1: 'Contraseña incorrecta.', 2: 'Demasiados intentos. Espere 10 minutos.', 3: 'Falta configurar VELTRIX_PASSWORD en Vercel.' };
+const back = (res, e) => { res.setHeader('Location', '/api/login?e=' + e); return res.status(303).end(); }; // POST -> redirect -> GET: recargar no reenvia el formulario
+
 module.exports = (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   const q = req.query || {};
   if (q.logout) { res.setHeader('Set-Cookie', auth.cookie('', 0)); res.setHeader('Location', '/api/login'); return res.status(302).end(); }
   if (req.method === 'POST') {
     const t = auth.throttled(req);
-    if (t.blocked) return res.status(429).setHeader('Content-Type', 'text/html; charset=utf-8').end(PAGE('Demasiados intentos. Espere 10 minutos.'));
-    let pw = req.body && (typeof req.body === 'object' ? req.body.password : new URLSearchParams(String(req.body)).get('password'));
-    if (!process.env.VELTRIX_PASSWORD) return res.status(500).setHeader('Content-Type', 'text/html; charset=utf-8').end(PAGE('Falta configurar VELTRIX_PASSWORD en Vercel.'));
+    if (t.blocked) return back(res, 2);
+    if (!process.env.VELTRIX_PASSWORD) return back(res, 3);
+    const pw = req.body && (typeof req.body === 'object' ? req.body.password : new URLSearchParams(String(req.body)).get('password'));
     if (auth.checkPass(pw || '')) {
-      res.setHeader('Set-Cookie', auth.cookie(auth.make(), 7 * 86400)); res.setHeader('Location', '/'); return res.status(302).end();
+      res.setHeader('Set-Cookie', auth.cookie(auth.make(), 7 * 86400)); res.setHeader('Location', '/'); return res.status(303).end();
     }
     t.hit();
-    return res.status(401).setHeader('Content-Type', 'text/html; charset=utf-8').end(PAGE('Contraseña incorrecta.'));
+    return back(res, 1);
   }
-  res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.status(200).end(PAGE(''));
+  res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.status(200).end(PAGE(MSG[q.e] || ''));
 };
