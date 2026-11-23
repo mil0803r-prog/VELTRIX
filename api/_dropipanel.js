@@ -7,12 +7,11 @@ const mock = require('./_mock');
 const als = new AsyncLocalStorage();
 const DEMO = () => process.env.VELTRIX_DEMO === '1';
 
-// Datos por pais. Para otro pais: agregar fila aqui + CTAS + variable en Vercel.
-const META = {
-  1: { pais: 'Guatemala', mon: 'GTQ', sym: 'Q', dec: 2, wa: '502', base: 'https://api.dropi.gt', fx: 7.75 },
-  2: { pais: 'Colombia', mon: 'COP', sym: '$', dec: 0, wa: '57', base: 'https://api.dropi.co', fx: 4100 },
-  3: { pais: 'Colombia 2', mon: 'COP', sym: '$', dec: 0, wa: '57', base: 'https://api.dropi.co', fx: 4100 },
-};
+// Datos por pais. Para otro pais: cambiar/agregar fila aqui + CTAS + variable en Vercel.
+const MX = { pais: 'México', mon: 'MXN', sym: '$', dec: 2, wa: '52', base: 'https://api.dropi.mx' };
+const META = { 1: { ...MX }, 2: { ...MX, pais: 'México 2' }, 3: { ...MX, pais: 'México 3' } };
+// Conversion de pesos (MXN) a soles (PEN): valor editable desde el tablero; este es el inicial.
+const DEF_PEN = () => Number(process.env.VELTRIX_MXN_PEN) || 0.2;
 const tokenVar = (n) => (n === 1 ? 'DROPI_TOKEN' : 'DROPI_TOKEN_' + n);
 const mk = (n) => ({
   n, tokenVar: tokenVar(n), meta: META[n],
@@ -64,7 +63,7 @@ async function allOrders(fresh) {
 function groupOf(o) {
   const st = norm(o.status);
   if (st.includes('DEVOL') || st.includes('DEVUELTO')) return 'devolucion';
-  if (S().n !== 1 && st.includes('RECHAZ')) return 'devolucion'; // estados propios de CO
+  if (st.includes('RECHAZ')) return 'devolucion'; // estados propios del pais
   if (st.includes('ENTREGADO')) return 'entregado';
   if (st.includes('CANCEL')) return 'cancelado';
   if (st.includes('NOVEDAD')) return 'novedad';
@@ -177,7 +176,7 @@ const json = (res, code, body) => { res.status(code).json(body); };
 async function names() {
   const saved = await store.get('settings', 'nombres', {});
   return [1, 2, 3].map((n) => ({
-    n, nombre: saved[n] || META[n].pais, pais: META[n].pais, mon: META[n].mon, sym: META[n].sym, dec: META[n].dec, wa: META[n].wa, fx: META[n].fx,
+    n, nombre: saved[n] || META[n].pais, pais: META[n].pais, mon: META[n].mon, sym: META[n].sym, dec: META[n].dec, wa: META[n].wa,
     conectada: !!process.env[tokenVar(n)] || DEMO(),
   }));
 }
@@ -190,7 +189,15 @@ async function route(req, res, q) {
         const saved = await store.get('settings', 'nombres', {});
         saved[Number(body.n)] = String(body.nombre || '').slice(0, 40); await store.set('settings', 'nombres', saved);
       }
-      return json(res, 200, { cuentas: await names() });
+      return json(res, 200, { cuentas: await names(), pen: await store.get('settings', 'fxpen', DEF_PEN()) });
+    }
+    if (a === 'fx') { // tasa MXN -> PEN (soles por 1 peso mexicano)
+      if (req.method === 'POST') {
+        const r = Number(body.rate);
+        if (!(r > 0.001 && r < 100)) return json(res, 400, { error: 'Tasa inválida' });
+        await store.set('settings', 'fxpen', r);
+      }
+      return json(res, 200, { pen: await store.get('settings', 'fxpen', DEF_PEN()) });
     }
     if (a === 'retiros') {
       const cur = await store.get('settings', key('retiros'), []);

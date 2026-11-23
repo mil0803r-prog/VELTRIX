@@ -1,13 +1,11 @@
 // Datos simulados (solo con VELTRIX_DEMO=1). Mismo formato que devuelve Dropi.
 function rng(seed) { let s = seed; return () => ((s = (s * 1664525 + 1013904223) % 4294967296) / 4294967296); }
-const GT = { deptos: ['Guatemala', 'Quetzaltenango', 'Escuintla', 'Alta Verapaz', 'Huehuetenango', 'Petén'], carr: ['Cargo Expreso', 'Guatex', 'Forza'], dev: ['DEVOLUCION', 'DEVUELTO'] };
-const CO = { deptos: ['Antioquia', 'Cundinamarca', 'Valle del Cauca', 'Atlántico', 'Santander', 'Bolívar'], carr: ['Servientrega', 'Interrapidisimo', 'Coordinadora', 'Envia'], dev: ['DEVOLUCION', 'DEVOLUCION EN TRANSITO', 'RECHAZADO'] };
+const MX = { deptos: ['CDMX', 'Jalisco', 'Nuevo León', 'Estado de México', 'Puebla', 'Veracruz'], carr: ['Estafeta', 'Paquetexpress', 'Redpack', 'J&T Express'], dev: ['DEVOLUCION', 'DEVOLUCION EN TRANSITO', 'RECHAZADO'] };
 const PRODS = ['Faja reductora', 'Corrector de postura', 'Masajeador cervical', 'Lámpara solar', 'Set de cuchillos', 'Cepillo alisador', 'Reloj inteligente', 'Organizador de cables'];
 const SUPS = ['Proveedor Norte', 'LogiStock', 'Mayorista Sur', 'DropHub'];
 
 function orders(n) {
-  const k = n === 3 ? CO : n === 2 ? CO : GT;
-  const mult = n === 1 ? 1 : 520; // GTQ vs COP
+  const k = MX, mult = 4; // pesos mexicanos
   const R = rng(n * 977 + 13), out = [], now = Date.now();
   for (let i = 0; i < 260; i++) {
     const r = R(), age = Math.floor(R() * 90);
@@ -26,7 +24,7 @@ function orders(n) {
       id: 10000 * n + i, status, created_at: created.toISOString(),
       updated_at: new Date(created.getTime() + (2 + R() * 6) * 864e5).toISOString(),
       total_order: price * qty + ship, shipping_amount: ship,
-      name: 'Cliente', surname: String(i), phone: (n === 1 ? '502' : '57') + String(40000000 + Math.floor(R() * 60) * 91731 % 99999999),
+      name: 'Cliente', surname: String(i), phone: '52' + String(10000000 + Math.floor(R() * 60) * 91731 % 89999999).padStart(10, '5'),
       state: k.deptos[Math.floor(R() * k.deptos.length)], city: 'Ciudad ' + (1 + Math.floor(R() * 9)),
       distribution_company: { name: k.carr[Math.floor(R() * k.carr.length)] },
       shipping_guide: 'G' + (500000 + i * 7),

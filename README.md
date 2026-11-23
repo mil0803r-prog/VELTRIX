@@ -20,9 +20,10 @@ Guía para agregar otro país: [`docs/PLANTILLA-PANEL-PAIS.md`](docs/PLANTILLA-P
 |---|---|
 | `VELTRIX_PASSWORD` | **Obligatoria.** Contraseña de acceso. Sin ella nadie entra. |
 | `VELTRIX_SECRET` | Firma de la cookie de sesión (cadena larga aleatoria). |
-| `DROPI_TOKEN` | Cuenta 1 · Guatemala (token de **integración** de Dropi) |
-| `DROPI_TOKEN_2` | Cuenta 2 · Colombia |
-| `DROPI_TOKEN_3` | Cuenta 3 · Colombia 2 |
+| `DROPI_TOKEN` | Cuenta 1 · México (token de **integración** de Dropi) |
+| `DROPI_TOKEN_2` | Cuenta 2 · México 2 |
+| `DROPI_TOKEN_3` | Cuenta 3 · México 3 |
+| `VELTRIX_MXN_PEN` | Opcional: tasa inicial de soles por 1 peso mexicano (por defecto 0.20). Se edita desde el tablero. |
 | `DROPI_API_BASE_<n>` | Opcional: otra base de API para la cuenta n |
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Guardar retiros, favoritos, gestión y registro diario (sin esto usa memoria y se pierde) |
 | `VELTRIX_DEMO` | `1` = datos simulados para cuentas sin token (solo pruebas) |
@@ -37,5 +38,6 @@ npm test
 ```
 
 ## Notas
-- Las monedas y prefijos de WhatsApp por país están en `META` dentro de `api/_dropipanel.js`; el panel los lee de `a=cuentas`.
+- Moneda: las cuentas son de México (MXN, base `https://api.dropi.mx`, WhatsApp 52). Todos los paneles se pueden ver **convertidos a soles (S/)** con el interruptor de la esquina superior; la tasa (soles por 1 MXN) se edita ahí y se guarda en el servidor. No es una tasa en vivo: actualícela cuando cambie.
+- Los países/monedas por cuenta están en `META` dentro de `api/_dropipanel.js`; el panel los lee de `a=cuentas`.
 - Los endpoints de Dropi usados son solo `/integrations/orders/myorders` y `/integrations/products/index`. Los campos de pedido se leyeron de la guía; **confirme con un token real** que coinciden (ver `slim()` y `costOf()`).

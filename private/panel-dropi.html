@@ -16,10 +16,13 @@ header h1{font-size:22px;font-weight:800;letter-spacing:-.02em}header small{colo
 <div class="tabs" id="tabs"></div><div id="view"><div class="empty">Cargando…</div></div>
 <script>
 const CTA=Number(new URLSearchParams(location.search).get('c'))||1;
-let M={sym:'$',dec:0,wa:'',mon:''},D=null,tab='resumen';
+let M={sym:'$',dec:2,wa:'',mon:'MXN',pen:0.2},D=null,tab='resumen';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const nf=(n,d)=>{let t=Number(n||0).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});return M.mon==='COP'?t.replace(/,/g,'.'):t};
-const money=n=>(n<0?'-':'')+M.sym+nf(Math.abs(n),M.dec)+(M.mon==='COP'?' COP':'');
+const nf=(n,d)=>Number(n||0).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+// Trabaja en pesos (MXN); se muestra en soles (PEN) o pesos segun el interruptor del tablero (localStorage vx_mode / vx_pen).
+const mode=()=>{try{return localStorage.getItem('vx_mode')==='mxn'?'mxn':'pen'}catch(e){return 'pen'}};
+const penRate=()=>{try{return Number(localStorage.getItem('vx_pen'))||M.pen||0.2}catch(e){return M.pen||0.2}};
+const money=n=>{const v=Number(n||0)*(mode()==='pen'?penRate():1);return (v<0?'-':'')+(mode()==='pen'?'S/ ':'MX$ ')+nf(Math.abs(v),2)};
 const pct=n=>(n||0)+'%';
 const waLink=(t,txt)=>'https://wa.me/'+(String(t).startsWith(M.wa)?t:M.wa+t)+(txt?'?text='+encodeURIComponent(txt):'');
 const view=document.getElementById('view');
@@ -40,9 +43,9 @@ const kpi=(l,v,s,c)=>`<div class="card kpi"><div class="l">${l}</div><div class=
 async function load(fresh){
   view.innerHTML='<div class="empty">Cargando…</div>';
   try{
-    const cu=await api('cuentas');const c=cu.cuentas.find(x=>x.n===CTA);M=c;
+    const cu=await api('cuentas');const c=cu.cuentas.find(x=>x.n===CTA);M={...c,pen:cu.pen};
     document.getElementById('pais').textContent=c.nombre;
-    document.getElementById('src').textContent='Fuente: Dropi '+c.pais+' · '+c.mon+' · datos en vivo, sin guardar clientes';
+    document.getElementById('src').textContent='Fuente: Dropi '+c.pais+' · '+(mode()==='pen'?'MXN convertido a soles (S/)':'pesos MXN')+' · datos en vivo, sin guardar clientes';
     D=await api('data',fresh?{fresh:1}:{});render();
   }catch(e){view.innerHTML=`<div class="err">${esc(e.message)}</div>`;}
 }
@@ -110,5 +113,6 @@ async function rend(){
   <div class="card" style="margin-top:12px"><h3>Huella del cliente (riesgo por teléfono)</h3><div class="scroll"><table class="tbl"><tr><th>Teléfono</th><th>Cliente</th><th>Pedidos</th><th>Entreg.</th><th>Devol.</th><th>Cancel.</th><th>Riesgo</th></tr>
   ${r.clientes.map(c=>`<tr><td>${esc(c.tel)}</td><td>${esc(c.cliente)}</td><td>${c.total}</td><td>${c.entregados}</td><td>${c.devoluciones}</td><td>${c.cancelados}</td><td class="${c.riesgo==='alto'?'neg':c.riesgo==='medio'?'warn':'pos'}">${esc(c.riesgo)}</td></tr>`).join('')||'<tr><td colspan=7 class=empty>Sin clientes de riesgo</td></tr>'}</table></div></div>`;
 }
+addEventListener('storage',ev=>{if(ev.key==='vx_mode'||ev.key==='vx_pen'){const e=document.getElementById('src');if(e&&M.pais)e.textContent='Fuente: Dropi '+M.pais+' · '+(mode()==='pen'?'MXN convertido a soles (S/)':'pesos MXN')+' · datos en vivo, sin guardar clientes';render()}});
 load();
 </script></body></html>
