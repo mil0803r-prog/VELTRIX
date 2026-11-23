@@ -1,0 +1,20 @@
+{
+  "version": 2,
+  "functions": { "api/page.js": { "includeFiles": "private/**" } },
+  "rewrites": [
+    { "source": "/", "destination": "/api/page?p=veltrix" },
+    { "source": "/pedidos-dropi", "destination": "/api/page?p=panel" },
+    { "source": "/theme.css", "destination": "/api/page?p=theme" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "same-origin" },
+        { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; connect-src 'self'; frame-ancestors 'self'" }
+      ]
+    }
+  ]
+}

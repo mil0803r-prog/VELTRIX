@@ -1,0 +1,104 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VELTRIX</title><link rel="stylesheet" href="/theme.css">
+<style>
+body{display:flex;min-height:100vh}
+nav{width:210px;background:var(--bg2);border-right:1px solid var(--line);padding:18px 12px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh;flex-shrink:0}
+nav .logo{font-size:22px;font-weight:800;letter-spacing:.16em;color:var(--g);padding:0 10px 16px}
+nav a{display:block;padding:10px 12px;border-radius:10px;color:var(--mut);text-decoration:none;cursor:pointer}
+nav a:hover{background:var(--card)}nav a.on{background:var(--card2);color:var(--g);font-weight:700;box-shadow:inset 3px 0 var(--g)}
+nav .out{margin-top:auto;font-size:13px}
+main{flex:1;min-width:0;padding:20px 24px 50px}
+h2{font-size:22px;margin-bottom:14px}section{display:none}section.on{display:block}
+.bar2{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+iframe{width:100%;height:calc(100vh - 150px);min-height:520px;border:1px solid var(--line);border-radius:var(--rad);background:var(--bg)}
+.two{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+form.f{display:grid;gap:8px}
+@media(max-width:760px){body{flex-direction:column}nav{width:100%;height:auto;position:static;flex-direction:row;flex-wrap:wrap;padding:10px}nav .logo{padding:6px 10px}nav .out{margin:0 0 0 auto}main{padding:14px 14px 40px}}
+</style></head><body>
+<nav><div class="logo">VELTRIX</div>
+<a data-s="dash" class="on">Dashboard</a><a data-s="adm">Admin Dropi</a><a data-s="din">Dinero</a><a data-s="reg">Registro diario</a>
+<a class="out" href="/api/login?logout=1">Cerrar sesión</a></nav>
+<main>
+<section id="dash" class="on"><h2>Dashboard</h2>
+ <div class="bar2"><div id="db-srcs" class="row"></div><span class="sp"></span>
+  <select id="db-per"><option value="7">7 días</option><option value="30">30 días</option><option value="90">90 días</option><option value="all">Todo</option></select>
+  <label class="row mut"><input type="checkbox" id="usd"> Ver en USD</label><button class="btn" id="db-ref">Actualizar</button></div>
+ <div id="db-body"><div class="empty">Cargando…</div></div></section>
+<section id="adm"><h2>Admin Dropi</h2><div class="bar2" id="adm-bar"></div>
+ <iframe id="adm-if" title="Panel Dropi"></iframe></section>
+<section id="din"><h2>Dinero · Retiros</h2>
+ <div class="bar2" id="din-bar"></div>
+ <p class="mut">Dropi no entrega los retiros por la API de integración: se registran a mano por cuenta.</p>
+ <div class="two"><div class="card"><h3>Nuevo retiro</h3><form class="f" id="rf">
+  <input name="banco" placeholder="Banco" required maxlength="60"><input name="monto" type="number" step="0.01" min="0.01" placeholder="Monto" required>
+  <input name="comision" type="number" step="0.01" min="0" placeholder="Comisión" value="0"><input name="fecha" type="date"><button class="btn pri">Guardar retiro</button></form></div>
+ <div class="card"><h3>Resumen</h3><div id="din-sum" class="mut"></div></div></div>
+ <div class="card scroll" style="margin-top:12px"><table class="tbl"><thead><tr><th>Fecha</th><th>Banco</th><th>Monto</th><th>Comisión</th><th>Neta</th><th></th></tr></thead><tbody id="din-tb"></tbody></table></div></section>
+<section id="reg"><h2>Registro diario</h2><div class="two">
+ <div class="card"><h3>Anotar día</h3><form class="f" id="gf"><input name="fecha" type="date" required><input name="gasto" type="number" step="0.01" min="0" placeholder="Gasto en publicidad (USD)">
+  <input name="ventas" type="number" step="0.01" min="0" placeholder="Ventas del día (USD)"><textarea name="nota" rows="3" maxlength="300" placeholder="Nota"></textarea><button class="btn pri">Guardar</button></form></div>
+ <div class="card"><h3>Totales</h3><div id="reg-sum" class="mut"></div></div></div>
+ <div class="card scroll" style="margin-top:12px"><table class="tbl"><thead><tr><th>Fecha</th><th>Gasto</th><th>Ventas</th><th>Resultado</th><th>Nota</th><th></th></tr></thead><tbody id="reg-tb"></tbody></table></div></section>
+</main>
+<script>
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $=id=>document.getElementById(id);
+let ST={};try{ST=JSON.parse(localStorage.getItem('vx_db')||'{}')}catch(e){}
+const save=()=>{try{localStorage.setItem('vx_db',JSON.stringify(ST))}catch(e){}};
+let CU=[];
+async function api(a,extra={},opt){const r=await fetch('/api/dropi?'+new URLSearchParams({a,...extra}),opt);const j=await r.json().catch(()=>({error:'Respuesta inválida'}));if(r.status===401){location='/api/login';return}if(!r.ok)throw new Error(j.error||r.status);return j}
+const post=(a,b,x)=>api(a,x,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});
+const del=(a,x)=>api(a,x,{method:'DELETE'});
+// ---- menu
+document.querySelector('nav').onclick=e=>{const s=e.target.dataset.s;if(!s)return;
+  document.querySelectorAll('nav a[data-s]').forEach(a=>a.classList.toggle('on',a===e.target));
+  document.querySelectorAll('main section').forEach(x=>x.classList.toggle('on',x.id===s));
+  if(s==='adm')openAdm();if(s==='din')loadDin();if(s==='reg')loadReg();};
+const cu=n=>CU.find(c=>c.n===n)||{sym:'$',dec:0,mon:'',fx:1,nombre:'',pais:''};
+const nf=(n,d,cop)=>{let t=Number(n||0).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});return cop?t.replace(/,/g,'.'):t};
+const fmt=(n,c,usd)=>{if(usd)return 'US$ '+nf(Number(n||0)/(c.fx||1),2);
+  return (n<0?'-':'')+c.sym+nf(Math.abs(n),c.dec,c.mon==='COP')+(c.mon==='COP'?' COP':'')};
+// ---- barra de cuentas
+let ACT=Number(ST.adm)||1;
+function accBar(id,cb){const el=$(id);el.innerHTML=CU.map(c=>`<button class="btn ${c.n===ACT?'on':''}" data-n="${c.n}" ${c.conectada?'':'title="Sin token en Vercel"'}>${esc(c.nombre)} ${c.conectada?'●':'○'}</button>`).join('');
+  el.onclick=e=>{const n=Number(e.target.dataset.n);if(!n)return;ACT=n;ST.adm=n;save();cb();};}
+function openAdm(){accBar('adm-bar',openAdm);$('adm-if').src='/pedidos-dropi?c='+ACT;}
+// ---- dashboard
+async function dash(fresh){
+  const src=ST.src||'all',per=ST.per||'30',usd=ST.usd||src==='all';
+  $('db-per').value=per;$('usd').checked=usd;$('usd').disabled=src==='all';
+  $('db-srcs').innerHTML=[['all','General']].concat(CU.map(c=>[String(c.n),c.nombre])).map(([k,v])=>`<button class="btn ${k===src?'on':''}" data-k="${k}">${esc(v)}</button>`).join('');
+  const body=$('db-body');body.innerHTML='<div class="empty">Cargando…</div>';
+  const list=src==='all'?CU.filter(c=>c.conectada):[cu(Number(src))];
+  const res=await Promise.all(list.map(c=>api('data',{c:c.n,d:per,...(fresh?{fresh:1}:{})}).then(d=>({c,d})).catch(e=>({c,err:e.message}))));
+  const T={ventas:0,entregados:0,devueltos:0,perdida:0,cobrar:0,util:0,total:0};
+  for(const r of res){if(!r.d)continue;const k=r.d.kpis,f=src==='all'?1/(r.c.fx||1):1;
+    T.ventas+=k.ventas*f;T.entregados+=k.entregados;T.devueltos+=k.devueltos;T.perdida+=k.perdidaDev*f;T.cobrar+=k.porCobrar*f;T.util+=k.utilidad*f;T.total+=k.total;}
+  const c0=src==='all'?{sym:'US$ ',dec:2,mon:'USD',fx:1}:list[0];const m=n=>fmt(n,c0,usd&&src!=='all');
+  const eff=T.entregados+T.devueltos?Math.round(T.entregados/(T.entregados+T.devueltos)*1000)/10:0;
+  const kp=(l,v,s,c)=>`<div class="card kpi"><div class="l">${l}</div><div class="v ${c||''}">${v}</div><div class="s">${s||''}</div></div>`;
+  const errs=res.filter(r=>r.err).map(r=>`<div class="err">${esc(r.c.nombre)}: ${esc(r.err)}</div>`).join('');
+  body.innerHTML=errs+(list.length?`<div class="grid">${kp('Ventas',m(T.ventas),T.total+' pedidos')}${kp('Entregados',T.entregados,eff+'% efectividad','pos')}${kp('Devueltos',T.devueltos,'','neg')}
+   ${kp('Descuento por devueltos','−'+m(T.perdida),'flete perdido','neg')}${kp('Por cobrar',m(T.cobrar),'en proceso y novedad','warn')}${kp('Utilidad',m(T.util),'entregados',T.util>=0?'pos':'neg')}</div>`:'<div class="empty">No hay cuentas conectadas. Configure DROPI_TOKEN en Vercel.</div>');
+  if(src==='all'&&list.length>1)body.innerHTML+=`<div class="card" style="margin-top:12px"><h3>Por cuenta</h3><table class="tbl"><tr><th>Cuenta</th><th>Pedidos</th><th>Ventas (local)</th><th>Utilidad (local)</th><th>Efectividad</th></tr>${res.filter(r=>r.d).map(r=>`<tr><td>${esc(r.c.nombre)}</td><td>${r.d.kpis.total}</td><td>${fmt(r.d.kpis.ventas,r.c)}</td><td>${fmt(r.d.kpis.utilidad,r.c)}</td><td>${r.d.kpis.efectividad}%</td></tr>`).join('')}</table></div>`;
+}
+$('db-srcs').onclick=e=>{const k=e.target.dataset.k;if(k){ST.src=k;save();dash();}};
+$('db-per').onchange=e=>{ST.per=e.target.value;save();dash();};
+$('usd').onchange=e=>{ST.usd=e.target.checked;save();dash();};
+$('db-ref').onclick=()=>dash(true);
+// ---- dinero
+async function loadDin(){accBar('din-bar',loadDin);const r=await api('retiros',{c:ACT}),c=cu(ACT);
+  $('din-tb').innerHTML=r.retiros.map(x=>`<tr><td>${esc(x.fecha)}</td><td>${esc(x.banco)}</td><td>${fmt(x.monto,c)}</td><td>${fmt(x.comision,c)}</td><td class="pos">${fmt(x.neta,c)}</td><td><button class="btn" data-d="${esc(x.id)}">Borrar</button></td></tr>`).join('')||'<tr><td colspan=6 class="empty">Sin retiros</td></tr>';
+  const s=r.retiros.reduce((a,x)=>({m:a.m+x.monto,c:a.c+x.comision,n:a.n+x.neta}),{m:0,c:0,n:0});
+  $('din-sum').innerHTML=`Retirado: <b>${fmt(s.m,c)}</b><br>Comisiones: <b class="neg">${fmt(s.c,c)}</b><br>Neto recibido: <b class="pos">${fmt(s.n,c)}</b><br>≈ ${fmt(s.n,c,true)}`;}
+$('din-tb').onclick=async e=>{const d=e.target.dataset.d;if(d){await del('retiros',{c:ACT,id:d});loadDin();}};
+$('rf').onsubmit=async e=>{e.preventDefault();const f=Object.fromEntries(new FormData(e.target));await post('retiros',f,{c:ACT});e.target.reset();loadDin();};
+// ---- registro
+async function loadReg(){const r=(await api('registro')).registro,ks=Object.keys(r).sort().reverse();
+  $('reg-tb').innerHTML=ks.map(k=>{const x=r[k],res=x.ventas-x.gasto;return`<tr><td>${esc(k)}</td><td>US$ ${x.gasto.toFixed(2)}</td><td>US$ ${x.ventas.toFixed(2)}</td><td class="${res>=0?'pos':'neg'}">US$ ${res.toFixed(2)}</td><td class="mut">${esc(x.nota)}</td><td><button class="btn" data-d="${esc(k)}">Borrar</button></td></tr>`}).join('')||'<tr><td colspan=6 class="empty">Sin registros</td></tr>';
+  const s=ks.reduce((a,k)=>({g:a.g+r[k].gasto,v:a.v+r[k].ventas}),{g:0,v:0});
+  $('reg-sum').innerHTML=`Gasto: <b class="neg">US$ ${s.g.toFixed(2)}</b><br>Ventas: <b>US$ ${s.v.toFixed(2)}</b><br>Resultado: <b class="${s.v-s.g>=0?'pos':'neg'}">US$ ${(s.v-s.g).toFixed(2)}</b>`;}
+$('reg-tb').onclick=async e=>{const d=e.target.dataset.d;if(d){await del('registro',{f:d});loadReg();}};
+$('gf').onsubmit=async e=>{e.preventDefault();await post('registro',Object.fromEntries(new FormData(e.target)));e.target.reset();loadReg();};
+(async()=>{try{CU=(await api('cuentas')).cuentas;if(!CU.some(c=>c.n===ACT))ACT=1;await dash();}catch(e){$('db-body').innerHTML=`<div class="err">${esc(e.message)}</div>`}})();
+</script></body></html>

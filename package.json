@@ -1,0 +1,11 @@
+{
+  "name": "veltrix",
+  "version": "1.0.0",
+  "private": true,
+  "description": "VELTRIX - plataforma de control Dropi multi-pais (tema verde)",
+  "scripts": {
+    "dev": "VELTRIX_DEMO=1 VELTRIX_PASSWORD=demo VELTRIX_SECRET=dev node dev.js",
+    "test": "node test/run.js"
+  },
+  "engines": { "node": ">=18" }
+}
