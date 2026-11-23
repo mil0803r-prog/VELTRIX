@@ -90,7 +90,7 @@ tr.hot td{background:rgba(190,18,60,.07)}tr.hot:hover td{background:rgba(190,18,
 <div class="tabs" id="tabs"></div><div id="view"><div class="empty">Cargando…</div></div>
 <script>
 const CTA=Number(new URLSearchParams(location.search).get('c'))||1,RET=5;
-let M={sym:'$',dec:2,wa:'',mon:'MXN',pen:0.2,base:''},D=null,tab=(['resumen','ofi','prov','fav','nov','rend','pagos','nuevo'].includes(new URLSearchParams(location.search).get('t'))?new URLSearchParams(location.search).get('t'):'resumen'),FAV={items:[],hide:[],dir:{},msg:''};
+let M={sym:'$',dec:2,wa:'',mon:'MXN',pen:0.2,base:''},D=null,tab=(['resumen','ofi','prov','fav','nov','rend','pagos'].includes(new URLSearchParams(location.search).get('t'))?new URLSearchParams(location.search).get('t'):'resumen'),FAV={items:[],hide:[],dir:{},msg:''};
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const nf=(n,d)=>Number(n||0).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
@@ -106,7 +106,7 @@ async function api(a,extra={},opt){const p=new URLSearchParams({a,c:CTA,d:$('per
 const post=(a,body,extra)=>api(a,extra,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
 const IC={chart:'<path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/>',building:'<rect width="16" height="20" x="4" y="2" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/>',truck:'<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>',bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',trend:'<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',wallet:'<path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>',clock:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',finger:'<path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"/><path d="M14 13.12c0 2.38 0 6.38-1 8.88M17.29 21.02c.12-.6.43-2.3.5-3.02M2 12a10 10 0 0 1 18-6M2 16h.01M21.8 16c.2-2 .131-5.354 0-6M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2M8.65 22c.21-.66.45-1.32.57-2M9 6.8a6 6 0 0 1 9 5.2v2"/>',wa:'<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',pencil:'<path d="M21.17 6.81a1 1 0 0 0-3.99-3.99L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5Z"/>',x:'<path d="M18 6 6 18M6 6l12 12"/>',star:'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',cart:'<circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>',heart:'<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>',plus:'<path d="M5 12h14M12 5v14"/>',send:'<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',alert:'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4M12 17h.01"/>'};
 const I=n=>`<svg class="i" viewBox="0 0 24 24">${IC[n]}</svg>`;
-const TABS=[['resumen','Resumen','chart'],['ofi','Oficina','building'],['prov','Proveedores','truck'],['fav','Favoritos','star'],['nov','Novedades','bell'],['rend','Rendimiento','trend'],['pagos','Pagos','wallet'],['nuevo','Subir pedido','plus']];
+const TABS=[['resumen','Resumen','chart'],['ofi','Oficina','building'],['prov','Proveedores','truck'],['fav','Favoritos','star'],['nov','Novedades','bell'],['rend','Rendimiento','trend'],['pagos','Pagos','wallet']];
 $('tabs').innerHTML=TABS.map(([k,v,i])=>`<button data-t="${k}">${I(i)}${v}</button>`).join('');
 $('tabs').onclick=e=>{const b=e.target.closest('[data-t]');if(b){tab=b.dataset.t;render()}};
 $('ref').onclick=()=>load(true);$('per').onchange=()=>load();
@@ -161,7 +161,7 @@ const srcTxt=()=>{if(M.pais)$('src').textContent='Fuente: Dropi '+M.pais+' · '+
 async function render(){
   document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
   if(!D)return;
-  try{await ({resumen,ofi,prov,fav,nov,rend,pagos,nuevo}[tab])();view.querySelectorAll('.card').forEach((c,i)=>c.style.setProperty('--i',Math.min(i,14)))}catch(e){view.innerHTML=`<div class="err">${esc(e.message)}</div>`}
+  try{await ({resumen,ofi,prov,fav,nov,rend,pagos}[tab])();view.querySelectorAll('.card').forEach((c,i)=>c.style.setProperty('--i',Math.min(i,14)))}catch(e){view.innerHTML=`<div class="err">${esc(e.message)}</div>`}
 }
 async function loadFav(){try{FAV=await api('favs')}catch(e){}return FAV}
 
@@ -365,9 +365,7 @@ function favCard(p,k,compact){
 function wireFav(el,L){
   el.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{const c=b.closest('.fcard'),p=L[c.dataset.fk];c.querySelectorAll('[data-r]').forEach(x=>x.classList.toggle('on',x===b));c.querySelector('.fchartin').innerHTML=chartIn(p,Number(b.dataset.r))});
   el.querySelectorAll('[data-send]').forEach(b=>b.onclick=()=>sendFav(L[b.dataset.send]))}
-async function sendFav(p){
-  if(tab!=='nuevo'){tab='nuevo';if(!NP||NP.res)NP=npNew();await render()}
-  npAddProd(p,'Agregado desde Favoritos: '+p.name)}
+function sendFav(p){if(parent!==window)parent.postMessage({vx:'add',id:p.id,c:CTA},location.origin);else location.href='/subir-pedido?c='+CTA+'&add='+p.id}
 async function fav(){
   view.innerHTML='<div class="empty">Cargando sus favoritos de Dropi…</div>';let L;
   try{L=await loadDF(true)}catch(e){view.innerHTML=`<div class="card flat"><div class="hd"><h3>${I('star')} Favoritos de Dropi</h3></div><div class="err">No se pudieron leer sus favoritos de Dropi: ${esc(e.message)}</div><p class="mut" style="font-size:12px">Si el mensaje dice 429, Dropi limitó las consultas: espere un minuto y pulse Actualizar. Mientras tanto puede ver sus favoritos manuales en la pestaña Proveedores.</p></div>`;return}
@@ -376,214 +374,6 @@ async function fav(){
   view.innerHTML=`<div class="hd"><h3>${I('star')} Productos favoritos de Dropi</h3><small>${L.length} productos · solo los marcados con ♥ en Dropi</small><span class="sp"></span><input id="ffq" placeholder="Buscar por nombre, proveedor o categoría…" style="min-width:260px"></div>
    ${L.length?'':'<div class="empty">No tiene productos favoritos en Dropi. Márquelos con el corazón en Dropi y aparecerán aquí con su foto.</div>'}<div class="fgrid" id="fgrid"></div>${foot(0,Date.now())}`;
   $('ffq').oninput=draw;draw()}
-
-/* ================= CREAR ORDEN (mismo esquema que Dropi: cliente · transportadora · resumen) ================= */
-const MX_ESTADOS=['Aguascalientes','Baja California','Baja California Sur','Campeche','Chiapas','Chihuahua','Ciudad de México','Coahuila','Colima','Durango','Estado de México','Guanajuato','Guerrero','Hidalgo','Jalisco','Michoacán','Morelos','Nayarit','Nuevo León','Oaxaca','Puebla','Querétaro','Quintana Roo','San Luis Potosí','Sinaloa','Sonora','Tabasco','Tamaulipas','Tlaxcala','Veracruz','Yucatán','Zacatecas'];
-const COLORS={dorado:'#d4af37',dorada:'#d4af37',oro:'#d4af37',azul:'#2563eb',rojo:'#dc2626',roja:'#dc2626',negro:'#111827',negra:'#111827',verde:'#16a34a',rosa:'#f472b6',rosada:'#f472b6',rosado:'#f472b6',blanco:'#f8fafc',blanca:'#f8fafc',morado:'#7c3aed',morada:'#7c3aed',lila:'#a78bfa',amarillo:'#facc15',amarilla:'#facc15',naranja:'#f97316',gris:'#9ca3af',plateado:'#cbd5e1',plateada:'#cbd5e1',plata:'#cbd5e1',cafe:'#78350f',marron:'#78350f',beige:'#e7d3b0',crema:'#f5efd9',celeste:'#7dd3fc',turquesa:'#14b8a6',vino:'#7f1d1d',fucsia:'#d946ef',cobre:'#b87333',bronce:'#cd7f32',transparente:'#e5e7eb',multicolor:'conic-gradient(#ef4444,#f59e0b,#facc15,#22c55e,#3b82f6,#8b5cf6,#ef4444)'};
-const swatch=t=>{for(const w of nrm(t).toLowerCase().split(/[^a-z]+/))if(COLORS[w])return COLORS[w];return ''};
-const npNew=()=>({name:'',surname:'',phone:'',client_email:'',dni:'',state:'',depId:null,city:'',cityObj:null,colonia:'',zip_code:'',dir:'',rate_type:'CON RECAUDO',distribution_company_id:'',carrierName:'',shop_order_id:'',notes:'',notasOn:false,items:[],ok:false,res:null,pm:'cat',q:'',fs:'',quote:null});
-const clrCar=()=>{NP.distribution_company_id='';NP.carrierName=''};
-let NP=null,DEPS=[],CITIES={},CAR=[],QT=null,QSEQ=0;
-const mx=n=>'MX$ '+nf(n,2),penTxt=n=>'S/ '+nf(n*penRate(),2);
-const initials=n=>String(n).split(/[\s-]+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
-const hue=n=>{let h=0;for(const c of String(n))h=(h*31+c.charCodeAt(0))%360;return h};
-/* --- geografía y cotización --- */
-let DEPS_ERR='',GEO_ERR='',SND=null;try{SND=JSON.parse(localStorage.getItem('vx_snd_'+CTA)||'null')}catch(e){}
-const pretty=n=>String(n||'');
-async function geoDeps(){if(DEPS.length)return;try{DEPS=(await api('geo',{t:'deps'})).departamentos||[];DEPS_ERR=DEPS.length?'':'Dropi no devolvió estados'}catch(e){DEPS=[];DEPS_ERR=e.message}if(!DEPS.length)DEPS=MX_ESTADOS.map(n=>({id:null,name:n}))}
-async function geoCities(dep=NP.depId){if(!dep)return [];const k=dep+'|'+NP.rate_type;if(CITIES[k])return CITIES[k];
-  try{const c=(await api('geo',{t:'ciudades',dep,rate:NP.rate_type})).ciudades||[];GEO_ERR=c.length?'':'Dropi no devolvió municipios para este estado';if(c.length)CITIES[k]=c;return c}catch(e){GEO_ERR=e.message;return []}}
-/* Estado y municipio conectados: el municipio es un selector que se llena con los municipios del estado elegido */
-const cityBox=(inner,note)=>`<label class="fl"><span class="req">Municipalidad o alcaldía</span>${inner}</label>${note?`<div class="mut" style="font-size:11.5px;margin-top:4px">${note}</div>`:''}`;
-function cityFree(w,note){w.innerHTML=cityBox(`<input id="np-city" value="${esc(NP.city)}" placeholder="Escriba el municipio" maxlength="80" autocomplete="off">`,note);
-  $('np-city').oninput=e=>{NP.city=e.target.value;NP.cityObj=null;npSum();qDebounce()}}
-async function cityDraw(){
-  const w=$('np-city-wrap');if(!w)return;
-  if(!NP.state){w.innerHTML=cityBox('<select id="np-city" disabled><option>Primero elija el estado</option></select>');return}
-  if(!NP.depId)return cityFree(w,'Sin lista de municipios de Dropi: escríbalo a mano (no se podrá cotizar el flete).');
-  const dep=NP.depId;w.innerHTML=cityBox('<select id="np-city" disabled><option>Cargando municipios de '+esc(NP.state)+'…</option></select>');
-  const list=await geoCities(dep);if(dep!==NP.depId)return; // cambió el estado mientras cargaba
-  if(!list.length)return cityFree(w,'No se pudo cargar la lista de municipios de '+esc(NP.state)+(GEO_ERR?' ('+esc(GEO_ERR)+')':'')+'. Escríbalo a mano.');
-  const cur=list.find(c=>nrm(c.name)===nrm(NP.city));
-  if(NP.city&&!cur){NP.city='';NP.cityObj=null;NP.quote=null;clrCar()} else NP.cityObj=cur||null;
-  w.innerHTML=cityBox(`<select id="np-city"><option value="">Municipalidad o delegación</option>${list.map(c=>`<option value="${esc(c.id)}" ${cur&&String(cur.id)===String(c.id)?'selected':''}>${esc(c.name)}</option>`).join('')}</select>`,list.length+' municipios en '+esc(NP.state));
-  $('np-city').onchange=e=>{const c=list.find(x=>String(x.id)===e.target.value)||null;NP.city=c?c.name:'';NP.cityObj=c;clrCar();npSum();qDebounce()};
-  carrDraw();npSum()}
-const qReady=()=>NP.cityObj&&/^\d{5}$/.test(String(NP.zip_code).replace(/\D/g,''))&&NP.items.length&&NP.items.every(i=>Number(i.qty)>=1&&i.price!==''&&Number(i.price)>=0&&(!i.variations.length||i.variation_id));
-function qDebounce(){clearTimeout(QT);NP.quote=qReady()?{loading:true}:null;carrDraw();npSum();if(qReady())QT=setTimeout(cotizar,650)}
-async function cotizar(){
-  const seq=++QSEQ;
-  try{const r=await post('cotizar',{cod:NP.rate_type==='CON RECAUDO',city:{id:NP.cityObj.id,cod_dane:NP.cityObj.cod_dane,zip_code:NP.cityObj.zip_code},zip_code:String(NP.zip_code).replace(/\D/g,''),sender_dane:SND&&SND.dane||'',products:NP.items.map(i=>({id:i.id,price:Number(i.price),quantity:Number(i.qty),variation_id:i.variation_id||null}))});
-    if(seq!==QSEQ)return;NP.quote={carriers:r.carriers,err:r.quoteError||'',needsSender:!!r.needsSender};
-    const chosen=r.carriers.find(c=>(c.id&&String(c.id)===String(NP.distribution_company_id))||(NP.carrierName&&nrm(c.name)===nrm(NP.carrierName)));if((NP.distribution_company_id||NP.carrierName)&&chosen&&chosen.error)clrCar()}
-  catch(e){if(seq!==QSEQ)return;NP.quote={err:e.message}}
-  carrDraw();npSum()}
-const carrSel=()=>{const id=String(NP.distribution_company_id||''),nm=nrm(NP.carrierName||'');if(!id&&!nm)return null;const all=[...((NP.quote&&NP.quote.carriers)||[]),...CAR];return all.find(c=>(id&&String(c.id)===id)||(nm&&nrm(c.name)===nm))||{id,name:NP.carrierName||'ID '+id,cost:null}};
-/* --- validación --- */
-function npErrors(){
-  const e=[],r=(k,l)=>{if(!String(NP[k]).trim())e.push('Falta '+l)};
-  r('name','el nombre');r('surname','el apellido');r('state','el estado');r('city','el municipio');r('dir','la dirección');
-  let ph=String(NP.phone).replace(/\D/g,'');if(ph.length===12&&ph.startsWith(M.wa))ph=ph.slice(M.wa.length);
-  if(ph.length<8||ph.length>15)e.push('Teléfono inválido (10 dígitos)');
-  if(!/^\d{5}$/.test(String(NP.zip_code).replace(/\D/g,'')))e.push('Código postal de 5 dígitos');
-  if(NP.client_email&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(NP.client_email))e.push('Correo inválido');
-  if(!NP.items.length)e.push('Agregue al menos un producto');
-  for(const i of NP.items){const q=Number(i.qty),p=Number(i.price);
-    if(!(Number.isInteger(q)&&q>=1&&q<=50))e.push('Cantidad de «'+i.name+'»: de 1 a 50');
-    if(i.price===''||!(p>=0))e.push('Precio de venta de «'+i.name+'»');
-    if(i.variations.length&&!i.variation_id)e.push('Elija la variación de «'+i.name+'»')}
-  return e}
-const itemVar=i=>i.variations.find(v=>String(v.id)===String(i.variation_id));
-const itemCost=i=>{const v=itemVar(i);return (v&&v.cost>0?v.cost:i.cost)||0};
-/* --- columna 3: resumen --- */
-function npSum(){
-  const el=$('npsum');if(!el)return;const e=npErrors();
-  const venta=NP.items.reduce((a,i)=>a+(Number(i.price)||0)*(Number(i.qty)||0),0),prov=NP.items.reduce((a,i)=>a+itemCost(i)*(Number(i.qty)||0),0);
-  const cs=carrSel(),envio=cs&&cs.cost!=null?cs.cost:null,recaudar=NP.rate_type==='CON RECAUDO'?venta:0,gan=venta-prov-(envio||0);
-  el.innerHTML=`<div class="rs-box"><div class="rs-h"><span>Producto</span><span>Precio de venta</span></div>
-   ${NP.items.map(i=>{const v=itemVar(i),sw=v&&swatch(v.color||v.label);return `<div class="rs-p"><div><div>${esc(i.name)} <b>(${esc(i.qty)})</b></div>${v?`<div class="rs-v">${sw?`<i class="sw sm" style="background:${sw}"></i>`:''}${esc(v.label)}</div>`:''}</div><span>${mx((Number(i.price)||0)*(Number(i.qty)||0))}</span></div>`}).join('')||'<div class="mut" style="font-size:12px">Aún no hay productos.</div>'}</div>
-   <div class="rs-t"><div class="kv"><b>Total a recaudar:</b><b>${mx(recaudar)}</b></div><div class="kv"><span>Precio proveedor:</span><span>${mx(prov)}</span></div>
-   <div class="kv"><span>Precio de envío:</span><span>${envio==null?'<span class="mut">— por cotizar</span>':mx(envio)}</span></div><div class="kv"><span>Comisión de la plataforma:</span><span class="mut" title="La calcula Dropi al crear la orden">la calcula Dropi</span></div>
-   <div class="kv" style="border:0"><b class="pos">Ganancias</b><b class="${gan>=0?'pos':'neg'}">${mx(gan)}</b></div><div class="mut" style="font-size:11px;text-align:right">≈ ${penTxt(gan)}${envio==null?' · sin flete (aún no cotizado)':''}</div></div>
-   <div class="kv" style="margin-top:6px"><span>Transportadora</span><b>${cs?esc(cs.name):'Automática'}</b></div><div class="kv"><span>Pago</span><b>${NP.rate_type==='CON RECAUDO'?'Contra entrega':'Pago anticipado'}</b></div>
-   ${e.length?`<div class="err" style="margin-top:12px;font-size:12px"><b>Para enviar falta:</b><br>${e.slice(0,8).map(x=>'• '+esc(x)).join('<br>')}</div>`:'<p class="pos" style="margin:12px 0 0;font-weight:600">✓ Datos completos</p>'}
-   <label class="row" style="margin-top:12px;align-items:flex-start;gap:8px"><input type="checkbox" id="npok" ${NP.ok?'checked':''} style="margin-top:3px"><span style="font-size:12px">Revisé los datos. Entiendo que esto <b>crea un pedido real en Dropi</b> que se enviará al cliente.</span></label>
-   <button class="btn pri" id="npgo" style="width:100%;margin-top:12px;padding:12px" ${e.length||!NP.ok?'disabled':''}>${I('send')} Enviar al cliente</button><div id="nperr"></div>`;
-  $('npok').onchange=ev=>{NP.ok=ev.target.checked;npSum()};$('npgo').onclick=()=>npEnviar(false)}
-/* --- columna 2: tipo de pago y transportadoras --- */
-function carrDraw(){
-  const el=$('carr');if(!el)return;const Q=NP.quote,pay=NP.rate_type;
-  let msg='',kind='';
-  if(!NP.cityObj)msg='Para cotizar, selecciona ciudad de destino.';
-  else if(!/^\d{5}$/.test(String(NP.zip_code).replace(/\D/g,'')))msg='Escribe el código postal (5 dígitos) para cotizar.';
-  else if(!NP.items.length)msg='Agrega productos para cotizar.';
-  else if(NP.items.some(i=>i.variations.length&&!i.variation_id))msg='Elige la variación de cada producto para cotizar.';
-  else if(Q&&Q.loading){msg='Cotizando con las transportadoras…';kind='ok'}
-  else if(Q&&Q.err)msg='No se pudo cotizar: '+Q.err+(Q.needsSender?'. Dropi pide la ciudad de origen del producto: indíquela abajo.':'. Dropi calculará el flete al crear la orden.');
-  const list=(Q&&Q.carriers&&Q.carriers.length)?Q.carriers:CAR.map(c=>({id:c.id,name:c.name,cost:null,error:null}));
-  const row=(id,name,cost,err,auto,tray)=>{const sel=!!(NP.distribution_company_id||NP.carrierName),on=auto?!sel:((id&&String(NP.distribution_company_id||'')===String(id))||(NP.carrierName&&nrm(NP.carrierName)===nrm(name))),dis=!!err,why=err||'';
-    return `<button type="button" class="crow ${on?'on':''} ${dis?'dis':''}" data-car="${esc(id||'')}" data-cname="${esc(auto?'':name)}" ${dis?'disabled':''} title="${esc(why)}"><i class="rd"></i>${auto?`<i class="av" style="background:var(--gsoft);color:var(--g)">${I('truck')}</i>`:`<i class="av" style="background:hsl(${hue(name)} 60% 90%);color:hsl(${hue(name)} 55% 28%)">${esc(initials(pretty(name)))}</i>`}<span class="cn">${esc(auto?name:pretty(name))}${tray?`<small style="color:var(--mut)">${esc(tray)}</small>`:''}${err?`<small>${esc(err)}</small>`:''}</span><span class="cp">${auto?'':cost!=null?`${mx(cost)}<small>≈ ${penTxt(cost)}</small>`:'MX$ - -'}</span></button>`};
-  el.innerHTML=`${msg?`<div class="cmsg ${kind}">${kind?'':I('x')+' '}${esc(msg)}</div>`:''}
-   <div class="pays"><button type="button" class="pay ${pay==='CON RECAUDO'?'on':''}" data-pay="CON RECAUDO"><i class="rd"></i>Contra Entrega</button><button type="button" class="pay ${pay==='SIN RECAUDO'?'on':''}" data-pay="SIN RECAUDO"><i class="rd"></i>Pago Anticipado</button></div>
-   <div class="clist">${row('','Automática (Dropi elige)',null,null,true)}${list.map(c=>row(c.id,c.name,c.cost,c.error,false,c.trayecto)).join('')}</div>
-   ${!list.length?'<p class="mut" style="font-size:12px">No hay transportadoras para mostrar. Dropi elige según su configuración.</p>':''}`;
-  el.querySelectorAll('[data-pay]').forEach(b=>b.onclick=()=>{if(NP.rate_type===b.dataset.pay)return;NP.rate_type=b.dataset.pay;CITIES={};clrCar();cityDraw();qDebounce()});
-  el.querySelectorAll('[data-car]').forEach(b=>b.onclick=()=>{NP.distribution_company_id=b.dataset.car;NP.carrierName=b.dataset.cname;carrDraw();npSum()});
-  const d=$('orig-d');if(d&&Q&&Q.needsSender)d.open=true}
-/* --- ciudad de origen (la pide el cotizador de Dropi) --- */
-function origDraw(){
-  const el=$('orig');if(!el)return;
-  el.innerHTML=`<details id="orig-d" class="orig" ${SND?'open':''}><summary>Ciudad de origen del producto${SND?': <b>'+esc(SND.city)+'</b>':''}</summary>
-   <p class="mut" style="font-size:12px;margin:6px 0 8px">El cotizador de Dropi la pide: es la ciudad desde donde sale el producto (bodega del proveedor). Si no la indica, se intenta detectar sola.</p>
-   <div class="fg2"><label class="fl"><span>Estado de origen</span><select id="sd-dep"><option value="">Elegir…</option>${DEPS.filter(d=>d.id!=null).map(d=>`<option value="${esc(d.id)}" ${SND&&String(SND.dep)===String(d.id)?'selected':''}>${esc(d.name)}</option>`).join('')}</select></label>
-    <label class="fl"><span>Municipio de origen</span><input id="sd-city" list="dl-sd" value="${esc(SND?SND.city:'')}" placeholder="Escriba el municipio" autocomplete="off"><datalist id="dl-sd"></datalist></label></div>
-   ${SND?`<button type="button" class="btn sm" id="sd-clr" style="margin-top:8px">Quitar origen</button>`:''}</details>`;
-  const fill=async()=>{const dep=$('sd-dep').value;$('dl-sd').innerHTML=dep?(await geoCities(Number(dep))).map(c=>`<option value="${esc(c.name)}">`).join(''):''};
-  $('sd-dep').onchange=()=>{fill();$('sd-city').value=''};fill();
-  $('sd-city').oninput=async e=>{const dep=Number($('sd-dep').value);if(!dep)return;const c=(await geoCities(dep)).find(x=>nrm(x.name)===nrm(e.target.value));
-    if(c&&c.cod_dane){SND={dep,city:c.name,dane:c.cod_dane};try{localStorage.setItem('vx_snd_'+CTA,JSON.stringify(SND))}catch(x){}$('orig-d').querySelector('summary').innerHTML='Ciudad de origen del producto: <b>'+esc(c.name)+'</b>';qDebounce()}};
-  const clr=$('sd-clr');if(clr)clr.onclick=()=>{SND=null;try{localStorage.removeItem('vx_snd_'+CTA)}catch(x){}origDraw();qDebounce()}}
-/* --- carrito de productos --- */
-function npCart(){
-  const el=$('cart');if(!el)return;
-  el.innerHTML=NP.items.map((i,k)=>{const sel=itemVar(i);
-   return `<div class="pcard"><div style="display:flex;gap:12px">
-    ${i.img?`<img src="${esc(i.img)}" alt="" loading="lazy" referrerpolicy="no-referrer" class="pimg" onerror="this.remove()">`:'<div class="pimg"></div>'}
-    <div style="flex:1;min-width:0"><div class="nm" style="font-size:15px">${esc(i.name)}</div><div class="sb"><span class="chip mono">ID: ${esc(i.id)}</span> ${i.prov?'Proveedor: '+esc(i.prov):''}</div><div class="sb" style="margin-top:3px">Precio de proveedor: <b>${mx(itemCost(i))}</b>${i.suggested?' · sugerido '+mx(i.suggested):''}${i.manual?' · <span class="warn">no está en el catálogo: se enviará tal cual</span>':''}</div></div>
-    <button type="button" class="ic" style="background:var(--card2);border:1px solid var(--line);align-self:flex-start" data-cx="${k}" title="Quitar">${I('x')}</button></div>
-    ${i.variations.length?`<div class="fl" style="margin-top:10px"><span class="req">Variación</span></div><div class="vopts">${i.variations.map(v=>{const sw=swatch(v.color||v.label);return `<button type="button" class="vopt ${String(i.variation_id)===String(v.id)?'on':''}" data-vk="${k}" data-vv="${esc(v.id)}" ${v.stock===0?'disabled title="Sin stock"':''}>${sw?`<i class="sw" style="background:${sw}"></i>`:''}${esc(v.label)}${v.stock!=null?`<small>${v.stock===0?'agotado':esc(v.stock)+' und'}</small>`:''}</button>`}).join('')}</div>${sel?'':'<div class="warn" style="font-size:12px;margin-top:6px">Elija la variación (color / modelo) *</div>'}`:''}
-    ${i.manual?`<label class="fl" style="margin-top:8px"><span>ID de variación (opcional)</span><input data-ci="${k}" data-f="variation_id" value="${esc(i.variation_id)}" inputmode="numeric" style="width:140px"></label>`:''}
-    <div class="row" style="margin-top:10px;gap:14px"><label class="fl" style="margin:0"><span class="req">Precio de venta (MXN)</span><input type="number" min="0" step="0.01" value="${esc(i.price)}" data-ci="${k}" data-f="price" style="width:150px"></label>
-     <label class="fl" style="margin:0"><span>Cantidad</span><input type="number" min="1" max="50" step="1" value="${esc(i.qty)}" data-ci="${k}" data-f="qty" style="width:90px"></label></div></div>`}).join('')||'<div class="empty">Agregue productos desde el catálogo, sus favoritos o por ID.</div>';
-  el.querySelectorAll('[data-ci]').forEach(i=>{const h=()=>{NP.items[i.dataset.ci][i.dataset.f]=i.value;npSum();qDebounce()};i.oninput=h;i.onchange=h});
-  el.querySelectorAll('[data-vk]').forEach(b=>b.onclick=()=>{const it=NP.items[b.dataset.vk],v=it.variations.find(x=>String(x.id)===b.dataset.vv);if(!v)return;
-    const prev=it.suggested;it.variation_id=v.id;if(v.suggested>0){if(it.price===''||Number(it.price)===Number(prev))it.price=v.suggested;it.suggested=v.suggested}npCart();npSum();qDebounce()});
-  el.querySelectorAll('[data-cx]').forEach(b=>b.onclick=()=>{NP.items.splice(b.dataset.cx,1);npCart();npSum();qDebounce()})}
-function npAddProd(p,nota){
-  const ex=NP.items.find(i=>i.id===p.id&&!p.variations.length&&!p.manual);
-  if(ex)ex.qty=Number(ex.qty)+1;else NP.items.push({id:p.id,name:p.name,img:p.img||'',prov:p.prov||'',cost:p.cost||p.price||0,price:p.suggested||p.price||'',suggested:p.suggested||0,qty:1,variations:p.variations||[],variation_id:'',manual:!!p.manual});
-  npCart();npSum();qDebounce();const m=$('pm-msg');if(m)m.textContent=nota||('Agregado: '+p.name)}
-async function npResolveId(id,name){
-  const m=$('pm-msg');if(m)m.textContent='Buscando el producto '+id+'…';
-  try{const r=await api('productos',{id:String(id)});
-    if(r.productos.length)npAddProd(r.productos[0],'Agregado: '+r.productos[0].name+' (ID '+id+')');
-    else npAddProd({id:Number(id),name:name||('Producto ID '+id),suggested:0,variations:[],manual:true},'El ID '+id+' no apareció en el catálogo: se agregó tal cual. Escriba el precio y, si es variable, el ID de la variación.')}
-  catch(e){if(m)m.innerHTML=`<span class="neg">${esc(e.message)}</span>`}}
-function pmodeDraw(){
-  const el=$('pmode');if(!el)return;const fl=favList();
-  el.innerHTML=`<div class="row" id="pm-ch">${[['cat','Catálogo'],['fav','Favoritos ('+fl.length+')'],['id','Por ID']].map(([k,l])=>`<button type="button" class="fchip ${NP.pm===k?'on':''}" data-pm="${k}">${l}</button>`).join('')}</div><div id="pm-body" style="margin-top:12px"></div><div id="pm-msg" class="mut" style="margin-top:8px;font-size:12px"></div>`;
-  $('pm-ch').onclick=e=>{const b=e.target.closest('[data-pm]');if(b){NP.pm=b.dataset.pm;pmodeDraw()}};
-  const body=$('pm-body');
-  if(NP.pm==='cat'){
-    body.innerHTML=`<div class="row"><input id="ps" placeholder="Buscar producto del catálogo de Dropi…" style="flex:1;min-width:200px"><button type="button" class="btn pri" id="psb">Buscar</button></div><div id="pres" style="margin-top:10px"></div>`;
-    const buscar=async()=>{const q=$('ps').value.trim(),o=$('pres');if(!q)return;o.innerHTML='<div class="mut">Buscando…</div>';
-      try{const r=await api('productos',{q});window.__res=r.productos;o.innerHTML=r.productos.map((p,k)=>`<div class="frow">${p.img?`<img src="${esc(p.img)}" alt="" loading="lazy" referrerpolicy="no-referrer" style="width:42px;height:42px;object-fit:cover;border-radius:9px;border:1px solid var(--line)" onerror="this.remove()">`:''}<div style="flex:1"><div class="nm">${esc(p.name)}</div><div class="sb">ID ${esc(p.id)} · sugerido ${mx(p.suggested)}${p.variations.length?' · '+p.variations.length+' variaciones ':''}${p.variations.slice(0,10).map(v=>{const w=swatch(v.color||v.label);return w?`<i class="sw sm" style="background:${w}" title="${esc(v.label)}"></i>`:''}).join('')}</div></div><button type="button" class="btn sm" data-add="${k}">+ Agregar</button></div>`).join('')||'<div class="mut">Sin resultados</div>';
-        o.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>npAddProd(window.__res[b.dataset.add]))}
-      catch(e){o.innerHTML=`<div class="err">${esc(e.message)}</div>`}};
-    $('psb').onclick=buscar;$('ps').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();buscar()}};
-    if(NP.q){$('ps').value=NP.q;NP.q='';buscar()}
-  }else if(NP.pm==='fav'){
-    const manual=(note)=>{body.innerHTML=`${note?`<div class="cmsg" style="margin-bottom:10px">${esc(note)}</div>`:''}<input id="fs" placeholder="Buscar en favoritos…" value="${esc(NP.fs)}" style="width:100%;margin-bottom:8px"><div id="fl2"></div><p class="mut" style="font-size:12px;margin:8px 0 0">Los favoritos con ID se agregan directo; los que no tienen ID se buscan por nombre en el catálogo.</p>`;
-      const draw=()=>{const q=NP.fs.toLowerCase(),r=fl.filter(f=>!q||(f.name+' '+f.prov).toLowerCase().includes(q));
-        $('fl2').innerHTML=r.map(f=>`<div class="frow"><div style="flex:1"><div class="nm">${f.star?I('star')+' ':''}${esc(f.name)}</div><div class="sb">${esc(f.prov||'Sin proveedor')} · ${f.id?'ID '+esc(f.id):'sin ID (se buscará en el catálogo)'}</div></div><button type="button" class="btn sm" data-fa="${fl.indexOf(f)}">+ Agregar</button></div>`).join('')||'<div class="empty">Sin favoritos todavía.</div>';
-        $('fl2').querySelectorAll('[data-fa]').forEach(b=>b.onclick=()=>{const f=fl[b.dataset.fa];if(f.id)npResolveId(f.id,f.name);else{NP.pm='cat';NP.q=f.name;pmodeDraw()}})};
-      $('fs').oninput=e=>{NP.fs=e.target.value;draw()};draw()};
-    body.innerHTML='<div class="mut">Cargando favoritos de Dropi…</div>';
-    loadDF().then(L=>{if(NP.pm!=='fav')return;
-      body.innerHTML=`<input id="fs" placeholder="Buscar en favoritos de Dropi…" value="${esc(NP.fs)}" style="width:100%;margin-bottom:10px"><div class="fgrid compact" id="fgp"></div>`;
-      const draw=()=>{const q=NP.fs.toLowerCase(),r=L.filter(p=>!q||(p.name+' '+p.prov+' '+p.categoria).toLowerCase().includes(q));$('fgp').innerHTML=r.map(p=>favCard(p,L.indexOf(p),true)).join('')||'<div class="empty">No tiene favoritos en Dropi.</div>';wireFav($('fgp'),L)};
-      $('fs').oninput=e=>{NP.fs=e.target.value;draw()};draw()}).catch(e=>{if(NP.pm==='fav')manual('No se pudieron leer sus favoritos de Dropi ('+e.message+'). Se muestran los de sus pedidos y los que agregó a mano.')});
-  }else{
-    body.innerHTML=`<div class="row"><input id="pidv" type="number" min="1" step="1" placeholder="ID del producto en Dropi" style="flex:1;min-width:200px"><button type="button" class="btn pri" id="pidb">Agregar por ID</button></div><p class="mut" style="font-size:12px;margin:8px 0 0">Escriba el ID tal como aparece en Dropi. Si está en el catálogo se completan el nombre, el precio y las variaciones.</p>`;
-    const go=()=>{const v=$('pidv').value.trim();if(!/^\d+$/.test(v)||Number(v)<1){$('pm-msg').innerHTML='<span class="neg">Escriba un ID numérico</span>';return}npResolveId(Number(v));$('pidv').value=''};
-    $('pidb').onclick=go;$('pidv').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();go()}};
-  }
-}
-async function npEnviar(forzar){
-  const b=$('npgo');b.disabled=true;b.innerHTML='Enviando…';
-  const body={...Object.fromEntries(['name','surname','phone','client_email','dni','state','city','colonia','zip_code','dir','rate_type','distribution_company_id','shop_order_id','notes'].map(k=>[k,NP[k]])),carrier_name:NP.carrierName,
-    products:NP.items.map(i=>{const v=itemVar(i);return {id:i.id,name:i.name+(v?' ('+v.label+')':''),price:Number(i.price),quantity:Number(i.qty),variation_id:i.variation_id||null}}),forzar};
-  try{const r=await post('crear',body);NP.res=r.orden;nuevo()}
-  catch(e){
-    if(e.data&&e.data.duplicado&&!forzar&&confirm(e.message+'\n\n¿Enviarlo de todos modos?'))return npEnviar(true);
-    b.disabled=false;b.innerHTML=I('send')+' Enviar al cliente';$('nperr').innerHTML=`<div class="err" style="margin-top:10px">${esc(e.message)}</div>`}}
-async function nuevo(){
-  await loadFav();await geoDeps();try{CAR=(await api('transportadoras')).transportadoras}catch(e){CAR=[]}let hist=[],demo=false;try{const h=await api('crear');hist=h.ordenes;demo=h.demo}catch(e){}
-  const histHTML=`<div class="card flat sec"><div class="hd"><h3>${I('clock')} Pedidos subidos desde VELTRIX</h3><span class="sp"></span><small>${hist.length} registros · sin datos del cliente</small></div>
-   <div class="scroll"><table class="tbl"><thead><tr><th>Fecha</th><th>ID Dropi</th><th>Estado</th><th>Productos</th><th>Total estimado</th><th>Pago</th><th>Resultado</th></tr></thead><tbody>
-   ${hist.map(h=>`<tr><td>${esc(h.fecha)}</td><td><span class="mono">${esc(h.id||'—')}</span></td><td>${esc(h.estado)}</td><td style="white-space:normal">${h.items.map(i=>esc(i.q+'× '+i.n)).join(', ')}</td><td>${mx(h.total)} <span class="mut">≈ ${penTxt(h.total)}</span></td><td>${h.rate==='CON RECAUDO'?'Contra entrega':'Pago anticipado'}</td>
-   <td>${h.demo?'<span class="chip">SIMULADO</span>':h.status==='creado'?'<span class="chip g">Creado</span>':h.status==='incierto'?'<span class="chip a">Verificar en Dropi</span>':'<span class="chip b">Enviando…</span>'}</td></tr>`).join('')||'<tr><td colspan=7 class="empty">Todavía no ha subido pedidos desde aquí</td></tr>'}</tbody></table></div></div>`;
-  if(NP&&NP.res){const r=NP.res;
-    view.innerHTML=`<div class="card flat" style="text-align:center;padding:30px"><div style="font-size:42px">✅</div><h2 style="margin:6px 0">${r.demo?'Pedido simulado':'Pedido creado en Dropi'}</h2>
-     <p class="mut">${r.demo?'Modo demostración: <b>no se envió nada</b> a Dropi.':'Dropi lo registró y la transportadora lo recogerá según su proceso.'}</p><p>ID: <span class="chip b mono" style="font-size:14px">${esc(r.id||'sin id devuelto')}</span> · Total estimado ${mx(r.total)} (≈ ${penTxt(r.total)}) + flete</p>
-     <p style="margin-top:16px"><button class="btn pri" id="npnew">Crear otra orden</button></p></div>${histHTML}${foot(0,Date.now())}`;
-    $('npnew').onclick=()=>{NP=npNew();nuevo()};return}
-  if(!NP)NP=npNew();
-  const T=(k,l,o={})=>`<label class="fl"><span class="${o.req?'req':''}">${l}</span><input data-k="${k}" value="${esc(NP[k])}" ${o.type?`type="${o.type}"`:''} ${o.ph?`placeholder="${esc(o.ph)}"`:''} ${o.max?`maxlength="${o.max}"`:''} ${o.mode?`inputmode="${o.mode}"`:''} autocomplete="off"></label>`;
-  view.innerHTML=`${demo?'<div class="err" style="background:var(--p-nov);color:var(--p-novt)">Modo demostración: esta cuenta no tiene token, los pedidos se <b>simulan</b> y no se envían a Dropi.</div>':''}
-  <div class="co-h"><h2>Crear Orden</h2><small class="mut">Mismo esquema que Dropi: cliente · transportadora · resumen</small></div>
-  <div class="co">
-   <div><div class="card flat"><h3 class="co-t">Información del cliente:</h3>
-     <div class="fg2">${T('name','Nombres',{req:1,max:60})}${T('surname','Apellidos',{req:1,max:60})}</div>
-     <div class="phone"><span class="flag">🇲🇽 <b>${esc(M.wa||'52')}</b></span>${T('phone','Número de teléfono',{req:1,max:20,mode:'tel',ph:'55 1234 5678'})}<button type="button" class="ic t-b" id="np-fp" title="Huella del cliente: ver su historial por teléfono">${I('finger')}</button></div>
-     <div class="fg2"><div><label class="fl"><span class="req">Estado</span><select id="np-state"><option value="">Estado</option>${DEPS.map(d=>`<option value="${esc(d.name)}" ${NP.state===d.name?'selected':''}>${esc(d.name)}</option>`).join('')}</select></label>${DEPS_ERR?`<div class="warn" style="font-size:11.5px;margin-top:4px">No se pudieron cargar los estados de Dropi (${esc(DEPS_ERR)}). Se usa una lista local.</div>`:''}</div>
-      <div id="np-city-wrap"></div></div>
-     <label class="fl" style="margin-top:12px"><span class="req">Dirección y complementos</span><textarea data-k="dir" rows="2" maxlength="200" placeholder="Calle, número, entre calles, referencias…">${esc(NP.dir)}</textarea></label>
-     <div class="fg2" style="margin-top:12px">${T('client_email','Correo electrónico (opcional)',{type:'email',max:100})}${T('zip_code','Código postal',{req:1,max:5,mode:'numeric',ph:'44100'})}</div>
-     <div class="fg2" style="margin-top:12px">${T('colonia','Colonia (opcional)',{max:80})}${T('shop_order_id','Referencia de tu tienda (opcional)',{max:60})}</div>
-     <label class="row" style="margin-top:14px;gap:10px;cursor:pointer"><input type="checkbox" id="np-notes" ${NP.notasOn?'checked':''}> <span>¿Desea agregar notas para el proveedor?</span></label>
-     <div id="np-notes-box" style="${NP.notasOn?'':'display:none'};margin-top:8px"><textarea data-k="notes" rows="2" maxlength="300" placeholder="Notas que se guardan en la orden">${esc(NP.notes)}</textarea></div></div>
-    <div class="card flat sec"><h3 class="co-t">Seleccionar Productos</h3><div id="pmode"></div><div id="cart" style="margin-top:12px"></div></div></div>
-   <div class="card flat"><h3 class="co-t">Seleccione una transportadora:</h3><div id="carr"></div><div id="orig" style="margin-top:12px"></div></div>
-   <div class="card flat" style="position:sticky;top:70px;align-self:start"><h3 class="co-t">Resumen de la orden:</h3><div id="npsum"></div></div>
-  </div>${histHTML}`;
-  view.querySelectorAll('[data-k]').forEach(i=>{const h=()=>{NP[i.dataset.k]=i.value;npSum();if(i.dataset.k==='zip_code')qDebounce()};i.oninput=h;i.onchange=h});
-  $('np-state').onchange=e=>{const d=DEPS.find(x=>x.name===e.target.value);NP.state=d?d.name:'';NP.depId=d?d.id:null;NP.city='';NP.cityObj=null;clrCar();cityDraw();qDebounce()};
-  $('np-notes').onchange=e=>{NP.notasOn=e.target.checked;$('np-notes-box').style.display=e.target.checked?'':'none'};
-  $('np-fp').onclick=async()=>{let t=String(NP.phone).replace(/\D/g,'');if(t.length<8)return modal('<p class="mut">Escriba primero el teléfono del cliente.</p>');
-    try{const r=await api('huella',{tel:t}),x=r.perfil;modal(`<h3>Huella del cliente</h3>${x?`<p>${esc(x.cliente)} · ${esc(x.tel)}</p><div class="k5" style="margin-top:10px">${kpi('Pedidos',x.total)}${kpi('Entregados',x.entregados,'','pos')}${kpi('Devueltos',x.devoluciones,'','neg')}${kpi('Cancelados',x.cancelados)}</div><p style="margin-top:12px">Riesgo: <b class="${x.riesgo==='alto'?'neg':x.riesgo==='medio'?'warn':'pos'}">${esc(x.riesgo)}</b></p>`:'<p class="mut">Este teléfono no tiene historial en el período: cliente nuevo.</p>'}`)}catch(e){modal(`<div class="err">${esc(e.message)}</div>`)}};
-  cityDraw();pmodeDraw();npCart();carrDraw();origDraw();npSum();
-}
 
 addEventListener('storage',ev=>{if(ev.key==='vx_mode'||ev.key==='vx_pen'){srcTxt();render()}});
 load();

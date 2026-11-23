@@ -377,7 +377,8 @@ async function route(req, res, q) {
       const demo = DEMO() && !process.env[S().tokenVar];
       const raw = demo ? mock.products('').slice(0, 6) : rows(await dropi('/integrations/products/index', { method: 'POST', body: { pageSize: 50, startData: 0, no_count: true, order_by: 'id', order_type: 'desc', favorite: true } }));
       const sold = {};
-      for (const o of await allOrders()) {
+      let ords = []; try { ords = await allOrders(); } catch (e) { /* sin pedidos: las tarjetas salen igual, con 0 ventas */ }
+      for (const o of ords) {
         if (groupOf(o) === 'cancelado') continue;
         const t = new Date(o.created_at).getTime(); if (!Number.isFinite(t)) continue;
         for (const d of o.orderdetails || []) { const id = d.product && d.product.id; if (id != null) (sold[id] ||= []).push([t, num(d.quantity || 1)]); }

@@ -219,7 +219,10 @@ function seg(id,items,active,cb){const el=$(id);el.innerHTML='<i class="pill-bg"
   requestAnimationFrame(move);setTimeout(move,60)}
 const cuenta=n=>CU.find(c=>c.n===n)||{sym:'$',dec:2,mon:'MXN',nombre:'',pais:''};
 const accSeg=(id,cb)=>seg(id,CU.map(c=>[String(c.n),`${esc(c.nombre)} <span style="font-size:9px">${c.conectada?'●':'○'}</span>`,c.conectada?'':'Sin token en Vercel']),ACT,k=>{ACT=Number(k);ST.adm=ACT;save();cb()});
-function openPed(){accSeg('ped-bar',openPed);const f=$('ped-if'),u='/pedidos-dropi?c='+ACT+'&t=nuevo';if(!f.src.endsWith(u))f.src=u}
+function openPed(){accSeg('ped-bar',openPed);const f=$('ped-if'),u='/subir-pedido?c='+ACT;if(!f.src.includes('/subir-pedido?c='+ACT+(f.src.includes('&add=')?'&add=':'')))f.src=u}
+// El boton «Enviar al cliente» de Favoritos (Admin Dropi) abre Subir pedido con ese producto
+addEventListener('message',e=>{const d=e.data;if(e.origin!==location.origin||!d||d.vx!=='add'||!Number.isInteger(d.id)||![1,2,3].includes(d.c))return;if(e.source!==$('adm-if').contentWindow)return;
+  ACT=d.c;ST.adm=ACT;save();go('ped');$('ped-if').src='/subir-pedido?c='+d.c+'&add='+d.id});
 function openAdm(){accSeg('adm-bar',openAdm);const f=$('adm-if'),u='/pedidos-dropi?c='+ACT;if(!f.src.endsWith(u))f.src=u}
 // ---------- dashboard ----------
 let LAST=null,busy=false;

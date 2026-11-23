@@ -48,6 +48,8 @@ npm test
 
 ## Subir pedidos a Dropi (pantalla «Crear Orden»)
 
+Es una **sección independiente** (`/subir-pedido`, menú lateral «Subir pedido»): no depende de Admin Dropi ni de la lectura de pedidos, tiene su propio selector de cuenta y no usa periodos. El botón «Enviar al cliente» de la pestaña Favoritos de Admin Dropi abre esta sección con ese producto.
+
 Tres columnas como la de Dropi: **cliente** (con estado y municipio de Dropi y huella por teléfono), **transportadora** (contra entrega / pago anticipado, con el flete cotizado de cada una) y **resumen** (total a recaudar, precio proveedor, envío y ganancias). Usa la API oficial de integraciones de Dropi: cabecera `dropi-integration-key`, `POST /orders/myorders` (`payment_method_id: 1`, `type: FINAL_ORDER`, `total_order`, `shop_order_id`, `distributionCompany`), `GET /department`, `POST /trajectory/bycity` y `POST /orders/cotizaEnvioTransportadoraV2`.
 
 

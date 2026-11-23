@@ -4,6 +4,7 @@
   "rewrites": [
     { "source": "/", "destination": "/api/page?p=veltrix" },
     { "source": "/pedidos-dropi", "destination": "/api/page?p=panel" },
+    { "source": "/subir-pedido", "destination": "/api/page?p=pedido" },
     { "source": "/theme.css", "destination": "/api/page?p=theme" }
   ],
   "headers": [

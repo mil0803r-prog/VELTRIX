@@ -1,7 +1,7 @@
 // Sirve las paginas de /private solo con sesion valida.
 const fs = require('fs'), path = require('path');
 const auth = require('./_auth');
-const FILES = { veltrix: ['veltrix.html', 'text/html; charset=utf-8'], panel: ['panel-dropi.html', 'text/html; charset=utf-8'], theme: ['theme.css', 'text/css; charset=utf-8'] };
+const FILES = { veltrix: ['veltrix.html', 'text/html; charset=utf-8'], panel: ['panel-dropi.html', 'text/html; charset=utf-8'], pedido: ['subir-pedido.html', 'text/html; charset=utf-8'], theme: ['theme.css', 'text/css; charset=utf-8'] };
 
 module.exports = (req, res) => {
   const q = req.query || Object.fromEntries(new URL(req.url, 'http://x').searchParams);
