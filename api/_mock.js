@@ -38,7 +38,7 @@ function orders(n) {
 function products(q) {
   return PRODS.filter((x) => !q || x.toLowerCase().includes(String(q).toLowerCase()))
     .map((nm, i) => ({ id: 100 + i, name: nm, sale_price: 90 + i * 15, suggested_price: 150 + i * 20, sku: 'SKU' + i, img: '',
-      gallery: [{ urlS3: 'https://example.com/p' + i + '.png' }],
+      gallery: [{ urlS3: 'https://example.com/p' + i + '.png' }], categories: [i % 2 ? 'Bisutería' : 'Moda'], stock: 599 - i * 37, created_at: '2026-11-1' + (i % 9) + 'T10:00:00Z', user: { name: ['IMPULSA', 'LogiStock', 'DropHub'][i % 3] }, type: i % 3 === 0 ? 'VARIABLE' : 'SIMPLE',
       variations: i % 3 === 0 ? [['Dorado', 40], ['Azul', 0], ['Rojo', 12], ['Negro', 99], ['Rosada', 5], ['Multicolor', 8]].map(([c, st], j) => ({ id: 1000 * (j + 1) + i, sku: 'SKU' + i + '-' + j, stock: st, sale_price: 90 + i * 15, suggested_price: 150 + i * 20 + j * 5, attributes: [{ name: 'Color', value: c }] })) : [] }));
 }
 const ESTADOS = ['Aguascalientes', 'Baja California', 'Baja California Sur', 'Campeche', 'Chiapas', 'Chihuahua', 'Ciudad de México', 'Coahuila', 'Colima', 'Durango', 'Estado de México', 'Guanajuato', 'Guerrero', 'Hidalgo', 'Jalisco', 'Michoacán', 'Morelos', 'Nayarit', 'Nuevo León', 'Oaxaca', 'Puebla', 'Querétaro', 'Quintana Roo', 'San Luis Potosí', 'Sinaloa', 'Sonora', 'Tabasco', 'Tamaulipas', 'Tlaxcala', 'Veracruz', 'Yucatán', 'Zacatecas'];

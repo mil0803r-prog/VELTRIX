@@ -190,6 +190,21 @@ function huella(list, tel) {
     .sort((a, b) => b.devoluciones + b.cancelados - (a.devoluciones + a.cancelados)).slice(0, 100);
 }
 
+// Producto de Dropi -> forma que usa el panel (catalogo, favoritos y pedidos)
+function mapProd(p) {
+  const gallery = p.gallery && p.gallery[0]; const u = String((gallery && (gallery.urlS3 || gallery.url)) || p.img || '');
+  const cat = p.categories && p.categories[0]; const stock = p.stock != null ? num(p.stock) : (p.warehouse_product || []).reduce((a, w) => a + num(w.stock), 0);
+  const vars = (p.variations || []).map((v) => {
+    const at = (v.attributes || v.attribute_values || []).map((x) => ({ n: String(x.name || (x.attribute && x.attribute.name) || '').slice(0, 30), v: String(x.value ?? '').slice(0, 40) })).filter((x) => x.v);
+    return { id: v.id, label: at.map((x) => (x.n ? x.n + ': ' : '') + x.v).join(' · ') || String(v.label || v.sku || ('Variación ' + v.id)).slice(0, 60),
+      color: (at.find((x) => /color|colour|estilo|modelo|dise/i.test(x.n)) || at[0] || {}).v || '', stock: v.stock == null ? null : num(v.stock), suggested: num(v.suggested_price), cost: num(v.sale_price) };
+  });
+  return { id: p.id, name: String(p.name || '').slice(0, 120), img: /^https:\/\//.test(u) ? u.slice(0, 300) : '', price: num(p.sale_price), cost: num(p.sale_price), suggested: num(p.suggested_price ?? p.sale_price),
+    type: String(p.type || (vars.length ? 'VARIABLE' : 'SIMPLE')).toUpperCase(), categoria: String((cat && (cat.name || cat)) || '').slice(0, 40), stock,
+    created: String(p.created_at || '').slice(0, 10), supplier_id: p.supplier_id ?? null,
+    prov: String((p.user && (p.user.name || p.user.store_name)) || p.supplier_name || (p.supplier_id ? 'Proveedor ' + p.supplier_id : '')).slice(0, 60), variations: vars };
+}
+
 // ---------- Subir pedidos a Dropi ----------
 const ORDER_PATH = () => process.env.DROPI_ORDER_PATH || '/integrations/orders/myorders';
 const QUOTE_PATH = () => process.env.DROPI_QUOTE_PATH || '/integrations/orders/cotizaEnvioTransportadoraV2';
@@ -323,16 +338,25 @@ async function route(req, res, q) {
     if (a === 'productos') { // catalogo de Dropi para elegir productos al subir un pedido
       const qq = String(q.q || q.id || '').trim().slice(0, 80), byId = q.id != null && q.id !== '' ? Number(q.id) : null;
       if (byId !== null && !(Number.isInteger(byId) && byId >= 1)) return json(res, 400, { error: 'El ID del producto debe ser un número' });
-      let raw = DEMO() && !process.env[S().tokenVar] ? mock.products(byId !== null ? '' : qq) : rows(await dropi('/integrations/products/index', { method: 'POST', body: { keywords: qq, pageSize: 20, startData: 0 } }));
+      let raw = DEMO() && !process.env[S().tokenVar] ? mock.products(byId !== null ? '' : qq) : rows(await dropi('/integrations/products/index', { method: 'POST', body: { keywords: qq, pageSize: 20, startData: 0, no_count: true } }));
       if (byId !== null) raw = raw.filter((p) => Number(p.id) === byId);
-      const img = (p) => { const u = String((p.gallery && p.gallery[0] && p.gallery[0].urlS3) || p.img || ''); return /^https:\/\//.test(u) ? u.slice(0, 300) : ''; };
-      return json(res, 200, { productos: raw.slice(0, 20).map((p) => ({ id: p.id, name: String(p.name || '').slice(0, 120), img: img(p), price: num(p.sale_price), suggested: num(p.suggested_price ?? p.sale_price),
-        prov: String((p.user && (p.user.name || p.user.store_name)) || p.supplier_name || '').slice(0, 60), cost: num(p.sale_price),
-        variations: (p.variations || []).map((v) => {
-          const at = (v.attributes || v.attribute_values || []).map((x) => ({ n: String(x.name || (x.attribute && x.attribute.name) || '').slice(0, 30), v: String(x.value ?? '').slice(0, 40) })).filter((x) => x.v);
-          return { id: v.id, label: at.map((x) => (x.n ? x.n + ': ' : '') + x.v).join(' · ') || String(v.label || v.sku || ('Variación ' + v.id)).slice(0, 60),
-            color: (at.find((x) => /color|colour|estilo|modelo|dise/i.test(x.n)) || at[0] || {}).v || '', stock: v.stock == null ? null : num(v.stock), suggested: num(v.suggested_price), cost: num(v.sale_price) };
-        }) })) });
+      return json(res, 200, { productos: raw.slice(0, 20).map(mapProd) });
+    }
+    if (a === 'favoritos') { // solo los productos marcados como favoritos en Dropi, con ventas propias de 7 y 30 dias
+      const demo = DEMO() && !process.env[S().tokenVar];
+      const raw = demo ? mock.products('').slice(0, 6) : rows(await dropi('/integrations/products/index', { method: 'POST', body: { pageSize: 50, startData: 0, no_count: true, order_by: 'id', order_type: 'desc', favorite: true } }));
+      const sold = {};
+      for (const o of await allOrders()) {
+        if (groupOf(o) === 'cancelado') continue;
+        const t = new Date(o.created_at).getTime(); if (!Number.isFinite(t)) continue;
+        for (const d of o.orderdetails || []) { const id = d.product && d.product.id; if (id != null) (sold[id] ||= []).push([t, num(d.quantity || 1)]); }
+      }
+      const series = (id, n) => {
+        const end = new Date(); end.setHours(23, 59, 59, 999); const arr = [];
+        for (let i = n - 1; i >= 0; i--) { const to = end.getTime() - i * 864e5, from = to - 864e5; arr.push({ f: new Date(to - 36e5).toISOString().slice(0, 10), n: (sold[id] || []).filter(([t]) => t > from && t <= to).reduce((x, [, c]) => x + c, 0) }); }
+        return arr;
+      };
+      return json(res, 200, { favoritos: raw.slice(0, 50).map((p) => ({ ...mapProd(p), d7: series(p.id, 7), d30: series(p.id, 30) })), demo });
     }
     if (a === 'geo') { // departamentos y ciudades de Dropi (para cotizar)
       const demo = DEMO() && !process.env[S().tokenVar];

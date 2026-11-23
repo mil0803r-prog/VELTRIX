@@ -73,5 +73,8 @@ const ck = { cookie: 'vx_s=' + auth.make() };
   const cs = r.body.carriers[0].cost; r = await Q({ city: { id: 1501 }, zip_code: '44100', cod: false, products: prodsQ }); assert.ok(r.body.carriers[0].cost < cs, 'sin recaudo es más barato');
   r = await Q({ city: { id: 0 }, zip_code: '44100', products: prodsQ }); assert.equal(r.code, 400); r = await Q({ city: { id: 5 }, zip_code: '4', products: prodsQ }); assert.equal(r.code, 400); r = await Q({ city: { id: 5 }, zip_code: '44100', products: [] }); assert.equal(r.code, 400);
   r = await call(dropi, { headers: ck, query: { a: 'huella', c: '1', tel: '5555555555' } }); assert.equal(r.code, 200);
+  r = await call(dropi, { headers: ck, query: { a: 'favoritos', c: '1' } }); assert.equal(r.code, 200); const fv = r.body.favoritos;
+  assert.ok(fv.length >= 3 && fv.every((p) => p.d7.length === 7 && p.d30.length === 30 && /^https:/.test(p.img) && p.categoria && p.prov && p.stock >= 0), 'tarjetas de favoritos completas');
+  assert.equal(fv[0].type, 'VARIABLE'); assert.ok(fv.some((p) => p.d30.some((d) => d.n > 0)), 'ventas propias por producto');
   console.log('OK: todas las pruebas pasaron');
 })().catch((e) => { console.error('FALLÓ:', e.message); process.exit(1); });

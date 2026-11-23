@@ -69,6 +69,17 @@ tr.hot td{background:rgba(190,18,60,.07)}tr.hot:hover td{background:rgba(190,18,
 .cmsg{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid color-mix(in srgb,var(--red) 35%,transparent);background:var(--p-bad);color:var(--p-badt);border-radius:10px;font-size:12px}.cmsg.ok{background:var(--gsoft);color:var(--g2);border-color:var(--line)}
 .rs-box{background:var(--card2);border-radius:12px;padding:12px 14px;margin-bottom:14px}.rs-h{display:flex;justify-content:space-between;font-size:12px;font-weight:700;border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:8px}.rs-p{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;padding:4px 0}.rs-v{font-size:11.5px;color:var(--mut);display:flex;align-items:center;gap:4px;margin-top:2px}.rs-t .kv{font-size:12.5px;padding:7px 0}
 .pcard{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px}.pimg{width:64px;height:64px;border-radius:10px;border:1px solid var(--line);background:var(--solid);object-fit:cover;flex-shrink:0}
+.fgrid{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(235px,1fr))}.fgrid.compact{grid-template-columns:repeat(auto-fill,minmax(185px,1fr))}
+.fcard{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow);transition:.3s var(--ease);animation:rise .5s var(--ease) both}.fcard:hover{transform:translateY(-3px);border-color:var(--gl)}
+.fimg{position:relative;aspect-ratio:1/1;background:var(--card2);display:grid;place-items:center;overflow:hidden;color:var(--mut)}.fimg img{width:100%;height:100%;object-fit:cover}
+.fbadge{position:absolute;top:10px;left:10px;background:var(--c-pend);color:#fff;font-weight:700;font-size:12px;padding:5px 12px;border-radius:99px;box-shadow:0 4px 10px -4px rgba(0,0,0,.4)}
+.fheart{position:absolute;right:10px;bottom:10px;width:38px;height:38px;border-radius:12px;background:var(--solid);display:grid;place-items:center;color:var(--c-pend);box-shadow:var(--shadow)}.fheart svg{fill:currentColor;stroke:none;width:18px;height:18px}
+.fbody{padding:14px;display:flex;flex-direction:column;gap:6px;flex:1}.fmeta{display:flex;justify-content:space-between;color:var(--mut);font-size:12.5px}.fname{font-weight:650;font-size:16px;line-height:1.25}.fprov{font-size:12.5px;color:var(--mut)}.fprov b{color:var(--blue)}
+.fprice{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}.fprice small{display:block;color:var(--mut);font-size:11.5px}.fp1{font-size:16px;color:var(--mut)}.fp2{font-size:19px;font-weight:700}
+.fchart{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:10px;margin-top:6px}.ftabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--bg);padding:3px;border-radius:10px}.ftabs button{border:0;background:none;border-radius:8px;padding:6px;font:inherit;font-weight:600;font-size:12.5px;cursor:pointer;color:var(--text)}.ftabs button.on{background:var(--blue);color:#fff}
+.fsales{text-align:right;margin:8px 4px 0}.fsales b{display:block;color:var(--blue);font-size:13px;line-height:1}.fsales small{font-size:11px;color:var(--mut)}.fchart svg{width:100%;height:74px;display:block}.fchart text{font-size:8px;fill:var(--mut)}.frange{text-align:center;font-size:12px;color:var(--mut);margin-top:4px}
+.fcre{font-size:11.5px;color:var(--mut);margin-top:6px}.fsend{border:0;border-top:1px solid var(--line);background:var(--solid);color:var(--g2);font:inherit;font-weight:700;padding:13px;cursor:pointer;display:flex;gap:8px;align-items:center;justify-content:center;transition:.2s}.fsend:hover{background:var(--gsoft)}
+.compact .fname{font-size:14px}.compact .fprice .fp1,.compact .fp2{font-size:14px}.compact .fbody{gap:4px;padding:10px}
 @media(max-width:1250px){.co{grid-template-columns:1fr 1fr}.co>div:first-child{grid-column:1/-1}}@media(max-width:820px){.co{grid-template-columns:1fr}.fg2{grid-template-columns:1fr}}
 @media(max-width:1000px){.twocol,.ofgrid{grid-template-columns:1fr}}
 </style></head><body>
@@ -78,7 +89,7 @@ tr.hot td{background:rgba(190,18,60,.07)}tr.hot:hover td{background:rgba(190,18,
 <div class="tabs" id="tabs"></div><div id="view"><div class="empty">Cargando…</div></div>
 <script>
 const CTA=Number(new URLSearchParams(location.search).get('c'))||1,RET=5;
-let M={sym:'$',dec:2,wa:'',mon:'MXN',pen:0.2,base:''},D=null,tab=(['resumen','ofi','prov','nov','rend','pagos','nuevo'].includes(new URLSearchParams(location.search).get('t'))?new URLSearchParams(location.search).get('t'):'resumen'),FAV={items:[],hide:[],dir:{},msg:''};
+let M={sym:'$',dec:2,wa:'',mon:'MXN',pen:0.2,base:''},D=null,tab=(['resumen','ofi','prov','fav','nov','rend','pagos','nuevo'].includes(new URLSearchParams(location.search).get('t'))?new URLSearchParams(location.search).get('t'):'resumen'),FAV={items:[],hide:[],dir:{},msg:''};
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const nf=(n,d)=>Number(n||0).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
@@ -92,9 +103,9 @@ const waLink=(t,txt)=>'https://wa.me/'+(String(t).startsWith(M.wa)?t:M.wa+t)+(tx
 const view=$('view');
 async function api(a,extra={},opt){const p=new URLSearchParams({a,c:CTA,d:$('per').value,...extra});const r=await fetch('/api/dropi?'+p,opt);const j=await r.json().catch(()=>({error:'Respuesta inválida'}));if(!r.ok){const er=new Error(j.error||r.status);er.data=j;er.status=r.status;throw er}return j}
 const post=(a,body,extra)=>api(a,extra,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-const IC={chart:'<path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/>',building:'<rect width="16" height="20" x="4" y="2" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/>',truck:'<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>',bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',trend:'<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',wallet:'<path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>',clock:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',finger:'<path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"/><path d="M14 13.12c0 2.38 0 6.38-1 8.88M17.29 21.02c.12-.6.43-2.3.5-3.02M2 12a10 10 0 0 1 18-6M2 16h.01M21.8 16c.2-2 .131-5.354 0-6M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2M8.65 22c.21-.66.45-1.32.57-2M9 6.8a6 6 0 0 1 9 5.2v2"/>',wa:'<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',pencil:'<path d="M21.17 6.81a1 1 0 0 0-3.99-3.99L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5Z"/>',x:'<path d="M18 6 6 18M6 6l12 12"/>',star:'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',plus:'<path d="M5 12h14M12 5v14"/>',send:'<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',alert:'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4M12 17h.01"/>'};
+const IC={chart:'<path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/>',building:'<rect width="16" height="20" x="4" y="2" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/>',truck:'<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>',bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',trend:'<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',wallet:'<path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>',clock:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',finger:'<path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"/><path d="M14 13.12c0 2.38 0 6.38-1 8.88M17.29 21.02c.12-.6.43-2.3.5-3.02M2 12a10 10 0 0 1 18-6M2 16h.01M21.8 16c.2-2 .131-5.354 0-6M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2M8.65 22c.21-.66.45-1.32.57-2M9 6.8a6 6 0 0 1 9 5.2v2"/>',wa:'<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',pencil:'<path d="M21.17 6.81a1 1 0 0 0-3.99-3.99L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5Z"/>',x:'<path d="M18 6 6 18M6 6l12 12"/>',star:'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',cart:'<circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>',heart:'<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>',plus:'<path d="M5 12h14M12 5v14"/>',send:'<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',alert:'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4M12 17h.01"/>'};
 const I=n=>`<svg class="i" viewBox="0 0 24 24">${IC[n]}</svg>`;
-const TABS=[['resumen','Resumen','chart'],['ofi','Oficina','building'],['prov','Proveedores','truck'],['nov','Novedades','bell'],['rend','Rendimiento','trend'],['pagos','Pagos','wallet'],['nuevo','Subir pedido','plus']];
+const TABS=[['resumen','Resumen','chart'],['ofi','Oficina','building'],['prov','Proveedores','truck'],['fav','Favoritos','star'],['nov','Novedades','bell'],['rend','Rendimiento','trend'],['pagos','Pagos','wallet'],['nuevo','Subir pedido','plus']];
 $('tabs').innerHTML=TABS.map(([k,v,i])=>`<button data-t="${k}">${I(i)}${v}</button>`).join('');
 $('tabs').onclick=e=>{const b=e.target.closest('[data-t]');if(b){tab=b.dataset.t;render()}};
 $('ref').onclick=()=>load(true);$('per').onchange=()=>load();
@@ -149,7 +160,7 @@ const srcTxt=()=>{if(M.pais)$('src').textContent='Fuente: Dropi '+M.pais+' · '+
 async function render(){
   document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
   if(!D)return;
-  try{await ({resumen,ofi,prov,nov,rend,pagos,nuevo}[tab])();view.querySelectorAll('.card').forEach((c,i)=>c.style.setProperty('--i',Math.min(i,14)))}catch(e){view.innerHTML=`<div class="err">${esc(e.message)}</div>`}
+  try{await ({resumen,ofi,prov,fav,nov,rend,pagos,nuevo}[tab])();view.querySelectorAll('.card').forEach((c,i)=>c.style.setProperty('--i',Math.min(i,14)))}catch(e){view.innerHTML=`<div class="err">${esc(e.message)}</div>`}
 }
 async function loadFav(){try{FAV=await api('favs')}catch(e){}return FAV}
 
@@ -333,6 +344,38 @@ async function pagos(){
   $('pm').onclick=async()=>{if(!rows.length)return;await post('pagos',{ids:rows.slice(0,300).map(p=>p.id),pagado:PG.f!=='pag'});pagos()};
 }
 
+/* ================= FAVORITOS DE DROPI (tarjetas con foto) ================= */
+let DF=null;
+async function loadDF(force){if(DF&&!force)return DF;DF=(await api('favoritos')).favoritos;return DF}
+const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+function miniChart(ser){
+  const n=ser.length,W=200,H=70,L=8,R=8,T=8,B=16,mx_=Math.max(1,...ser.map(x=>x.n)),X=i=>L+(n>1?i*(W-L-R)/(n-1):0),Y=v=>T+(H-T-B)*(1-v/mx_);
+  const pts=ser.map((x,i)=>[X(i),Y(x.n)]),lab=ser.map((x,i)=>(n<=7||i===0||i===n-1||i===Math.floor(n/2))?`<text x="${X(i)}" y="${H-3}" text-anchor="middle">${+x.f.slice(8)}/${+x.f.slice(5,7)}</text>`:'').join('');
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><polyline fill="none" stroke="var(--blue)" stroke-width="2" stroke-linejoin="round" points="${pts.map(q=>q.join(',')).join(' ')}"/>${pts.map((q,i)=>n<=7?`<circle cx="${q[0]}" cy="${q[1]}" r="3" fill="var(--solid)" stroke="var(--blue)" stroke-width="1.8"><title>${esc(ser[i].f)}: ${ser[i].n}</title></circle>`:'').join('')}${lab}</svg>`}
+function chartIn(p,r){const ser=r===30?p.d30:p.d7,a=ser[0].f,b=ser[ser.length-1].f,tot=ser.reduce((x,y)=>x+y.n,0);
+  return `<div class="fsales"><b>${tot}</b><small>Ventas</small></div>${miniChart(ser)}<div class="frange">Del ${+a.slice(8)} ${+a.slice(5,7)!==+b.slice(5,7)?'de '+MESES[+a.slice(5,7)-1]+' ':''}al ${+b.slice(8)} de ${MESES[+b.slice(5,7)-1]}</div>`}
+function favCard(p,k,compact){
+  const cr=p.created?p.created.slice(8,10)+'/'+p.created.slice(5,7)+'/'+p.created.slice(2,4):'';
+  return `<div class="fcard" data-fk="${k}"><div class="fimg">${p.img?`<img src="${esc(p.img)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">`:I('star')}${p.type==='VARIABLE'?'<span class="fbadge">Variable</span>':''}<span class="fheart" title="Favorito en Dropi">${I('heart')}</span></div>
+   <div class="fbody"><div class="fmeta"><span>${esc(p.categoria||'—')}</span><span>Stock: <b class="${p.stock>0?'pos':'neg'}">${esc(p.stock)}</b></span></div><div class="fname">${esc(p.name)}</div><div class="fprov">Provider: <b>${esc(p.prov||'—')}</b></div>
+   <div class="fprice"><div><small>Precio proveedor:</small><div class="fp1">${money(p.cost)}</div></div><div><small>Sugerido${p.type==='VARIABLE'?' (variable)':''}</small><div class="fp2">${money(p.suggested)}</div></div></div>
+   ${compact?'':`<div class="fchart"><div class="ftabs"><button type="button" class="on" data-r="7">7 días</button><button type="button" data-r="30">30 días</button></div><div class="fchartin">${chartIn(p,7)}</div></div><div class="fcre">Creación: ${esc(cr)} · ID ${esc(p.id)}</div>`}</div>
+   <button type="button" class="fsend" data-send="${k}">${I('cart')} ${compact?'Agregar al pedido':'Enviar al cliente'}</button></div>`}
+function wireFav(el,L){
+  el.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{const c=b.closest('.fcard'),p=L[c.dataset.fk];c.querySelectorAll('[data-r]').forEach(x=>x.classList.toggle('on',x===b));c.querySelector('.fchartin').innerHTML=chartIn(p,Number(b.dataset.r))});
+  el.querySelectorAll('[data-send]').forEach(b=>b.onclick=()=>sendFav(L[b.dataset.send]))}
+async function sendFav(p){
+  if(tab!=='nuevo'){tab='nuevo';if(!NP||NP.res)NP=npNew();await render()}
+  npAddProd(p,'Agregado desde Favoritos: '+p.name)}
+async function fav(){
+  view.innerHTML='<div class="empty">Cargando sus favoritos de Dropi…</div>';let L;
+  try{L=await loadDF(true)}catch(e){view.innerHTML=`<div class="card flat"><div class="hd"><h3>${I('star')} Favoritos de Dropi</h3></div><div class="err">No se pudieron leer sus favoritos de Dropi: ${esc(e.message)}</div><p class="mut" style="font-size:12px">Si el mensaje dice 429, Dropi limitó las consultas: espere un minuto y pulse Actualizar. Mientras tanto puede ver sus favoritos manuales en la pestaña Proveedores.</p></div>`;return}
+  const draw=()=>{const q=($('ffq')||{value:''}).value.toLowerCase(),r=L.filter(p=>!q||(p.name+' '+p.prov+' '+p.categoria).toLowerCase().includes(q));
+    $('fgrid').innerHTML=r.map(p=>favCard(p,L.indexOf(p),false)).join('')||'<div class="empty">No hay favoritos que coincidan.</div>';wireFav($('fgrid'),L)};
+  view.innerHTML=`<div class="hd"><h3>${I('star')} Productos favoritos de Dropi</h3><small>${L.length} productos · solo los marcados con ♥ en Dropi</small><span class="sp"></span><input id="ffq" placeholder="Buscar por nombre, proveedor o categoría…" style="min-width:260px"></div>
+   ${L.length?'':'<div class="empty">No tiene productos favoritos en Dropi. Márquelos con el corazón en Dropi y aparecerán aquí con su foto.</div>'}<div class="fgrid" id="fgrid"></div>${foot(0,Date.now())}`;
+  $('ffq').oninput=draw;draw()}
+
 /* ================= CREAR ORDEN (mismo esquema que Dropi: cliente · transportadora · resumen) ================= */
 const MX_ESTADOS=['Aguascalientes','Baja California','Baja California Sur','Campeche','Chiapas','Chihuahua','Ciudad de México','Coahuila','Colima','Durango','Estado de México','Guanajuato','Guerrero','Hidalgo','Jalisco','Michoacán','Morelos','Nayarit','Nuevo León','Oaxaca','Puebla','Querétaro','Quintana Roo','San Luis Potosí','Sinaloa','Sonora','Tabasco','Tamaulipas','Tlaxcala','Veracruz','Yucatán','Zacatecas'];
 const COLORS={dorado:'#d4af37',dorada:'#d4af37',oro:'#d4af37',azul:'#2563eb',rojo:'#dc2626',roja:'#dc2626',negro:'#111827',negra:'#111827',verde:'#16a34a',rosa:'#f472b6',rosada:'#f472b6',rosado:'#f472b6',blanco:'#f8fafc',blanca:'#f8fafc',morado:'#7c3aed',morada:'#7c3aed',lila:'#a78bfa',amarillo:'#facc15',amarilla:'#facc15',naranja:'#f97316',gris:'#9ca3af',plateado:'#cbd5e1',plateada:'#cbd5e1',plata:'#cbd5e1',cafe:'#78350f',marron:'#78350f',beige:'#e7d3b0',crema:'#f5efd9',celeste:'#7dd3fc',turquesa:'#14b8a6',vino:'#7f1d1d',fucsia:'#d946ef',cobre:'#b87333',bronce:'#cd7f32',transparente:'#e5e7eb',multicolor:'conic-gradient(#ef4444,#f59e0b,#facc15,#22c55e,#3b82f6,#8b5cf6,#ef4444)'};
@@ -445,11 +488,16 @@ function pmodeDraw(){
     $('psb').onclick=buscar;$('ps').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();buscar()}};
     if(NP.q){$('ps').value=NP.q;NP.q='';buscar()}
   }else if(NP.pm==='fav'){
-    body.innerHTML=`<input id="fs" placeholder="Buscar en favoritos…" value="${esc(NP.fs)}" style="width:100%;margin-bottom:8px"><div id="fl2"></div><p class="mut" style="font-size:12px;margin:8px 0 0">Los favoritos con ID se agregan directo; los que no tienen ID se buscan por nombre en el catálogo. Adminístrelos en la pestaña Proveedores.</p>`;
-    const draw=()=>{const q=NP.fs.toLowerCase(),r=fl.filter(f=>!q||(f.name+' '+f.prov).toLowerCase().includes(q));
-      $('fl2').innerHTML=r.map(f=>`<div class="frow"><div style="flex:1"><div class="nm">${f.star?I('star')+' ':''}${esc(f.name)}</div><div class="sb">${esc(f.prov||'Sin proveedor')} · ${f.id?'ID '+esc(f.id):'sin ID (se buscará en el catálogo)'}</div></div><button type="button" class="btn sm" data-fa="${fl.indexOf(f)}">+ Agregar</button></div>`).join('')||'<div class="empty">Sin favoritos todavía.</div>';
-      $('fl2').querySelectorAll('[data-fa]').forEach(b=>b.onclick=()=>{const f=fl[b.dataset.fa];if(f.id)npResolveId(f.id,f.name);else{NP.pm='cat';NP.q=f.name;pmodeDraw()}})};
-    $('fs').oninput=e=>{NP.fs=e.target.value;draw()};draw();
+    const manual=(note)=>{body.innerHTML=`${note?`<div class="cmsg" style="margin-bottom:10px">${esc(note)}</div>`:''}<input id="fs" placeholder="Buscar en favoritos…" value="${esc(NP.fs)}" style="width:100%;margin-bottom:8px"><div id="fl2"></div><p class="mut" style="font-size:12px;margin:8px 0 0">Los favoritos con ID se agregan directo; los que no tienen ID se buscan por nombre en el catálogo.</p>`;
+      const draw=()=>{const q=NP.fs.toLowerCase(),r=fl.filter(f=>!q||(f.name+' '+f.prov).toLowerCase().includes(q));
+        $('fl2').innerHTML=r.map(f=>`<div class="frow"><div style="flex:1"><div class="nm">${f.star?I('star')+' ':''}${esc(f.name)}</div><div class="sb">${esc(f.prov||'Sin proveedor')} · ${f.id?'ID '+esc(f.id):'sin ID (se buscará en el catálogo)'}</div></div><button type="button" class="btn sm" data-fa="${fl.indexOf(f)}">+ Agregar</button></div>`).join('')||'<div class="empty">Sin favoritos todavía.</div>';
+        $('fl2').querySelectorAll('[data-fa]').forEach(b=>b.onclick=()=>{const f=fl[b.dataset.fa];if(f.id)npResolveId(f.id,f.name);else{NP.pm='cat';NP.q=f.name;pmodeDraw()}})};
+      $('fs').oninput=e=>{NP.fs=e.target.value;draw()};draw()};
+    body.innerHTML='<div class="mut">Cargando favoritos de Dropi…</div>';
+    loadDF().then(L=>{if(NP.pm!=='fav')return;
+      body.innerHTML=`<input id="fs" placeholder="Buscar en favoritos de Dropi…" value="${esc(NP.fs)}" style="width:100%;margin-bottom:10px"><div class="fgrid compact" id="fgp"></div>`;
+      const draw=()=>{const q=NP.fs.toLowerCase(),r=L.filter(p=>!q||(p.name+' '+p.prov+' '+p.categoria).toLowerCase().includes(q));$('fgp').innerHTML=r.map(p=>favCard(p,L.indexOf(p),true)).join('')||'<div class="empty">No tiene favoritos en Dropi.</div>';wireFav($('fgp'),L)};
+      $('fs').oninput=e=>{NP.fs=e.target.value;draw()};draw()}).catch(e=>{if(NP.pm==='fav')manual('No se pudieron leer sus favoritos de Dropi ('+e.message+'). Se muestran los de sus pedidos y los que agregó a mano.')});
   }else{
     body.innerHTML=`<div class="row"><input id="pidv" type="number" min="1" step="1" placeholder="ID del producto en Dropi" style="flex:1;min-width:200px"><button type="button" class="btn pri" id="pidb">Agregar por ID</button></div><p class="mut" style="font-size:12px;margin:8px 0 0">Escriba el ID tal como aparece en Dropi. Si está en el catálogo se completan el nombre, el precio y las variaciones.</p>`;
     const go=()=>{const v=$('pidv').value.trim();if(!/^\d+$/.test(v)||Number(v)<1){$('pm-msg').innerHTML='<span class="neg">Escriba un ID numérico</span>';return}npResolveId(Number(v));$('pidv').value=''};
