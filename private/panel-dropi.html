@@ -262,10 +262,10 @@ async function prov(){
    ${!crit.length&&!aten.length?`<div class="empty">Ningún proveedor con pedidos sin despachar hace ${N}+ días.</div>`:''}
    ${sel?`<div class="scroll" style="margin-top:10px;max-height:260px"><table class="tbl"><thead><tr><th>#</th><th>Estado</th><th>Producto</th><th>Cliente</th><th>Guía</th><th>Días</th></tr></thead><tbody>${sel.items.map(x=>`<tr><td>${esc(x.id)}</td><td>${estPill(x.estado,'proceso')}</td><td>${esc(x.prod)}</td><td>${esc(x.cliente)}</td><td><span class="mono mut">${esc(x.guia)}</span></td><td><span class="chip ${x.dias>=N*2?'r':x.dias>=N?'a':'g'}">${x.dias} d</span></td></tr>`).join('')}</tbody></table></div>`:''}</div>
   <div class="card flat sec"><div class="hd"><h3>${I('star')} Productos favoritos</h3><small>${fl.length} productos</small><span class="sp"></span><button class="btn sm" id="fmsg">${I('pencil')} Mensaje</button></div>
-   <div class="filters" style="margin-top:0"><input id="a-n" placeholder="Producto"><input id="a-p" placeholder="Proveedor"><input id="a-w" placeholder="WhatsApp del proveedor" inputmode="tel"><button class="btn pri" id="a-b">Agregar</button></div>
+   <div class="filters" style="margin-top:0"><input id="a-n" placeholder="Producto"><input id="a-p" placeholder="Proveedor"><input id="a-i" placeholder="ID del producto (opcional)" inputmode="numeric" maxlength="12"><input id="a-w" placeholder="WhatsApp del proveedor" inputmode="tel"><button class="btn pri" id="a-b">Agregar</button></div>
    <div class="filters"><input id="sq" placeholder="Buscar producto o proveedor…" value="${esc(PS.fq)}"></div>
    <div class="row" id="pchip"><button class="fchip ${PS.fp?'':'on'}" data-p="">Todos los proveedores (${fl.length})</button>${Object.entries(grp).sort().map(([k,v])=>`<button class="fchip ${PS.fp===k?'on':''}" data-p="${esc(k)}">${esc(k.charAt(0)+k.slice(1).toLowerCase())} (${v.length})</button>`).join('')}</div>
-   ${Object.entries(vg).sort().map(([k,v])=>`<div class="gl">${esc(k)} · ${v.length}</div>${v.map(f=>{const w=FAV.dir[f.prov];return `<div class="frow"><div style="flex:1;min-width:200px"><div class="nm">${f.star?I('star')+' ':''}${esc(f.name)}</div><div class="sb">${esc(f.prov||'—')} · ${w?'📱 '+esc(w):'Sin WhatsApp del proveedor'}</div></div>
+   ${Object.entries(vg).sort().map(([k,v])=>`<div class="gl">${esc(k)} · ${v.length}</div>${v.map(f=>{const w=FAV.dir[f.prov];return `<div class="frow"><div style="flex:1;min-width:200px"><div class="nm">${f.star?I('star')+' ':''}${esc(f.name)}</div><div class="sb">${f.id?'ID '+esc(f.id)+' · ':''}${esc(f.prov||'—')} · ${w?'📱 '+esc(w):'Sin WhatsApp del proveedor'}</div></div>
      ${w?`<a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/${esc(w)}?text=${encodeURIComponent(tpl(f))}">${I('wa')} Pedir foto o video</a>`:`<input data-wi="${esc(f.prov)}" placeholder="WhatsApp del proveedor" inputmode="tel" ${f.prov?'':'disabled'}><button class="btn sm" data-ws="${esc(f.prov)}" ${f.prov?'':'disabled'}>${f.prov?'Guardar WhatsApp':'Falta el proveedor'}</button>`}
      <button class="ic" style="background:var(--card2);border:1px solid var(--line)" data-ed="${esc(f.name)}" title="Cambiar proveedor / WhatsApp">${I('pencil')}</button><button class="ic" style="background:var(--card2);border:1px solid var(--line)" data-rm="${esc(f.name)}" title="Quitar">${I('x')}</button></div>`}).join('')}`).join('')||'<div class="empty">Sin productos</div>'}</div>${foot(D.ms,D.cache)}`;
   view.querySelectorAll('[data-sel]').forEach(b=>b.onclick=()=>{PS.sel=PS.sel===b.dataset.sel?null:b.dataset.sel;prov()});
@@ -273,13 +273,13 @@ async function prov(){
   $('sq').oninput=e=>{PS.fq=e.target.value;const p=e.target.selectionStart;prov().then(()=>{const n=$('sq');n.focus();n.setSelectionRange(p,p)})};
   $('pchip').onclick=e=>{const b=e.target.closest('[data-p]');if(b){PS.fp=b.dataset.p;prov()}};
   $('fmsg').onclick=async()=>{const m=prompt('Mensaje para pedir foto o video. Puede usar {producto} y {proveedor}:',FAV.msg||'Hola, ¿me puedes enviar una foto o video de {producto}? Gracias.');if(m)try{await post('favs',{op:'msg',msg:m});prov()}catch(e){alert(e.message)}};
-  $('a-b').onclick=async()=>{const n=$('a-n').value.trim();if(!n)return $('a-n').focus();try{await post('favs',{op:'add',item:{name:n,prov:$('a-p').value,wa:$('a-w').value}});prov()}catch(e){alert(e.message)}};
+  $('a-b').onclick=async()=>{const n=$('a-n').value.trim();if(!n)return $('a-n').focus();try{await post('favs',{op:'add',item:{name:n,prov:$('a-p').value,id:$('a-i').value,wa:$('a-w').value}});prov()}catch(e){alert(e.message)}};
   view.querySelectorAll('[data-ws]').forEach(b=>b.onclick=async()=>{const w=view.querySelector(`[data-wi="${CSS.escape(b.dataset.ws)}"]`).value;if(!w.trim())return;try{await post('favs',{op:'wa',prov:b.dataset.ws,wa:w});prov()}catch(e){alert(e.message)}});
   view.querySelectorAll('[data-rm]').forEach(b=>b.onclick=async()=>{if(confirm('¿Quitar "'+b.dataset.rm+'" de favoritos?')){await post('favs',{op:'del',name:b.dataset.rm});prov()}});
-  view.querySelectorAll('[data-ed]').forEach(b=>b.onclick=async()=>{const p=prompt('Proveedor de "'+b.dataset.ed+'":');if(p===null)return;const w=prompt('WhatsApp del proveedor (opcional, solo números con código de país):')||'';try{await post('favs',{op:'prov',name:b.dataset.ed,prov:p,wa:w});prov()}catch(e){alert(e.message)}});
+  view.querySelectorAll('[data-ed]').forEach(b=>b.onclick=async()=>{const p=prompt('Proveedor de "'+b.dataset.ed+'":');if(p===null)return;const cur=favList().find(x=>x.name===b.dataset.ed)||{};const i=prompt('ID del producto en Dropi (opcional, solo número):',cur.id||'');if(i===null)return;const w=prompt('WhatsApp del proveedor (opcional, solo números con código de país):')||'';try{await post('favs',{op:'prov',name:b.dataset.ed,prov:p,id:i,wa:w});prov()}catch(e){alert(e.message)}});
 }
-function favList(){const hide=new Set(FAV.hide||[]),man=new Map((FAV.items||[]).map(x=>[x.name.toLowerCase(),x])),out=(FAV.items||[]).map(x=>({name:x.name,prov:x.prov||'',star:true}));
-  for(const p of D.productos){if(hide.has(p.nombre)||man.has(p.nombre.toLowerCase()))continue;out.push({name:p.nombre,prov:p.prov||'',star:false})}return out}
+function favList(){const hide=new Set(FAV.hide||[]),man=new Map((FAV.items||[]).map(x=>[x.name.toLowerCase(),x])),out=(FAV.items||[]).map(x=>({name:x.name,prov:x.prov||'',id:x.id||null,star:true}));
+  for(const p of D.productos){if(hide.has(p.nombre)||man.has(p.nombre.toLowerCase()))continue;out.push({name:p.nombre,prov:p.prov||'',id:p.pid||null,star:false})}return out}
 
 /* ================= NOVEDADES ================= */
 async function nov(){
@@ -321,7 +321,7 @@ async function pagos(){
 
 /* ================= SUBIR PEDIDO ================= */
 const MX_ESTADOS=['Aguascalientes','Baja California','Baja California Sur','Campeche','Chiapas','Chihuahua','Ciudad de México','Coahuila','Colima','Durango','Estado de México','Guanajuato','Guerrero','Hidalgo','Jalisco','Michoacán','Morelos','Nayarit','Nuevo León','Oaxaca','Puebla','Querétaro','Quintana Roo','San Luis Potosí','Sinaloa','Sonora','Tabasco','Tamaulipas','Tlaxcala','Veracruz','Yucatán','Zacatecas'];
-const npNew=()=>({name:'',surname:'',phone:'',client_email:'',dni:'',state:'',city:'',colonia:'',zip_code:'',dir:'',rate_type:'CON RECAUDO',distribution_company_id:'',shop_order_id:'',shop_order_number:'',notes:'',items:[],ok:false,res:null});
+const npNew=()=>({name:'',surname:'',phone:'',client_email:'',dni:'',state:'',city:'',colonia:'',zip_code:'',dir:'',rate_type:'CON RECAUDO',distribution_company_id:'',shop_order_id:'',shop_order_number:'',notes:'',items:[],ok:false,res:null,pm:'cat',q:'',fs:''});
 let NP=null;
 const mx=n=>'MX$ '+nf(n,2),penTxt=n=>'S/ '+nf(n*penRate(),2);
 function npErrors(){
@@ -349,8 +349,8 @@ function npSum(){
   $('npok').onchange=ev=>{NP.ok=ev.target.checked;npSum()};$('npgo').onclick=()=>npEnviar(false)}
 function npCart(){
   const el=$('cart');if(!el)return;
-  el.innerHTML=NP.items.map((i,k)=>`<div class="frow"><div style="flex:1;min-width:180px"><div class="nm">${esc(i.name)}</div><div class="sb">ID ${esc(i.id)}${i.suggested?' · sugerido '+mx(i.suggested):''}</div></div>
-   ${i.variations.length?`<label class="fl" style="margin:0"><span class="req">Variación</span><select data-ci="${k}" data-f="variation_id"><option value="">Elegir…</option>${i.variations.map(v=>`<option value="${esc(v.id)}" ${String(i.variation_id)===String(v.id)?'selected':''}>${esc(v.label)}</option>`).join('')}</select></label>`:''}
+  el.innerHTML=NP.items.map((i,k)=>`<div class="frow"><div style="flex:1;min-width:180px"><div class="nm">${esc(i.name)}</div><div class="sb">ID ${esc(i.id)}${i.suggested?' · sugerido '+mx(i.suggested):''}${i.manual?' · <span class="warn">no está en el catálogo: se enviará tal cual</span>':''}</div></div>
+   ${i.manual?`<label class="fl" style="margin:0"><span>ID de variación (opcional)</span><input data-ci="${k}" data-f="variation_id" value="${esc(i.variation_id)}" inputmode="numeric" style="width:130px"></label>`:''}${i.variations.length?`<label class="fl" style="margin:0"><span class="req">Variación</span><select data-ci="${k}" data-f="variation_id"><option value="">Elegir…</option>${i.variations.map(v=>`<option value="${esc(v.id)}" ${String(i.variation_id)===String(v.id)?'selected':''}>${esc(v.label)}</option>`).join('')}</select></label>`:''}
    <label class="fl" style="margin:0"><span>Cantidad</span><input type="number" min="1" max="50" step="1" value="${esc(i.qty)}" data-ci="${k}" data-f="qty" style="width:80px"></label>
    <label class="fl" style="margin:0"><span class="req">Precio de venta (MXN)</span><input type="number" min="0" step="0.01" value="${esc(i.price)}" data-ci="${k}" data-f="price" style="width:130px"></label>
    <b style="min-width:90px;text-align:right">${mx((Number(i.price)||0)*(Number(i.qty)||0))}</b><button class="ic" style="background:var(--card2);border:1px solid var(--line)" data-cx="${k}" title="Quitar">${I('x')}</button></div>`).join('')||'<div class="empty">Busque un producto del catálogo de Dropi y agréguelo.</div>';
@@ -364,8 +364,43 @@ async function npEnviar(forzar){
   catch(e){
     if(e.data&&e.data.duplicado&&!forzar&&confirm(e.message+'\n\n¿Enviarlo de todos modos?'))return npEnviar(true);
     b.disabled=false;b.innerHTML=I('send')+' Subir pedido a Dropi';$('nperr').innerHTML=`<div class="err" style="margin-top:10px">${esc(e.message)}</div>`}}
+function npAddProd(p,nota){
+  const ex=NP.items.find(i=>i.id===p.id&&!p.variations.length&&!p.manual);
+  if(ex)ex.qty=Number(ex.qty)+1;else NP.items.push({id:p.id,name:p.name,price:p.suggested||p.price||'',suggested:p.suggested||0,qty:1,variations:p.variations||[],variation_id:'',manual:!!p.manual});
+  npCart();npSum();const m=$('pm-msg');if(m)m.textContent=nota||('Agregado: '+p.name)}
+async function npResolveId(id,name){
+  const m=$('pm-msg');if(m)m.textContent='Buscando el producto '+id+'…';
+  try{const r=await api('productos',{id:String(id)});
+    if(r.productos.length)npAddProd(r.productos[0],'Agregado: '+r.productos[0].name+' (ID '+id+')');
+    else npAddProd({id:Number(id),name:name||('Producto ID '+id),suggested:0,variations:[],manual:true},'El ID '+id+' no apareció en el catálogo: se agregó tal cual. Escriba el precio y, si es variable, el ID de la variación.')}
+  catch(e){if(m)m.innerHTML=`<span class="neg">${esc(e.message)}</span>`}}
+function pmodeDraw(){
+  const el=$('pmode');if(!el)return;const fl=favList();
+  el.innerHTML=`<div class="row" id="pm-ch">${[['cat','Catálogo'],['fav','Favoritos ('+fl.length+')'],['id','Por ID']].map(([k,l])=>`<button type="button" class="fchip ${NP.pm===k?'on':''}" data-pm="${k}">${l}</button>`).join('')}</div><div id="pm-body" style="margin-top:12px"></div><div id="pm-msg" class="mut" style="margin-top:8px;font-size:12px"></div>`;
+  $('pm-ch').onclick=e=>{const b=e.target.closest('[data-pm]');if(b){NP.pm=b.dataset.pm;pmodeDraw()}};
+  const body=$('pm-body');
+  if(NP.pm==='cat'){
+    body.innerHTML=`<div class="row"><input id="ps" placeholder="Buscar producto del catálogo de Dropi…" style="flex:1;min-width:200px"><button type="button" class="btn pri" id="psb">Buscar</button></div><div id="pres" style="margin-top:10px"></div>`;
+    const buscar=async()=>{const q=$('ps').value.trim(),o=$('pres');if(!q)return;o.innerHTML='<div class="mut">Buscando…</div>';
+      try{const r=await api('productos',{q});window.__res=r.productos;o.innerHTML=r.productos.map((p,k)=>`<div class="frow"><div style="flex:1"><div class="nm">${esc(p.name)}</div><div class="sb">ID ${esc(p.id)} · sugerido ${mx(p.suggested)}${p.variations.length?' · '+p.variations.length+' variaciones':''}</div></div><button type="button" class="btn sm" data-add="${k}">+ Agregar</button></div>`).join('')||'<div class="mut">Sin resultados</div>';
+        o.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>npAddProd(window.__res[b.dataset.add]))}
+      catch(e){o.innerHTML=`<div class="err">${esc(e.message)}</div>`}};
+    $('psb').onclick=buscar;$('ps').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();buscar()}};
+    if(NP.q){$('ps').value=NP.q;NP.q='';buscar()}
+  }else if(NP.pm==='fav'){
+    body.innerHTML=`<input id="fs" placeholder="Buscar en favoritos…" value="${esc(NP.fs)}" style="width:100%;margin-bottom:8px"><div id="fl2"></div><p class="mut" style="font-size:12px;margin:8px 0 0">Los favoritos con ID se agregan directo; los que no tienen ID se buscan por nombre en el catálogo. Administre sus favoritos en la pestaña Proveedores.</p>`;
+    const draw=()=>{const q=NP.fs.toLowerCase(),r=fl.filter(f=>!q||(f.name+' '+f.prov).toLowerCase().includes(q));
+      $('fl2').innerHTML=r.map(f=>`<div class="frow"><div style="flex:1"><div class="nm">${f.star?I('star')+' ':''}${esc(f.name)}</div><div class="sb">${esc(f.prov||'Sin proveedor')} · ${f.id?'ID '+esc(f.id):'sin ID (se buscará en el catálogo)'}</div></div><button type="button" class="btn sm" data-fa="${fl.indexOf(f)}">+ Agregar</button></div>`).join('')||'<div class="empty">Sin favoritos todavía.</div>';
+      $('fl2').querySelectorAll('[data-fa]').forEach(b=>b.onclick=()=>{const f=fl[b.dataset.fa];if(f.id)npResolveId(f.id,f.name);else{NP.pm='cat';NP.q=f.name;pmodeDraw()}})};
+    $('fs').oninput=e=>{NP.fs=e.target.value;draw()};draw();
+  }else{
+    body.innerHTML=`<div class="row"><input id="pidv" type="number" min="1" step="1" placeholder="ID del producto en Dropi" style="flex:1;min-width:200px"><button type="button" class="btn pri" id="pidb">Agregar por ID</button></div><p class="mut" style="font-size:12px;margin:8px 0 0">Escriba el ID tal como aparece en Dropi. Si está en el catálogo se completan el nombre, el precio sugerido y las variaciones.</p>`;
+    const go=()=>{const v=$('pidv').value.trim();if(!/^\d+$/.test(v)||Number(v)<1){$('pm-msg').innerHTML='<span class="neg">Escriba un ID numérico</span>';return}npResolveId(Number(v));$('pidv').value=''};
+    $('pidb').onclick=go;$('pidv').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();go()}};
+  }
+}
 async function nuevo(){
-  let hist=[],demo=false;try{const h=await api('crear');hist=h.ordenes;demo=h.demo}catch(e){}
+  await loadFav();let hist=[],demo=false;try{const h=await api('crear');hist=h.ordenes;demo=h.demo}catch(e){}
   const histHTML=`<div class="card flat sec"><div class="hd"><h3>${I('clock')} Pedidos subidos desde VELTRIX</h3><span class="sp"></span><small>${hist.length} registros · sin datos del cliente</small></div>
    <div class="scroll"><table class="tbl"><thead><tr><th>Fecha</th><th>ID Dropi</th><th>Estado</th><th>Productos</th><th>Total estimado</th><th>Pago</th><th>Resultado</th></tr></thead><tbody>
    ${hist.map(h=>`<tr><td>${esc(h.fecha)}</td><td><span class="mono">${esc(h.id||'—')}</span></td><td>${esc(h.estado)}</td><td style="white-space:normal">${h.items.map(i=>esc(i.q+'× '+i.n)).join(', ')}</td><td>${mx(h.total)} <span class="mut">≈ ${penTxt(h.total)}</span></td><td>${h.rate==='CON RECAUDO'?'Contra entrega':'Prepagado'}</td>
@@ -383,21 +418,15 @@ async function nuevo(){
    <div class="card flat sec"><div class="hd"><h3>${I('building')} 2 · Entrega</h3></div><datalist id="dl-est">${MX_ESTADOS.map(x=>`<option value="${esc(x)}">`).join('')}</datalist>
     <div class="fg">${T('state','Estado',{req:1,list:'dl-est',max:60})}${T('city','Ciudad / municipio / alcaldía',{req:1,max:80})}${T('colonia','Colonia (opcional)',{max:80})}${T('zip_code','Código postal (5 dígitos)',{req:1,max:5,mode:'numeric',ph:'44100'})}</div>
     <label class="fl" style="margin-top:12px"><span class="req">Dirección (calle, número, referencias)</span><textarea data-k="dir" rows="2" maxlength="200">${esc(NP.dir)}</textarea></label></div>
-   <div class="card flat sec"><div class="hd"><h3>${I('star')} 3 · Productos</h3></div><div class="row"><input id="ps" placeholder="Buscar producto del catálogo de Dropi…" style="flex:1;min-width:200px"><button class="btn pri" id="psb">Buscar</button></div>
-    <div id="pres" style="margin-top:10px"></div><div class="gl">EN EL PEDIDO</div><div id="cart"></div></div>
+   <div class="card flat sec"><div class="hd"><h3>${I('star')} 3 · Productos</h3></div><div id="pmode"></div>
+    <div class="gl">EN EL PEDIDO</div><div id="cart"></div></div>
    <div class="card flat sec"><div class="hd"><h3>${I('truck')} 4 · Pago y envío</h3></div><div class="fg">
     <label class="fl"><span class="req">Tipo de pago</span><select data-k="rate_type"><option value="CON RECAUDO" ${NP.rate_type==='CON RECAUDO'?'selected':''}>Contra entrega (con recaudo)</option><option value="SIN RECAUDO" ${NP.rate_type==='SIN RECAUDO'?'selected':''}>Prepagado (sin recaudo)</option></select></label>
     ${T('distribution_company_id','ID de transportadora (opcional)',{mode:'numeric',max:6,ph:'vacío = Dropi elige'})}${T('shop_order_id','ID de pedido de tu tienda (opcional)',{max:60})}${T('shop_order_number','N.º de pedido de tu tienda (opcional)',{max:60})}</div>
     <label class="fl" style="margin-top:12px"><span>Notas internas (opcional)</span><textarea data-k="notes" rows="2" maxlength="300">${esc(NP.notes)}</textarea></label></div>
   </div><div class="card flat" style="position:sticky;top:70px"><h3 style="margin-bottom:8px">Resumen</h3><div id="npsum"></div></div></div>${histHTML}`;
   view.querySelectorAll('[data-k]').forEach(i=>{const h=()=>{NP[i.dataset.k]=i.value;npSum()};i.oninput=h;i.onchange=h});
-  const buscar=async()=>{const q=$('ps').value.trim(),o=$('pres');if(!q)return;o.innerHTML='<div class="mut">Buscando…</div>';
-    try{const r=await api('productos',{q});window.__res=r.productos;o.innerHTML=r.productos.map((p,k)=>`<div class="frow"><div style="flex:1"><div class="nm">${esc(p.name)}</div><div class="sb">ID ${esc(p.id)} · sugerido ${mx(p.suggested)}${p.variations.length?' · '+p.variations.length+' variaciones':''}</div></div><button class="btn sm" data-add="${k}">+ Agregar</button></div>`).join('')||'<div class="mut">Sin resultados</div>';
-      o.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{const p=window.__res[b.dataset.add],ex=NP.items.find(i=>i.id===p.id&&!p.variations.length);
-        if(ex)ex.qty=Number(ex.qty)+1;else NP.items.push({id:p.id,name:p.name,price:p.suggested||p.price||0,suggested:p.suggested,qty:1,variations:p.variations,variation_id:''});npCart();npSum()})}
-    catch(e){o.innerHTML=`<div class="err">${esc(e.message)}</div>`}};
-  $('psb').onclick=buscar;$('ps').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();buscar()}};
-  npCart();npSum();
+  pmodeDraw();npCart();npSum();
 }
 
 addEventListener('storage',ev=>{if(ev.key==='vx_mode'||ev.key==='vx_pen'){srcTxt();render()}});

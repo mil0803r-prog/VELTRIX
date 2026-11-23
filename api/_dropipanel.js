@@ -144,7 +144,7 @@ function build(list) {
     const dd = (dias[p.fecha] ||= { fecha: p.fecha, pedidos: 0, ventas: 0, recaudo: 0, entregados: 0, utilidad: 0 });
     if (g === 'entregado') { dd.utilidad += p.utilidad; dd.recaudo += p.total; }
     dd.pedidos++; if (g !== 'cancelado') dd.ventas += p.total; if (g === 'entregado') dd.entregados++;
-    const pp = (pr[p.prod] ||= { nombre: p.prod, prov: p.prov, total: 0, unidades: 0, entregados: 0, devoluciones: 0, utilidad: 0 });
+    const pp = (pr[p.prod] ||= { nombre: p.prod, prov: p.prov, pid: (o.orderdetails || []).length === 1 ? (o.orderdetails[0].product?.id ?? null) : null, total: 0, unidades: 0, entregados: 0, devoluciones: 0, utilidad: 0 });
     pp.unidades += (o.orderdetails || []).reduce((a, x) => a + num(x.quantity || 1), 0) || 1;
     pp.total++; if (g === 'entregado') { pp.entregados++; pp.utilidad += p.utilidad; } if (g === 'devolucion') pp.devoluciones++;
   }
@@ -279,15 +279,19 @@ async function route(req, res, q) {
       st.items ||= []; st.hide ||= []; st.dir ||= {}; st.msg ||= '';
       if (req.method === 'POST') {
         const nm = (x) => String(x || '').slice(0, 120).trim(), digits = (x) => String(x || '').replace(/\D/g, '');
+        const pidOf = (v) => { if (v == null || String(v).trim() === '') return null; const n = Number(v); return Number.isInteger(n) && n >= 1 && n < 1e12 ? n : false; };
         const setWa = (prov, wa) => { const w = digits(wa); if (!prov) return; if (!w) delete st.dir[prov]; else if (w.length >= 8 && w.length <= 15) st.dir[prov] = w; };
         if (body.op === 'add') {
-          const it = body.item || {}, name = nm(it.name), prov = nm(it.prov);
+          const it = body.item || {}, name = nm(it.name), prov = nm(it.prov), pid = pidOf(it.id);
           if (!name) return json(res, 400, { error: 'Falta el producto' });
-          st.items = st.items.filter((x) => x.name.toLowerCase() !== name.toLowerCase()); st.items.unshift({ name, prov });
+          if (pid === false) return json(res, 400, { error: 'El ID del producto debe ser un número' });
+          st.items = st.items.filter((x) => x.name.toLowerCase() !== name.toLowerCase()); st.items.unshift(pid ? { name, prov, id: pid } : { name, prov });
           st.hide = st.hide.filter((h) => h.toLowerCase() !== name.toLowerCase()); setWa(prov, it.wa);
         } else if (body.op === 'prov') {
-          const name = nm(body.name), prov = nm(body.prov); if (!name) return json(res, 400, { error: 'Falta el producto' });
-          st.items = st.items.filter((x) => x.name !== name); st.items.unshift({ name, prov }); setWa(prov, body.wa);
+          const name = nm(body.name), prov = nm(body.prov), pid = pidOf(body.id); if (!name) return json(res, 400, { error: 'Falta el producto' });
+          if (pid === false) return json(res, 400, { error: 'El ID del producto debe ser un número' });
+          const prev = st.items.find((x) => x.name === name); st.items = st.items.filter((x) => x.name !== name);
+          const keep = pid === null ? (prev && prev.id) : pid; st.items.unshift(keep ? { name, prov, id: keep } : { name, prov }); setWa(prov, body.wa);
         } else if (body.op === 'wa') setWa(nm(body.prov), body.wa);
         else if (body.op === 'del') { const name = nm(body.name); st.items = st.items.filter((x) => x.name !== name); if (!st.hide.includes(name)) st.hide.push(name); st.hide = st.hide.slice(-500); }
         else if (body.op === 'msg') st.msg = String(body.msg || '').slice(0, 300);
@@ -297,8 +301,10 @@ async function route(req, res, q) {
       return json(res, 200, st);
     }
     if (a === 'productos') { // catalogo de Dropi para elegir productos al subir un pedido
-      const qq = String(q.q || '').trim().slice(0, 80);
-      const raw = DEMO() && !process.env[S().tokenVar] ? mock.products(qq) : rows(await dropi('/integrations/products/index', { method: 'POST', body: { keywords: qq, pageSize: 20, startData: 0 } }));
+      const qq = String(q.q || q.id || '').trim().slice(0, 80), byId = q.id != null && q.id !== '' ? Number(q.id) : null;
+      if (byId !== null && !(Number.isInteger(byId) && byId >= 1)) return json(res, 400, { error: 'El ID del producto debe ser un número' });
+      let raw = DEMO() && !process.env[S().tokenVar] ? mock.products(byId !== null ? '' : qq) : rows(await dropi('/integrations/products/index', { method: 'POST', body: { keywords: qq, pageSize: 20, startData: 0 } }));
+      if (byId !== null) raw = raw.filter((p) => Number(p.id) === byId);
       return json(res, 200, { productos: raw.slice(0, 20).map((p) => ({ id: p.id, name: String(p.name || '').slice(0, 120), price: num(p.sale_price), suggested: num(p.suggested_price ?? p.sale_price),
         variations: (p.variations || []).map((v) => ({ id: v.id, label: String(v.label || v.sku || (v.attribute_values || v.attributes || []).map((x) => x.value || x.name || x).join(' / ') || ('Variación ' + v.id)).slice(0, 60) })) })) });
     }
