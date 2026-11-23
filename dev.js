@@ -5,6 +5,11 @@ const rewrites = { '/': '/api/page?p=veltrix', '/pedidos-dropi': '/api/page?p=pa
 http.createServer((req, res) => {
   let u = new URL(req.url, 'http://localhost');
   if (rewrites[u.pathname]) { const t = new URL(rewrites[u.pathname], 'http://localhost'); t.searchParams.forEach((v, k) => u.searchParams.set(k, v)); u = new URL(t.pathname + '?' + u.searchParams, 'http://localhost'); }
+  const fp = require('path').join(__dirname, 'public', require('path').basename(u.pathname));
+  if (u.pathname !== '/' && require('fs').existsSync(fp) && require('fs').statSync(fp).isFile()) {
+    const t = { '.svg': 'image/svg+xml', '.png': 'image/png', '.webmanifest': 'application/manifest+json' }[require('path').extname(fp)] || 'application/octet-stream';
+    res.setHeader('Content-Type', t); return res.end(require('fs').readFileSync(fp));
+  }
   const h = routes[u.pathname]; if (!h) { res.statusCode = 404; return res.end('404'); }
   let raw = ''; req.on('data', (c) => (raw += c)); req.on('end', () => {
     req.query = Object.fromEntries(u.searchParams);
