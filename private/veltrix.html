@@ -4,10 +4,10 @@
 <script>try{var t=localStorage.getItem('vx_theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.dataset.theme=t}catch(e){}</script>
 <link rel="stylesheet" href="/theme.css">
 <style>
-body{display:flex;height:100vh;overflow:hidden}
+body{display:flex;height:100vh;height:100dvh;overflow:hidden}
 svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
 /* ---- barra lateral ---- */
-aside{width:272px;flex-shrink:0;height:100vh;background:var(--side);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:14px 12px;z-index:30;transition:transform .45s var(--ease)}
+aside{width:272px;flex-shrink:0;height:100vh;height:100dvh;background:var(--side);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:14px 12px;z-index:30;transition:transform .45s var(--ease)}
 .brand{display:flex;align-items:center;gap:10px;padding:4px 8px 12px;font-weight:800;letter-spacing:.2em;font-size:17px;color:var(--g)}
 .srch{display:flex;align-items:center;gap:8px;width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:var(--solid);color:var(--mut);cursor:pointer;font:inherit;transition:.25s var(--ease)}
 .srch:hover{border-color:var(--gl);box-shadow:0 0 0 4px rgba(34,197,94,.12)}.srch span{flex:1;text-align:left}
@@ -29,7 +29,7 @@ kbd{font:600 10px ui-monospace,monospace;border:1px solid var(--line);border-rad
 .ib{background:none;border:0;color:var(--mut);cursor:pointer;padding:6px;border-radius:9px;transition:.2s;display:grid}.ib:hover{background:var(--card2);color:var(--g)}
 .scrim{position:fixed;inset:0;background:var(--scrim);opacity:0;pointer-events:none;transition:opacity .35s;z-index:25}
 /* ---- principal ---- */
-main{flex:1;min-width:0;height:100vh;overflow-y:auto;overflow-x:hidden;position:relative;scroll-behavior:smooth}
+main{flex:1;min-width:0;height:100vh;height:100dvh;overflow-y:auto;overflow-x:hidden;position:relative;scroll-behavior:smooth}
 .prog{position:fixed;top:0;left:272px;right:0;height:3px;z-index:40;background:transparent;pointer-events:none}
 .prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--g),var(--gb));box-shadow:0 0 10px var(--gb);transition:width .1s}
 .top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:16px;padding:18px 28px 14px;transition:.3s var(--ease)}
