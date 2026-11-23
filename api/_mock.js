@@ -27,7 +27,7 @@ function orders(n) {
       total_order: price * qty + ship, shipping_amount: ship,
       name: 'Cliente', surname: String(i), phone: '52' + String(10000000 + Math.floor(R() * 60) * 91731 % 89999999).padStart(10, '5'),
       state: k.deptos[Math.floor(R() * k.deptos.length)], city: 'Ciudad ' + (1 + Math.floor(R() * 9)),
-      distribution_company: { name: k.carr[Math.floor(R() * k.carr.length)] },
+      distribution_company: (() => { const ci = Math.floor(R() * k.carr.length); return { id: ci + 2, name: k.carr[ci] }; })(),
       shipping_guide: 'G' + (500000 + i * 7),
       orderdetails: [{ quantity: qty, supplier_price: cost, product: { id: 100 + p, name: PRODS[p], user: { name: SUPS[p % SUPS.length] } } }],
       guia_movements: status === 'NOVEDAD' ? [{ description: 'Cliente no responde', created_at: created.toISOString() }] : [],
@@ -38,6 +38,7 @@ function orders(n) {
 function products(q) {
   return PRODS.filter((x) => !q || x.toLowerCase().includes(String(q).toLowerCase()))
     .map((nm, i) => ({ id: 100 + i, name: nm, sale_price: 90 + i * 15, suggested_price: 150 + i * 20, sku: 'SKU' + i, img: '',
-      variations: i % 3 === 0 ? [{ id: 1000 + i, sku: 'Talla M' }, { id: 2000 + i, sku: 'Talla G' }] : [] }));
+      gallery: [{ urlS3: 'https://example.com/p' + i + '.png' }],
+      variations: i % 3 === 0 ? [['Dorado', 40], ['Azul', 0], ['Rojo', 12], ['Negro', 99], ['Rosada', 5], ['Multicolor', 8]].map(([c, st], j) => ({ id: 1000 * (j + 1) + i, sku: 'SKU' + i + '-' + j, stock: st, sale_price: 90 + i * 15, suggested_price: 150 + i * 20 + j * 5, attributes: [{ name: 'Color', value: c }] })) : [] }));
 }
 module.exports = { orders, products };

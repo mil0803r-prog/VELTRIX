@@ -12,7 +12,10 @@ svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke
 .tabs button{display:flex;align-items:center;gap:7px;border:0;background:none;color:var(--mut);font:inherit;font-weight:500;padding:9px 15px;border-radius:10px;cursor:pointer;transition:.25s var(--ease)}
 .tabs button:hover{color:var(--text);background:var(--card2)}.tabs button.on{background:linear-gradient(135deg,var(--g2),var(--g) 60%,var(--gl));color:#fff;font-weight:600;box-shadow:0 8px 18px -8px rgba(4,120,87,.7)}
 #view>*{animation:fadein .35s both}
-.fg{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}.fl{display:grid;gap:5px;font-size:12px;font-weight:600;color:var(--mut)}.fl input,.fl select,.fl textarea{width:100%;font-weight:400;color:var(--text)}.req::after{content:" *";color:var(--red)}
+.vopts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.vopt{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--solid);color:var(--text);border-radius:99px;padding:5px 12px 5px 7px;font:inherit;font-size:12px;font-weight:500;cursor:pointer;transition:.2s}
+.vopt:hover:not(:disabled){border-color:var(--gl)}.vopt.on{border-color:var(--g);background:var(--gsoft);font-weight:600;box-shadow:0 0 0 2px color-mix(in srgb,var(--g) 28%,transparent)}.vopt:disabled{opacity:.4;text-decoration:line-through;cursor:not-allowed}.vopt small{color:var(--mut);font-weight:400}
+.sw{display:inline-block;width:16px;height:16px;border-radius:50%;border:1px solid rgba(0,0,0,.25);flex-shrink:0}.sw.sm{width:11px;height:11px;margin-left:3px;vertical-align:-1px}
+.fg{display:grid;align-items:start;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}.fl{display:grid;gap:5px;font-size:12px;font-weight:600;color:var(--mut)}.fl input,.fl select,.fl textarea{width:100%;font-weight:400;color:var(--text)}.req::after{content:" *";color:var(--red)}
 .k5{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}.v.bl{color:var(--blue)}.v.am{color:var(--amb)}
 .sec{margin-top:14px}.sec>h3,.hd{display:flex;align-items:center;gap:8px;margin-bottom:12px}.hd .sp{flex:1}.hd small{color:var(--mut);font-weight:400;font-size:12px}
 .attn{border-color:#e9c47a;background:linear-gradient(0deg,rgba(251,191,36,.07),rgba(251,191,36,.07)),var(--card)}
@@ -323,6 +326,9 @@ async function pagos(){
 const MX_ESTADOS=['Aguascalientes','Baja California','Baja California Sur','Campeche','Chiapas','Chihuahua','Ciudad de México','Coahuila','Colima','Durango','Estado de México','Guanajuato','Guerrero','Hidalgo','Jalisco','Michoacán','Morelos','Nayarit','Nuevo León','Oaxaca','Puebla','Querétaro','Quintana Roo','San Luis Potosí','Sinaloa','Sonora','Tabasco','Tamaulipas','Tlaxcala','Veracruz','Yucatán','Zacatecas'];
 const npNew=()=>({name:'',surname:'',phone:'',client_email:'',dni:'',state:'',city:'',colonia:'',zip_code:'',dir:'',rate_type:'CON RECAUDO',distribution_company_id:'',shop_order_id:'',shop_order_number:'',notes:'',items:[],ok:false,res:null,pm:'cat',q:'',fs:''});
 let NP=null;
+const COLORS={dorado:'#d4af37',dorada:'#d4af37',oro:'#d4af37',azul:'#2563eb',rojo:'#dc2626',roja:'#dc2626',negro:'#111827',negra:'#111827',verde:'#16a34a',rosa:'#f472b6',rosada:'#f472b6',rosado:'#f472b6',blanco:'#f8fafc',blanca:'#f8fafc',morado:'#7c3aed',morada:'#7c3aed',lila:'#a78bfa',amarillo:'#facc15',amarilla:'#facc15',naranja:'#f97316',gris:'#9ca3af',plateado:'#cbd5e1',plateada:'#cbd5e1',plata:'#cbd5e1',cafe:'#78350f',marron:'#78350f',beige:'#e7d3b0',crema:'#f5efd9',celeste:'#7dd3fc',turquesa:'#14b8a6',vino:'#7f1d1d',fucsia:'#d946ef',cobre:'#b87333',bronce:'#cd7f32',transparente:'#e5e7eb',multicolor:'conic-gradient(#ef4444,#f59e0b,#facc15,#22c55e,#3b82f6,#8b5cf6,#ef4444)'};
+const swatch=t=>{for(const w of nrm(t).toLowerCase().split(/[^a-z]+/))if(COLORS[w])return COLORS[w];return ''};
+let CAR=[];
 const mx=n=>'MX$ '+nf(n,2),penTxt=n=>'S/ '+nf(n*penRate(),2);
 function npErrors(){
   const e=[],r=(k,l)=>{if(!String(NP[k]).trim())e.push('Falta '+l)};
@@ -340,8 +346,9 @@ function npErrors(){
   return e}
 function npSum(){
   const el=$('npsum');if(!el)return;const e=npErrors(),sub=NP.items.reduce((a,i)=>a+(Number(i.price)||0)*(Number(i.qty)||0),0);
-  el.innerHTML=`<div class="kv"><span>Productos</span><b>${NP.items.reduce((a,i)=>a+(Number(i.qty)||0),0)}</b></div><div class="kv"><span>Subtotal productos</span><b>${mx(sub)}</b></div><div class="kv"><span>≈ en soles</span><b>${penTxt(sub)}</b></div>
-   <div class="kv"><span>Flete</span><b class="mut">lo calcula Dropi</b></div><div class="kv"><span>Pago</span><b>${NP.rate_type==='CON RECAUDO'?'Contra entrega':'Prepagado'}</b></div>
+  const carr=(()=>{const id=String(NP.distribution_company_id||'');if(!id)return 'Automática';const c=CAR.find(x=>String(x.id)===id);return c?c.name:'ID '+id})();
+  el.innerHTML=`${NP.items.length?`<div style="margin-bottom:8px;font-size:12px">${NP.items.map(i=>{const v=i.variations.find(x=>String(x.id)===String(i.variation_id)),sw=v&&swatch(v.color||v.label);return `<div style="display:flex;gap:6px;align-items:center;padding:3px 0">${sw?`<i class="sw sm" style="background:${sw}"></i>`:''}<span>${esc(i.qty)}× ${esc(i.name)}${v?' — <b>'+esc(v.label)+'</b>':''}</span></div>`}).join('')}</div>`:''}<div class="kv"><span>Productos</span><b>${NP.items.reduce((a,i)=>a+(Number(i.qty)||0),0)}</b></div><div class="kv"><span>Subtotal productos</span><b>${mx(sub)}</b></div><div class="kv"><span>≈ en soles</span><b>${penTxt(sub)}</b></div>
+   <div class="kv"><span>Transportadora</span><b>${esc(carr)}</b></div><div class="kv"><span>Flete</span><b class="mut">lo calcula Dropi</b></div><div class="kv"><span>Pago</span><b>${NP.rate_type==='CON RECAUDO'?'Contra entrega':'Prepagado'}</b></div>
    ${NP.rate_type==='CON RECAUDO'?`<p class="mut" style="font-size:12px;margin:8px 0 0">El cliente pagará al recibir: productos + flete.</p>`:''}
    ${e.length?`<div class="err" style="margin-top:12px;font-size:12px"><b>Para enviar falta:</b><br>${e.slice(0,8).map(x=>'• '+esc(x)).join('<br>')}</div>`:'<p class="pos" style="margin:12px 0 0;font-weight:600">✓ Datos completos</p>'}
    <label class="row" style="margin-top:12px;align-items:flex-start;gap:8px"><input type="checkbox" id="npok" ${NP.ok?'checked':''} style="margin-top:3px"><span style="font-size:12px">Revisé los datos. Entiendo que esto <b>crea un pedido real en Dropi</b> que se enviará al cliente.</span></label>
@@ -349,24 +356,30 @@ function npSum(){
   $('npok').onchange=ev=>{NP.ok=ev.target.checked;npSum()};$('npgo').onclick=()=>npEnviar(false)}
 function npCart(){
   const el=$('cart');if(!el)return;
-  el.innerHTML=NP.items.map((i,k)=>`<div class="frow"><div style="flex:1;min-width:180px"><div class="nm">${esc(i.name)}</div><div class="sb">ID ${esc(i.id)}${i.suggested?' · sugerido '+mx(i.suggested):''}${i.manual?' · <span class="warn">no está en el catálogo: se enviará tal cual</span>':''}</div></div>
-   ${i.manual?`<label class="fl" style="margin:0"><span>ID de variación (opcional)</span><input data-ci="${k}" data-f="variation_id" value="${esc(i.variation_id)}" inputmode="numeric" style="width:130px"></label>`:''}${i.variations.length?`<label class="fl" style="margin:0"><span class="req">Variación</span><select data-ci="${k}" data-f="variation_id"><option value="">Elegir…</option>${i.variations.map(v=>`<option value="${esc(v.id)}" ${String(i.variation_id)===String(v.id)?'selected':''}>${esc(v.label)}</option>`).join('')}</select></label>`:''}
+  el.innerHTML=NP.items.map((i,k)=>{const sel=i.variations.find(v=>String(v.id)===String(i.variation_id));
+   return `<div class="frow" style="align-items:flex-start"><div style="flex:1;min-width:260px;display:flex;gap:12px">
+    ${i.img?`<img src="${esc(i.img)}" alt="" loading="lazy" referrerpolicy="no-referrer" style="width:54px;height:54px;object-fit:cover;border-radius:10px;border:1px solid var(--line);flex-shrink:0" onerror="this.remove()">`:''}
+    <div style="flex:1;min-width:0"><div class="nm">${esc(i.name)}</div><div class="sb">ID ${esc(i.id)}${i.suggested?' · sugerido '+mx(i.suggested):''}${i.manual?' · <span class="warn">no está en el catálogo: se enviará tal cual</span>':''}</div>
+    ${i.variations.length?`<div class="vopts">${i.variations.map(v=>{const sw=swatch(v.color||v.label);return `<button type="button" class="vopt ${String(i.variation_id)===String(v.id)?'on':''}" data-vk="${k}" data-vv="${esc(v.id)}" ${v.stock===0?'disabled title="Sin stock"':''}>${sw?`<i class="sw" style="background:${sw}"></i>`:''}${esc(v.label)}${v.stock!=null?`<small>${v.stock===0?'agotado':esc(v.stock)+' und'}</small>`:''}</button>`}).join('')}</div>${sel?'':'<div class="warn" style="font-size:12px;margin-top:6px">Elija la variación (color / modelo) *</div>'}`:''}
+    ${i.manual?`<label class="fl" style="margin-top:8px"><span>ID de variación (opcional)</span><input data-ci="${k}" data-f="variation_id" value="${esc(i.variation_id)}" inputmode="numeric" style="width:140px"></label>`:''}</div></div>
    <label class="fl" style="margin:0"><span>Cantidad</span><input type="number" min="1" max="50" step="1" value="${esc(i.qty)}" data-ci="${k}" data-f="qty" style="width:80px"></label>
    <label class="fl" style="margin:0"><span class="req">Precio de venta (MXN)</span><input type="number" min="0" step="0.01" value="${esc(i.price)}" data-ci="${k}" data-f="price" style="width:130px"></label>
-   <b style="min-width:90px;text-align:right">${mx((Number(i.price)||0)*(Number(i.qty)||0))}</b><button class="ic" style="background:var(--card2);border:1px solid var(--line)" data-cx="${k}" title="Quitar">${I('x')}</button></div>`).join('')||'<div class="empty">Busque un producto del catálogo de Dropi y agréguelo.</div>';
-  el.querySelectorAll('[data-ci]').forEach(i=>{const h=()=>{NP.items[i.dataset.ci][i.dataset.f]=i.value;npSum();const t=i.closest('.frow').querySelector('b');if(t){const it=NP.items[i.dataset.ci];t.textContent=mx((Number(it.price)||0)*(Number(it.qty)||0))}};i.oninput=h;i.onchange=h});
+   <b class="tot" style="min-width:90px;text-align:right;align-self:center">${mx((Number(i.price)||0)*(Number(i.qty)||0))}</b><button type="button" class="ic" style="background:var(--card2);border:1px solid var(--line);align-self:center" data-cx="${k}" title="Quitar">${I('x')}</button></div>`}).join('')||'<div class="empty">Agregue productos desde el catálogo, sus favoritos o por ID.</div>';
+  el.querySelectorAll('[data-ci]').forEach(i=>{const h=()=>{NP.items[i.dataset.ci][i.dataset.f]=i.value;npSum();const t=i.closest('.frow').querySelector('b.tot');if(t){const it=NP.items[i.dataset.ci];t.textContent=mx((Number(it.price)||0)*(Number(it.qty)||0))}};i.oninput=h;i.onchange=h});
+  el.querySelectorAll('[data-vk]').forEach(b=>b.onclick=()=>{const it=NP.items[b.dataset.vk],v=it.variations.find(x=>String(x.id)===b.dataset.vv);if(!v)return;
+    const prev=it.suggested;it.variation_id=v.id;if(v.suggested>0){if(it.price===''||Number(it.price)===Number(prev))it.price=v.suggested;it.suggested=v.suggested}npCart();npSum()});
   el.querySelectorAll('[data-cx]').forEach(b=>b.onclick=()=>{NP.items.splice(b.dataset.cx,1);npCart();npSum()})}
 async function npEnviar(forzar){
   const b=$('npgo');b.disabled=true;b.innerHTML='Enviando…';
   const body={...Object.fromEntries(['name','surname','phone','client_email','dni','state','city','colonia','zip_code','dir','rate_type','distribution_company_id','shop_order_id','shop_order_number','notes'].map(k=>[k,NP[k]])),
-    products:NP.items.map(i=>({id:i.id,name:i.name,price:Number(i.price),quantity:Number(i.qty),variation_id:i.variation_id||null})),forzar};
+    products:NP.items.map(i=>{const v=i.variations.find(x=>String(x.id)===String(i.variation_id));return {id:i.id,name:i.name+(v?' ('+v.label+')':''),price:Number(i.price),quantity:Number(i.qty),variation_id:i.variation_id||null}}),forzar};
   try{const r=await post('crear',body);NP.res=r.orden;nuevo()}
   catch(e){
     if(e.data&&e.data.duplicado&&!forzar&&confirm(e.message+'\n\n¿Enviarlo de todos modos?'))return npEnviar(true);
     b.disabled=false;b.innerHTML=I('send')+' Subir pedido a Dropi';$('nperr').innerHTML=`<div class="err" style="margin-top:10px">${esc(e.message)}</div>`}}
 function npAddProd(p,nota){
   const ex=NP.items.find(i=>i.id===p.id&&!p.variations.length&&!p.manual);
-  if(ex)ex.qty=Number(ex.qty)+1;else NP.items.push({id:p.id,name:p.name,price:p.suggested||p.price||'',suggested:p.suggested||0,qty:1,variations:p.variations||[],variation_id:'',manual:!!p.manual});
+  if(ex)ex.qty=Number(ex.qty)+1;else NP.items.push({id:p.id,name:p.name,img:p.img||'',price:p.suggested||p.price||'',suggested:p.suggested||0,qty:1,variations:p.variations||[],variation_id:'',manual:!!p.manual});
   npCart();npSum();const m=$('pm-msg');if(m)m.textContent=nota||('Agregado: '+p.name)}
 async function npResolveId(id,name){
   const m=$('pm-msg');if(m)m.textContent='Buscando el producto '+id+'…';
@@ -382,7 +395,7 @@ function pmodeDraw(){
   if(NP.pm==='cat'){
     body.innerHTML=`<div class="row"><input id="ps" placeholder="Buscar producto del catálogo de Dropi…" style="flex:1;min-width:200px"><button type="button" class="btn pri" id="psb">Buscar</button></div><div id="pres" style="margin-top:10px"></div>`;
     const buscar=async()=>{const q=$('ps').value.trim(),o=$('pres');if(!q)return;o.innerHTML='<div class="mut">Buscando…</div>';
-      try{const r=await api('productos',{q});window.__res=r.productos;o.innerHTML=r.productos.map((p,k)=>`<div class="frow"><div style="flex:1"><div class="nm">${esc(p.name)}</div><div class="sb">ID ${esc(p.id)} · sugerido ${mx(p.suggested)}${p.variations.length?' · '+p.variations.length+' variaciones':''}</div></div><button type="button" class="btn sm" data-add="${k}">+ Agregar</button></div>`).join('')||'<div class="mut">Sin resultados</div>';
+      try{const r=await api('productos',{q});window.__res=r.productos;o.innerHTML=r.productos.map((p,k)=>`<div class="frow">${p.img?`<img src="${esc(p.img)}" alt="" loading="lazy" referrerpolicy="no-referrer" style="width:42px;height:42px;object-fit:cover;border-radius:9px;border:1px solid var(--line)" onerror="this.remove()">`:''}<div style="flex:1"><div class="nm">${esc(p.name)}</div><div class="sb">ID ${esc(p.id)} · sugerido ${mx(p.suggested)}${p.variations.length?' · '+p.variations.length+' variaciones ':''}${p.variations.slice(0,10).map(v=>{const w=swatch(v.color||v.label);return w?`<i class="sw sm" style="background:${w}" title="${esc(v.label)}"></i>`:''}).join('')}</div></div><button type="button" class="btn sm" data-add="${k}">+ Agregar</button></div>`).join('')||'<div class="mut">Sin resultados</div>';
         o.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>npAddProd(window.__res[b.dataset.add]))}
       catch(e){o.innerHTML=`<div class="err">${esc(e.message)}</div>`}};
     $('psb').onclick=buscar;$('ps').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();buscar()}};
@@ -399,8 +412,13 @@ function pmodeDraw(){
     $('pidb').onclick=go;$('pidv').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();go()}};
   }
 }
+function dcDraw(){
+  const w=$('dcwrap');if(!w)return;const cur=String(NP.distribution_company_id||''),otra=NP.dcotra||(cur&&!CAR.some(c=>String(c.id)===cur));
+  w.innerHTML=`<label class="fl"><span>Transportadora</span><select id="dcsel"><option value="">Automática (Dropi elige)</option>${CAR.map(c=>`<option value="${esc(c.id)}" ${cur===String(c.id)?'selected':''}>${esc(c.name)} · ID ${esc(c.id)} · ${c.n} pedido${c.n>1?'s':''}</option>`).join('')}<option value="__otra" ${otra?'selected':''}>Otra… (escribir ID)</option></select></label>${otra?`<label class="fl"><span>ID de la transportadora</span><input id="dcman" inputmode="numeric" maxlength="6" value="${esc(cur)}" placeholder="Ej: 6"></label>`:''}`;
+  $('dcsel').onchange=e=>{const v=e.target.value;if(v==='__otra'){NP.dcotra=true;NP.distribution_company_id=''}else{NP.dcotra=false;NP.distribution_company_id=v}dcDraw();npSum()};
+  const m=$('dcman');if(m)m.oninput=e=>{NP.distribution_company_id=e.target.value.replace(/\D/g,'');npSum()}}
 async function nuevo(){
-  await loadFav();let hist=[],demo=false;try{const h=await api('crear');hist=h.ordenes;demo=h.demo}catch(e){}
+  await loadFav();try{CAR=(await api('transportadoras')).transportadoras}catch(e){CAR=[]}let hist=[],demo=false;try{const h=await api('crear');hist=h.ordenes;demo=h.demo}catch(e){}
   const histHTML=`<div class="card flat sec"><div class="hd"><h3>${I('clock')} Pedidos subidos desde VELTRIX</h3><span class="sp"></span><small>${hist.length} registros · sin datos del cliente</small></div>
    <div class="scroll"><table class="tbl"><thead><tr><th>Fecha</th><th>ID Dropi</th><th>Estado</th><th>Productos</th><th>Total estimado</th><th>Pago</th><th>Resultado</th></tr></thead><tbody>
    ${hist.map(h=>`<tr><td>${esc(h.fecha)}</td><td><span class="mono">${esc(h.id||'—')}</span></td><td>${esc(h.estado)}</td><td style="white-space:normal">${h.items.map(i=>esc(i.q+'× '+i.n)).join(', ')}</td><td>${mx(h.total)} <span class="mut">≈ ${penTxt(h.total)}</span></td><td>${h.rate==='CON RECAUDO'?'Contra entrega':'Prepagado'}</td>
@@ -422,11 +440,11 @@ async function nuevo(){
     <div class="gl">EN EL PEDIDO</div><div id="cart"></div></div>
    <div class="card flat sec"><div class="hd"><h3>${I('truck')} 4 · Pago y envío</h3></div><div class="fg">
     <label class="fl"><span class="req">Tipo de pago</span><select data-k="rate_type"><option value="CON RECAUDO" ${NP.rate_type==='CON RECAUDO'?'selected':''}>Contra entrega (con recaudo)</option><option value="SIN RECAUDO" ${NP.rate_type==='SIN RECAUDO'?'selected':''}>Prepagado (sin recaudo)</option></select></label>
-    ${T('distribution_company_id','ID de transportadora (opcional)',{mode:'numeric',max:6,ph:'vacío = Dropi elige'})}${T('shop_order_id','ID de pedido de tu tienda (opcional)',{max:60})}${T('shop_order_number','N.º de pedido de tu tienda (opcional)',{max:60})}</div>
+    <div id="dcwrap"></div>${T('shop_order_id','ID de pedido de tu tienda (opcional)',{max:60})}${T('shop_order_number','N.º de pedido de tu tienda (opcional)',{max:60})}</div>
     <label class="fl" style="margin-top:12px"><span>Notas internas (opcional)</span><textarea data-k="notes" rows="2" maxlength="300">${esc(NP.notes)}</textarea></label></div>
   </div><div class="card flat" style="position:sticky;top:70px"><h3 style="margin-bottom:8px">Resumen</h3><div id="npsum"></div></div></div>${histHTML}`;
   view.querySelectorAll('[data-k]').forEach(i=>{const h=()=>{NP[i.dataset.k]=i.value;npSum()};i.oninput=h;i.onchange=h});
-  pmodeDraw();npCart();npSum();
+  dcDraw();pmodeDraw();npCart();npSum();
 }
 
 addEventListener('storage',ev=>{if(ev.key==='vx_mode'||ev.key==='vx_pen'){srcTxt();render()}});

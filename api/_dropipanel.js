@@ -305,8 +305,22 @@ async function route(req, res, q) {
       if (byId !== null && !(Number.isInteger(byId) && byId >= 1)) return json(res, 400, { error: 'El ID del producto debe ser un número' });
       let raw = DEMO() && !process.env[S().tokenVar] ? mock.products(byId !== null ? '' : qq) : rows(await dropi('/integrations/products/index', { method: 'POST', body: { keywords: qq, pageSize: 20, startData: 0 } }));
       if (byId !== null) raw = raw.filter((p) => Number(p.id) === byId);
-      return json(res, 200, { productos: raw.slice(0, 20).map((p) => ({ id: p.id, name: String(p.name || '').slice(0, 120), price: num(p.sale_price), suggested: num(p.suggested_price ?? p.sale_price),
-        variations: (p.variations || []).map((v) => ({ id: v.id, label: String(v.label || v.sku || (v.attribute_values || v.attributes || []).map((x) => x.value || x.name || x).join(' / ') || ('Variación ' + v.id)).slice(0, 60) })) })) });
+      const img = (p) => { const u = String((p.gallery && p.gallery[0] && p.gallery[0].urlS3) || p.img || ''); return /^https:\/\//.test(u) ? u.slice(0, 300) : ''; };
+      return json(res, 200, { productos: raw.slice(0, 20).map((p) => ({ id: p.id, name: String(p.name || '').slice(0, 120), img: img(p), price: num(p.sale_price), suggested: num(p.suggested_price ?? p.sale_price),
+        variations: (p.variations || []).map((v) => {
+          const at = (v.attributes || v.attribute_values || []).map((x) => ({ n: String(x.name || (x.attribute && x.attribute.name) || '').slice(0, 30), v: String(x.value ?? '').slice(0, 40) })).filter((x) => x.v);
+          return { id: v.id, label: at.map((x) => (x.n ? x.n + ': ' : '') + x.v).join(' · ') || String(v.label || v.sku || ('Variación ' + v.id)).slice(0, 60),
+            color: (at.find((x) => /color|colour|estilo|modelo|dise/i.test(x.n)) || at[0] || {}).v || '', stock: v.stock == null ? null : num(v.stock), suggested: num(v.suggested_price) };
+        }) })) });
+    }
+    if (a === 'transportadoras') { // transportadoras que ya aparecen en los pedidos de la cuenta (con su ID)
+      const m = {};
+      for (const o of await allOrders()) {
+        const dc = o.distribution_company || {}, id = Number(dc.id ?? o.distribution_company_id);
+        if (!Number.isInteger(id) || id < 1) continue;
+        const x = (m[id] ||= { id, name: String(dc.name || ('Transportadora ' + id)).slice(0, 60), n: 0 }); x.n++;
+      }
+      return json(res, 200, { transportadoras: Object.values(m).sort((a, b) => b.n - a.n) });
     }
     if (a === 'crear') { // subir un pedido a Dropi (real: le llega al cliente final)
       const hist = await store.get('settings', key('ordenes'), []);
