@@ -83,6 +83,10 @@ const lastMov = (o) => {
   return best ? String(best.description || best.status || '').slice(0, 120) : '';
 };
 
+const movs = (o) => Object.keys(o).filter((k) => /_movements$/.test(k) && Array.isArray(o[k]))
+  .flatMap((k) => o[k]).map((m) => ({ fecha: String(m.created_at || '').slice(0, 16).replace('T', ' '), texto: String(m.description || m.status || '').slice(0, 160) }))
+  .sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, 30);
+
 function inPeriod(list, d) {
   if (!d || d === 'all') return list;
   const from = Date.now() - Number(d) * 864e5;
@@ -102,17 +106,17 @@ function slim(o) {
 
 // ---------- Calculos ----------
 function build(list) {
-  const k = { total: list.length, ventas: 0, entregados: 0, devueltos: 0, cancelados: 0, novedad: 0, proceso: 0, utilidad: 0, perdidaDev: 0, porCobrar: 0 };
+  const k = { total: list.length, ventas: 0, ventasEntregadas: 0, entregados: 0, devueltos: 0, cancelados: 0, novedad: 0, proceso: 0, utilidad: 0, perdidaDev: 0, valorDevuelto: 0, porCobrar: 0, utilEnCurso: 0 };
   const tr = {}, zn = {}, dias = {}, pr = {};
   let diasSum = 0, diasN = 0;
   for (const o of list) {
     const p = slim(o), g = p.grupo;
     if (g !== 'cancelado') k.ventas += p.total;
-    if (g === 'entregado') { k.entregados++; k.utilidad += p.utilidad; }
-    else if (g === 'devolucion') { k.devueltos++; k.perdidaDev += p.flete; }
+    if (g === 'entregado') { k.entregados++; k.utilidad += p.utilidad; k.ventasEntregadas += p.total; }
+    else if (g === 'devolucion') { k.devueltos++; k.perdidaDev += p.flete; k.valorDevuelto += p.total; }
     else if (g === 'cancelado') k.cancelados++;
-    else if (g === 'novedad') { k.novedad++; k.porCobrar += p.total; }
-    else { k.proceso++; k.porCobrar += p.total; }
+    else if (g === 'novedad') { k.novedad++; k.porCobrar += p.total; k.utilEnCurso += p.utilidad; }
+    else { k.proceso++; k.porCobrar += p.total; k.utilEnCurso += p.utilidad; }
     let d = null;
     if (g === 'entregado' && o.updated_at) { d = (new Date(o.updated_at) - new Date(o.created_at)) / 864e5; if (d >= 0) { diasSum += d; diasN++; } }
     const t = (tr[p.transp] ||= { nombre: p.transp, total: 0, entregados: 0, devoluciones: 0, utilidad: 0, dias: 0, diasN: 0 });
@@ -121,13 +125,15 @@ function build(list) {
     if (g === 'devolucion') t.devoluciones++;
     const z = (zn[p.depto || 'Sin dato'] ||= { nombre: p.depto || 'Sin dato', total: 0, entregados: 0, devoluciones: 0 });
     z.total++; if (g === 'entregado') z.entregados++; if (g === 'devolucion') z.devoluciones++;
-    const dd = (dias[p.fecha] ||= { fecha: p.fecha, pedidos: 0, ventas: 0, entregados: 0 });
+    const dd = (dias[p.fecha] ||= { fecha: p.fecha, pedidos: 0, ventas: 0, entregados: 0, utilidad: 0 });
+    if (g === 'entregado') dd.utilidad += p.utilidad;
     dd.pedidos++; if (g !== 'cancelado') dd.ventas += p.total; if (g === 'entregado') dd.entregados++;
     const pp = (pr[p.prod] ||= { nombre: p.prod, total: 0, entregados: 0, devoluciones: 0, utilidad: 0 });
     pp.total++; if (g === 'entregado') { pp.entregados++; pp.utilidad += p.utilidad; } if (g === 'devolucion') pp.devoluciones++;
   }
   const eff = (a, b) => (a + b ? Math.round((a / (a + b)) * 1000) / 10 : 0);
   k.efectividad = eff(k.entregados, k.devueltos);
+  k.utilEsperada = Math.round(k.utilEnCurso * (k.efectividad / 100));
   k.diasPromedio = diasN ? Math.round((diasSum / diasN) * 10) / 10 : 0;
   const fin = (x) => ({ ...x, efectividad: eff(x.entregados, x.devoluciones) });
   return {
@@ -222,6 +228,13 @@ async function route(req, res, q) {
         found = r.map((p) => ({ id: p.id, name: p.name, price: num(p.sale_price), img: (p.gallery && p.gallery[0] && p.gallery[0].urlS3) || p.img || '' }));
       }
       return json(res, 200, { favs: cur, resultados: found });
+    }
+
+    if (a === 'rastreo') {
+      const term = String(q.q || '').trim().toLowerCase();
+      if (term.length < 3) return json(res, 400, { error: 'Escriba al menos 3 caracteres' });
+      const hit = (await allOrders()).filter((o) => [o.id, o.shipping_guide, o.phone, o.name, o.surname].join(' ').toLowerCase().includes(term)).slice(0, 20);
+      return json(res, 200, { resultados: hit.map((o) => ({ ...slim(o), movs: movs(o) })) });
     }
 
     // Todo lo demas parte de los pedidos

@@ -1,14 +1,14 @@
 <!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Panel Dropi</title><link rel="stylesheet" href="/theme.css">
+<title>Panel Dropi</title>
+<script>(function(){function a(){try{document.documentElement.dataset.theme=localStorage.getItem('vx_theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')}catch(e){}}a();addEventListener('storage',a)})()</script>
+<link rel="stylesheet" href="/theme.css">
 <style>
-body{padding:14px 16px 40px}header{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
-header h1{font-size:20px}header small{color:var(--mut)}
+body{padding:16px 18px 44px;height:auto;background-attachment:scroll}header{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+header h1{font-size:22px;font-weight:800;letter-spacing:-.02em}header small{color:var(--mut)}
 .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
-.chart{display:flex;align-items:flex-end;gap:2px;height:120px;padding-top:6px}
-.chart i{flex:1;background:linear-gradient(0deg,var(--g2),var(--g));border-radius:3px 3px 0 0;min-height:2px;opacity:.9}
-.chart i:hover{opacity:1;filter:brightness(1.2)}
-.cols{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));margin-top:12px}
 .fav{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)}
+.tabs .btn{border-radius:99px}
+#view>*{animation:fadein .4s both}
 </style></head><body>
 <header><h1>Panel Dropi <span id="pais" class="pill"></span></h1><small id="src"></small><span class="sp"></span>
 <select id="per"><option value="7">7 días</option><option value="30" selected>30 días</option><option value="90">90 días</option><option value="all">Todo</option></select>
@@ -49,7 +49,7 @@ async function load(fresh){
 async function render(){
   document.querySelectorAll('#tabs .btn').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
   if(!D)return;
-  try{await ({resumen,pedidos,prov,favs,gest,rend}[tab])();}catch(e){view.innerHTML=`<div class="err">${esc(e.message)}</div>`;}
+  try{await ({resumen,pedidos,prov,favs,gest,rend}[tab])();view.querySelectorAll('.card').forEach((c,i)=>c.style.setProperty('--i',i));}catch(e){view.innerHTML=`<div class="err">${esc(e.message)}</div>`;}
 }
 function resumen(){
   const k=D.kpis;
@@ -66,7 +66,7 @@ function resumen(){
   <div class="card"><h3>Productos</h3><table class="tbl"><tr><th>Producto</th><th>Pedidos</th><th>Efect.</th><th>Utilidad</th></tr>
    ${D.productos.slice(0,8).map(t=>`<tr><td>${esc(t.nombre)}</td><td>${t.total}</td><td>${pct(t.efectividad)}</td><td class="${t.utilidad>=0?'pos':'neg'}">${money(t.utilidad)}</td></tr>`).join('')}</table></div></div>`;
 }
-function trend(){const t=D.tendencia,mx=Math.max(1,...t.map(x=>x.pedidos));return t.map(x=>`<i title="${esc(x.fecha)}: ${x.pedidos} pedidos" style="height:${x.pedidos/mx*100}%"></i>`).join('')||'<span class="mut">Sin datos</span>';}
+function trend(){const t=D.tendencia,mx=Math.max(1,...t.map(x=>x.pedidos));return t.map((x,i)=>`<i title="${esc(x.fecha)}: ${x.pedidos} pedidos" style="--n:${i};height:${x.pedidos/mx*100}%"></i>`).join('')||'<span class="mut">Sin datos</span>';}
 function pedidos(){
   view.innerHTML=`<div class="row" style="margin-bottom:10px"><input id="q" placeholder="Buscar cliente, teléfono, guía, producto…" size="34">
   <select id="gf"><option value="">Todos</option><option>entregado</option><option>devolucion</option><option>cancelado</option><option>novedad</option><option>proceso</option></select><span class="mut" id="cnt"></span></div>
@@ -106,7 +106,7 @@ async function rend(){
   const r=await api('huella'),t=D.transportadoras;
   view.innerHTML=`<div class="cols"><div class="card"><h3>Ranking de transportadoras</h3><table class="tbl"><tr><th>Nombre</th><th>Entregados</th><th>Devol.</th><th>Efect.</th><th>Días</th><th>Utilidad</th></tr>
   ${[...t].sort((a,b)=>b.efectividad-a.efectividad).map(x=>`<tr><td>${esc(x.nombre)}</td><td>${x.entregados}</td><td>${x.devoluciones}</td><td>${pct(x.efectividad)}</td><td>${x.dias}</td><td class="${x.utilidad>=0?'pos':'neg'}">${money(x.utilidad)}</td></tr>`).join('')}</table></div>
-  <div class="card"><h3>Ventas por día</h3><div class="chart">${(()=>{const d=D.tendencia,m=Math.max(1,...d.map(x=>x.ventas));return d.map(x=>`<i title="${esc(x.fecha)}: ${esc(money(x.ventas))}" style="height:${x.ventas/m*100}%"></i>`).join('')})()}</div></div></div>
+  <div class="card"><h3>Ventas por día</h3><div class="chart">${(()=>{const d=D.tendencia,m=Math.max(1,...d.map(x=>x.ventas));return d.map((x,i)=>`<i title="${esc(x.fecha)}: ${esc(money(x.ventas))}" style="--n:${i};height:${x.ventas/m*100}%"></i>`).join('')})()}</div></div></div>
   <div class="card" style="margin-top:12px"><h3>Huella del cliente (riesgo por teléfono)</h3><div class="scroll"><table class="tbl"><tr><th>Teléfono</th><th>Cliente</th><th>Pedidos</th><th>Entreg.</th><th>Devol.</th><th>Cancel.</th><th>Riesgo</th></tr>
   ${r.clientes.map(c=>`<tr><td>${esc(c.tel)}</td><td>${esc(c.cliente)}</td><td>${c.total}</td><td>${c.entregados}</td><td>${c.devoluciones}</td><td>${c.cancelados}</td><td class="${c.riesgo==='alto'?'neg':c.riesgo==='medio'?'warn':'pos'}">${esc(c.riesgo)}</td></tr>`).join('')||'<tr><td colspan=7 class=empty>Sin clientes de riesgo</td></tr>'}</table></div></div>`;
 }
