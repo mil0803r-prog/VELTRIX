@@ -16,7 +16,7 @@ function orders(n) {
     else if (r < 0.72) status = k.dev[Math.floor(R() * k.dev.length)];
     else if (r < 0.80) status = 'CANCELADO';
     else if (r < 0.88) status = 'NOVEDAD';
-    else status = r < 0.92 ? 'EN OFICINA' : r < 0.96 ? 'EN TRANSITO' : r < 0.98 ? 'EN INVENTARIO' : 'GUIA GENERADA';
+    else status = r < 0.92 ? 'EN OFICINA' : r < 0.96 ? (R() < 0.5 ? 'EN RUTA' : 'EN TRANSITO') : r < 0.98 ? 'EN INVENTARIO' : 'GUIA GENERADA';
     const p = Math.floor(R() * PRODS.length), qty = 1 + Math.floor(R() * 2);
     const price = Math.round((120 + R() * 180) * mult), cost = Math.round(price * (0.35 + R() * 0.2));
     const ship = Math.round((28 + R() * 20) * mult);

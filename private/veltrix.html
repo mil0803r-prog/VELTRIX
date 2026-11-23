@@ -171,13 +171,26 @@ async function api(a,extra={},opt){const r=await fetch('/api/dropi?'+new URLSear
 const post=(a,b,x)=>api(a,x,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});
 const del=(a,x)=>api(a,x,{method:'DELETE'});
 // ---------- formato y animación de números ----------
-const estCls=(e,g)=>{const s=String(e||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
-  if(/CANCEL/.test(s))return 'e-can';if(/DEVOL.*(TRANS|CAMINO|RUTA)/.test(s))return 'e-devt';if(/DEVOL|DEVUELT|RECHAZ/.test(s))return 'e-dev';if(/ENTREGADO/.test(s))return 'e-ok';
-  if(/NOVEDAD|INCIDENC/.test(s))return 'e-nov';if(/OFICINA/.test(s))return 'e-ofi';if(/INVENTARIO|BODEGA|ALMACEN/.test(s))return 'e-inv';
-  if(/TRANSITO|RUTA|REPARTO|DESPACH|CAMINO|ENVIAD/.test(s))return 'e-ruta';if(/PENDIENTE|GENERAD|PREPAR|RECOLEC|ALISTAD|CONFIRM/.test(s))return 'e-pend';
+let OVR={};
+const nrm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().trim();
+// Naranja = pendiente · Azul = en ruta · Negro = en inventario · Morado = oficina · Amarillo = novedad · Rosa = devolucion en transito · Rojo = devolucion · Verde = entregado · Gris = cancelado
+const AUTO=(e,g)=>{const s=nrm(e);
+  if(/ENTREGADO A TRANSPORTADORA|ENTREGADA A CONEXIONES/.test(s))return 'e-ruta';
+  if(/CANCEL|ANULAD|GUIA NO EXISTE/.test(s))return 'e-can';
+  if(/DEVOL.*(TRANS|CAMINO|RUTA)|PROCESO DE DEVOL|PARA DEVOLVER|EN DEVOLUCION/.test(s))return 'e-devt';
+  if(/DEVOL|DEVUELT|RECHAZ|REMITENTE|NO ENTREGADO|REZAGO|INDEMNIZ|SINIESTRO|INCAUTAD|RETENCION|\bDEV\b/.test(s))return 'e-dev';
+  if(/SOLUCIONAD/.test(s))return 'e-ruta';
+  if(/NOVEDAD|INCIDENC|INTENTO|ORDEN PUBLICO|CIERRE DE VIAS|NO SE CUBRE|MAL ZONIFICADO|CLIMATOLOG|NO HAY QUIEN|FISICO NO|NO LLEGO|INVESTIGACION|STAND BY|ERROR/.test(s))return 'e-nov';
+  if(/ENTREGAD[OA]|ENTREGA EXITOSA|ENTREGA VERIFICADA|^ENTREGA( DIGITALIZADA)?$|DESPACHO EFECTIVO|PRUEBA DE ENTREGA|CUMPLIDO/.test(s))return 'e-ok';
+  if(/ALISTAMIENTO/.test(s))return 'e-pend';
+  if(/OFICINA/.test(s))return 'e-ofi';
+  if(/INVENTARIO|BODEGA DROPI|RECIBIDO (POR )?(DROPI|PAU)|RECOGIDO POR DROPI|BODEGA ORIGEN/.test(s))return 'e-inv';
+  if(/PENDIENTE|GENERANDO|GENERAD|PREPARAD|CONFIRMACION|TELEMERCADEO|AGENDAD|^EN PROCESO$/.test(s))return 'e-pend';
+  if(/RUTA|TRANSITO|CAMINO|REPARTO|DISTRIBUCION|DESPACH|RECOLEC|RECOGID|TRANSPORT|TERMINAL|TRASLADO|BODEGA|ADMITID|CENTRO|ZONA|ASIGNAD|CARGAD|REEXPED|REDIRECC|VIAJANDO|REENVIO|ACOPIO|SALIO|INGRESO|DIGITAD/.test(s))return 'e-ruta';
   return g==='entregado'?'e-ok':g==='devolucion'?'e-dev':g==='cancelado'?'e-can':g==='novedad'?'e-nov':'e-pend'};
+const estCls=(e,g)=>OVR[nrm(e)]||AUTO(e,g);
 const estPill=(e,g)=>`<span class="es ${estCls(e,g)}">${esc(e)}</span>`;
-const nf=(n,d,cop)=>{const t=Number(n||0).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});return cop?t.replace(/,/g,'.'):t};
+const nf=(n,d)=>Number(n||0).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
 let CUR={mode:ST.mode==='mxn'?'mxn':'pen',pen:0.2};
 // Todo el sistema trabaja en pesos mexicanos (MXN); aqui se muestra en MXN o convertido a soles (PEN).
 const money=(n,d=0)=>{const v=Number(n||0)*(CUR.mode==='pen'?CUR.pen:1);return (v<0?'-':'')+(CUR.mode==='pen'?'S/ ':'MX$ ')+nf(Math.abs(v),d)};

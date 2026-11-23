@@ -85,14 +85,27 @@ $('tabs').onclick=e=>{const b=e.target.closest('[data-t]');if(b){tab=b.dataset.t
 $('ref').onclick=()=>load(true);$('per').onchange=()=>load();
 const GRC={entregado:'var(--gl)',proceso:'var(--blue)',novedad:'var(--amb)',devolucion:'var(--red)',cancelado:'var(--grey)'};
 const bar=v=>`<div class="bar"><i style="width:${Math.min(100,v||0)}%"></i></div>`;
-const estCls=(e,g)=>{const s=String(e||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
-  if(/CANCEL/.test(s))return 'e-can';if(/DEVOL.*(TRANS|CAMINO|RUTA)/.test(s))return 'e-devt';if(/DEVOL|DEVUELT|RECHAZ/.test(s))return 'e-dev';if(/ENTREGADO/.test(s))return 'e-ok';
-  if(/NOVEDAD|INCIDENC/.test(s))return 'e-nov';if(/OFICINA/.test(s))return 'e-ofi';if(/INVENTARIO|BODEGA|ALMACEN/.test(s))return 'e-inv';
-  if(/TRANSITO|RUTA|REPARTO|DESPACH|CAMINO|ENVIAD/.test(s))return 'e-ruta';if(/PENDIENTE|GENERAD|PREPAR|RECOLEC|ALISTAD|CONFIRM/.test(s))return 'e-pend';
+let OVR={};
+const nrm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().trim();
+// Naranja = pendiente · Azul = en ruta · Negro = en inventario · Morado = oficina · Amarillo = novedad · Rosa = devolucion en transito · Rojo = devolucion · Verde = entregado · Gris = cancelado
+const AUTO=(e,g)=>{const s=nrm(e);
+  if(/ENTREGADO A TRANSPORTADORA|ENTREGADA A CONEXIONES/.test(s))return 'e-ruta';
+  if(/CANCEL|ANULAD|GUIA NO EXISTE/.test(s))return 'e-can';
+  if(/DEVOL.*(TRANS|CAMINO|RUTA)|PROCESO DE DEVOL|PARA DEVOLVER|EN DEVOLUCION/.test(s))return 'e-devt';
+  if(/DEVOL|DEVUELT|RECHAZ|REMITENTE|NO ENTREGADO|REZAGO|INDEMNIZ|SINIESTRO|INCAUTAD|RETENCION|\bDEV\b/.test(s))return 'e-dev';
+  if(/SOLUCIONAD/.test(s))return 'e-ruta';
+  if(/NOVEDAD|INCIDENC|INTENTO|ORDEN PUBLICO|CIERRE DE VIAS|NO SE CUBRE|MAL ZONIFICADO|CLIMATOLOG|NO HAY QUIEN|FISICO NO|NO LLEGO|INVESTIGACION|STAND BY|ERROR/.test(s))return 'e-nov';
+  if(/ENTREGAD[OA]|ENTREGA EXITOSA|ENTREGA VERIFICADA|^ENTREGA( DIGITALIZADA)?$|DESPACHO EFECTIVO|PRUEBA DE ENTREGA|CUMPLIDO/.test(s))return 'e-ok';
+  if(/ALISTAMIENTO/.test(s))return 'e-pend';
+  if(/OFICINA/.test(s))return 'e-ofi';
+  if(/INVENTARIO|BODEGA DROPI|RECIBIDO (POR )?(DROPI|PAU)|RECOGIDO POR DROPI|BODEGA ORIGEN/.test(s))return 'e-inv';
+  if(/PENDIENTE|GENERANDO|GENERAD|PREPARAD|CONFIRMACION|TELEMERCADEO|AGENDAD|^EN PROCESO$/.test(s))return 'e-pend';
+  if(/RUTA|TRANSITO|CAMINO|REPARTO|DISTRIBUCION|DESPACH|RECOLEC|RECOGID|TRANSPORT|TERMINAL|TRASLADO|BODEGA|ADMITID|CENTRO|ZONA|ASIGNAD|CARGAD|REEXPED|REDIRECC|VIAJANDO|REENVIO|ACOPIO|SALIO|INGRESO|DIGITAD/.test(s))return 'e-ruta';
   return g==='entregado'?'e-ok':g==='devolucion'?'e-dev':g==='cancelado'?'e-can':g==='novedad'?'e-nov':'e-pend'};
+const estCls=(e,g)=>OVR[nrm(e)]||AUTO(e,g);
 const estPill=(e,g)=>`<span class="es ${estCls(e,g)}">${esc(e)}</span>`;
 const ECOL={'e-ok':'var(--c-ok)','e-ruta':'var(--c-ruta)','e-pend':'var(--c-pend)','e-inv':'var(--c-inv)','e-ofi':'var(--c-ofi)','e-nov':'var(--c-nov)','e-devt':'var(--c-devt)','e-dev':'var(--c-dev)','e-can':'var(--c-can)'};
-const ESTADOS=[['e-ok','Entregado'],['e-ruta','En tránsito / ruta'],['e-pend','Pendiente / guía'],['e-inv','En inventario'],['e-ofi','En oficina'],['e-nov','Novedad'],['e-devt','Devolución en tránsito'],['e-dev','Devolución / rechazado'],['e-can','Cancelado']];
+const ESTADOS=[['e-pend','Pendiente / guía'],['e-ruta','En ruta / tránsito'],['e-inv','En inventario'],['e-ofi','En oficina'],['e-nov','Novedad'],['e-devt','Devolución en tránsito'],['e-dev','Devolución / rechazado'],['e-ok','Entregado'],['e-can','Cancelado']];
 const pill=g=>`<span class="pill ${esc(g)}">${esc(g)}</span>`;
 const kpi=(l,v,s,c)=>`<div class="card kpi"><div class="l">${l}</div><div class="v ${c||''}">${v}</div><div class="s">${s||''}</div></div>`;
 const foot=(ms,cache)=>{const d=new Date(cache||Date.now());return `<div class="foot">Fuente: ${esc(M.base)}/integrations · Actualizado ${d.toLocaleDateString('es')}, ${d.toLocaleTimeString('es')} · ${ms??0} ms</div>`};
@@ -113,7 +126,7 @@ async function load(fresh){
   view.innerHTML='<div class="empty">Cargando…</div>';
   try{
     const cu=await api('cuentas');const c=cu.cuentas.find(x=>x.n===CTA);M={...c,pen:cu.pen};
-    $('pais').textContent=c.nombre;srcTxt();
+    $('pais').textContent=c.nombre;srcTxt();try{OVR=(await api('colores')).colores||{}}catch(e){}
     D=await api('data',fresh?{fresh:1}:{});render();
   }catch(e){view.innerHTML=`<div class="err">${esc(e.message)}</div>`}
 }
@@ -177,7 +190,7 @@ async function resumen(){
    <div class="filters"><input id="fq" placeholder="Buscar cliente, ciudad, dirección, guía, #id…"><select id="fe"><option value="">Todos los estados</option>${[...new Set(P.map(p=>p.estado))].sort().map(x=>`<option>${esc(x)}</option>`).join('')}</select>
     <select id="ft"><option value="">Todas las transportadoras</option>${[...new Set(P.map(p=>p.transp))].sort().map(x=>`<option>${esc(x)}</option>`).join('')}</select>
     <select id="fp"><option value="">Todos los proveedores</option>${Object.keys(pv).sort().map(x=>`<option>${esc(x)}</option>`).join('')}</select><label class="row mut"><input type="checkbox" id="fl"> Solo con retraso</label></div>
-   <div class="legend" style="margin:0 0 10px">${ESTADOS.map(([c,l])=>`<span class="es ${c}">${l}</span>`).join('')}</div>
+   <div class="legend" style="margin:0 0 10px;align-items:center">${ESTADOS.map(([c,l])=>`<span class="es ${c}">${l}</span>`).join('')}<button class="btn sm" id="pcol">Personalizar colores</button></div>
    <div class="scroll"><table class="tbl"><thead><tr><th>#</th><th>Estado</th><th>Proveedor</th><th>Transportadora</th><th>Guía</th><th>Cliente</th><th>Ciudad</th><th>Dirección</th><th>Total</th><th>Flete</th><th>Utilidad</th><th>Fecha</th><th>Acción</th></tr></thead><tbody id="tb"></tbody></table></div></div>
   ${foot(D.ms,D.cache)}`;
   const late=p=>(p.grupo==='proceso'||p.grupo==='novedad')&&p.dias>=RET;
@@ -185,9 +198,16 @@ async function resumen(){
     const r=P.filter(p=>(!e||p.estado===e)&&(!t||p.transp===t)&&(!pr||(p.prov||'Sin proveedor')===pr)&&(!l||late(p))&&(!q||[p.cliente,p.tel,p.guia,p.prod,p.ciudad,p.dir,String(p.id)].join(' ').toLowerCase().includes(q)));
     $('pcount').textContent=Math.min(r.length,200)+' de '+P.length;
     $('tb').innerHTML=r.slice(0,200).map(p=>`<tr class="${estCls(p.estado,p.grupo)} ${late(p)?'hot':''}"><td class="mut">${esc(p.id)}</td><td>${estPill(p.estado,p.grupo)}</td><td>${esc(p.prov)}</td><td>${esc(p.transp)}</td><td><span class="mono mut">${esc(p.guia)}</span></td><td>${esc(p.cliente)}</td><td>${esc(p.ciudad)}</td><td class="mut" style="white-space:normal;min-width:140px;max-width:200px">${esc(p.dir)}</td><td>${money(p.total)}</td><td>${money(p.flete)}</td><td class="${p.utilidad>=0?'g':'r'}">${money(p.utilidad)}</td><td>${esc(p.fecha)}</td><td>${acts(p)}</td></tr>`).join('')||'<tr><td colspan=13 class="empty">Sin pedidos</td></tr>'};
+  $('pcol').onclick=coloresModal;
   ['fq','fe','ft','fp'].forEach(i=>$(i).oninput=f);$('fl').onchange=f;f();
   $('pchips').onclick=async e=>{const s=e.target.closest('[data-setwa]');if(s){e.stopPropagation();await setWa(s.dataset.setwa);return resumen()}
     if(e.target.closest('a'))return;const c=e.target.closest('[data-pv]');if(c){$('fp').value=c.dataset.pv;f();$('tb').scrollIntoView({behavior:'smooth',block:'center'})}};
+}
+function coloresModal(){
+  const opts=ESTADOS.map(([c,l])=>`<option value="${c}">${l}</option>`).join('');
+  modal(`<h3>Colores de los estados</h3><p class="mut" style="font-size:12px">Los colores se asignan solos según el texto del estado. Si alguno de su transportadora queda mal, elíjale aquí el color correcto.</p>${D.estados.map(e=>`<div class="erow"><span class="es ${estCls(e.estado,e.grupo)}">${esc(e.estado)}</span><select data-col="${esc(e.estado)}" style="margin-left:auto"><option value="auto">Automático</option>${opts}</select></div>`).join('')}`);
+  document.querySelectorAll('.modal [data-col]').forEach(sel=>{const k=nrm(sel.dataset.col);sel.value=OVR[k]||'auto';
+    sel.onchange=async()=>{try{const r=await post('colores',{estado:sel.dataset.col,cls:sel.value});OVR=r.colores||{};const sp=sel.parentElement.querySelector('.es');sp.className='es '+estCls(sp.textContent,'proceso');render()}catch(e){alert(e.message)}}});
 }
 async function setWa(prov){const w=prompt('WhatsApp de '+prov+' (con código de país, solo números):');if(!w)return;try{await post('favs',{op:'wa',prov,wa:w});await loadFav()}catch(e){alert(e.message)}}
 

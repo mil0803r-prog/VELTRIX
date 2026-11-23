@@ -77,9 +77,9 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:var(--gl);box-sha
 @keyframes fadein{from{opacity:0}to{opacity:1}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-delay:0ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 
-/* Colores de los estados de Dropi (un color por tipo de estado) */
-:root{--c-ok:#059669;--c-ruta:#0284c7;--c-pend:#6366f1;--c-inv:#0d9488;--c-ofi:#9333ea;--c-nov:#d97706;--c-devt:#ea580c;--c-dev:#dc2626;--c-can:#6b7280}
-:root[data-theme=dark]{--c-ok:#34d399;--c-ruta:#38bdf8;--c-pend:#a5b4fc;--c-inv:#2dd4bf;--c-ofi:#c084fc;--c-nov:#fbbf24;--c-devt:#fb923c;--c-dev:#f87171;--c-can:#9ca3af}
+/* Colores de los estados de Dropi: naranja pendiente, azul en ruta, negro en inventario */
+:root{--c-ok:#059669;--c-ruta:#2563eb;--c-pend:#ea580c;--c-inv:#111827;--c-ofi:#9333ea;--c-nov:#ca8a04;--c-devt:#db2777;--c-dev:#dc2626;--c-can:#6b7280}
+:root[data-theme=dark]{--c-ok:#34d399;--c-ruta:#60a5fa;--c-pend:#fb923c;--c-inv:#e5e7eb;--c-ofi:#c084fc;--c-nov:#facc15;--c-devt:#f472b6;--c-dev:#f87171;--c-can:#9ca3af}
 .e-ok{--ec:var(--c-ok)}.e-ruta{--ec:var(--c-ruta)}.e-pend{--ec:var(--c-pend)}.e-inv{--ec:var(--c-inv)}.e-ofi{--ec:var(--c-ofi)}.e-nov{--ec:var(--c-nov)}.e-devt{--ec:var(--c-devt)}.e-dev{--ec:var(--c-dev)}.e-can{--ec:var(--c-can)}
 .es{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 8px;border-radius:99px;font-size:11.5px;font-weight:600;white-space:nowrap;color:var(--ec,var(--mut));background:color-mix(in srgb,var(--ec,var(--mut)) 13%,transparent);border:1px solid color-mix(in srgb,var(--ec,var(--mut)) 30%,transparent)}
 .es::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--ec,var(--mut));flex-shrink:0}

@@ -62,11 +62,11 @@ async function allOrders(fresh) {
 // ---------- Clasificacion ----------
 function groupOf(o) {
   const st = norm(o.status);
-  if (st.includes('DEVOL') || st.includes('DEVUELTO')) return 'devolucion';
-  if (st.includes('RECHAZ')) return 'devolucion'; // estados propios del pais
-  if (st.includes('ENTREGADO')) return 'entregado';
-  if (st.includes('CANCEL')) return 'cancelado';
-  if (st.includes('NOVEDAD')) return 'novedad';
+  if (/CANCEL|ANULAD|GUIA NO EXISTE/.test(st)) return 'cancelado';
+  if (/DEVOL|DEVUELT|RECHAZ|REMITENTE|NO ENTREGADO|REZAGO|INDEMNIZ|SINIESTRO|INCAUTAD|RETENCION|\bDEV\b/.test(st)) return 'devolucion';
+  if (/SOLUCIONAD|ENTREGADO A TRANSPORTADORA|ENTREGADA A CONEXIONES/.test(st)) return 'proceso';
+  if (/NOVEDAD|INCIDENC|INTENTO|ORDEN PUBLICO|CIERRE DE VIAS|NO SE CUBRE|MAL ZONIFICADO|CLIMATOLOG|NO HAY QUIEN|FISICO NO|NO LLEGO|INVESTIGACION|STAND BY|ERROR/.test(st)) return 'novedad';
+  if (/ENTREGAD[OA]|ENTREGA EXITOSA|ENTREGA VERIFICADA|^ENTREGA( DIGITALIZADA)?$|DESPACHO EFECTIVO|PRUEBA DE ENTREGA|CUMPLIDO/.test(st)) return 'entregado';
   return 'proceso';
 }
 const costOf = (o) => (o.orderdetails || []).reduce((a, d) =>
@@ -93,7 +93,7 @@ function inPeriod(list, d) {
 }
 
 const ageDays = (d) => { const t = new Date(d).getTime(); return Number.isFinite(t) ? Math.max(0, Math.floor((Date.now() - t) / 864e5)) : 0; };
-const SIN_DESPACHAR = /PENDIENTE|GENERAD|INVENTARIO|PREPAR|ALISTAD|SIN DESPACH/;
+const SIN_DESPACHAR = /PENDIENTE|GENERAD|GENERANDO|INVENTARIO|BODEGA DROPI|RECIBIDO|PREPAR|ALISTAD|SIN DESPACH/;
 
 function slim(o) {
   const g = groupOf(o), total = num(o.total_order), ship = num(o.shipping_amount), cost = costOf(o);
@@ -260,6 +260,16 @@ async function route(req, res, q) {
         await store.set('settings', key('favs2'), st);
       }
       return json(res, 200, st);
+    }
+    if (a === 'colores') { // color personalizado por estado (por cuenta)
+      const cur = await store.get('settings', key('colores'), {});
+      if (req.method === 'POST') {
+        const k = norm(body.estado).slice(0, 80);
+        if (!k) return json(res, 400, { error: 'Falta el estado' });
+        if (['e-ok', 'e-ruta', 'e-pend', 'e-inv', 'e-ofi', 'e-nov', 'e-devt', 'e-dev', 'e-can'].includes(body.cls)) cur[k] = body.cls; else delete cur[k];
+        await store.set('settings', key('colores'), cur);
+      }
+      return json(res, 200, { colores: cur });
     }
     if (a === 'pagos') { // entregados marcados como ya pagados (manual)
       const pg = await store.get('settings', key('pagos'), {});
