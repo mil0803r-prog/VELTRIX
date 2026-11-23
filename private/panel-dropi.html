@@ -381,28 +381,44 @@ async function fav(){
 const MX_ESTADOS=['Aguascalientes','Baja California','Baja California Sur','Campeche','Chiapas','Chihuahua','Ciudad de México','Coahuila','Colima','Durango','Estado de México','Guanajuato','Guerrero','Hidalgo','Jalisco','Michoacán','Morelos','Nayarit','Nuevo León','Oaxaca','Puebla','Querétaro','Quintana Roo','San Luis Potosí','Sinaloa','Sonora','Tabasco','Tamaulipas','Tlaxcala','Veracruz','Yucatán','Zacatecas'];
 const COLORS={dorado:'#d4af37',dorada:'#d4af37',oro:'#d4af37',azul:'#2563eb',rojo:'#dc2626',roja:'#dc2626',negro:'#111827',negra:'#111827',verde:'#16a34a',rosa:'#f472b6',rosada:'#f472b6',rosado:'#f472b6',blanco:'#f8fafc',blanca:'#f8fafc',morado:'#7c3aed',morada:'#7c3aed',lila:'#a78bfa',amarillo:'#facc15',amarilla:'#facc15',naranja:'#f97316',gris:'#9ca3af',plateado:'#cbd5e1',plateada:'#cbd5e1',plata:'#cbd5e1',cafe:'#78350f',marron:'#78350f',beige:'#e7d3b0',crema:'#f5efd9',celeste:'#7dd3fc',turquesa:'#14b8a6',vino:'#7f1d1d',fucsia:'#d946ef',cobre:'#b87333',bronce:'#cd7f32',transparente:'#e5e7eb',multicolor:'conic-gradient(#ef4444,#f59e0b,#facc15,#22c55e,#3b82f6,#8b5cf6,#ef4444)'};
 const swatch=t=>{for(const w of nrm(t).toLowerCase().split(/[^a-z]+/))if(COLORS[w])return COLORS[w];return ''};
-const npNew=()=>({name:'',surname:'',phone:'',client_email:'',dni:'',state:'',depId:null,city:'',cityObj:null,colonia:'',zip_code:'',dir:'',rate_type:'CON RECAUDO',distribution_company_id:'',shop_order_id:'',notes:'',notasOn:false,items:[],ok:false,res:null,pm:'cat',q:'',fs:'',quote:null});
+const npNew=()=>({name:'',surname:'',phone:'',client_email:'',dni:'',state:'',depId:null,city:'',cityObj:null,colonia:'',zip_code:'',dir:'',rate_type:'CON RECAUDO',distribution_company_id:'',carrierName:'',shop_order_id:'',notes:'',notasOn:false,items:[],ok:false,res:null,pm:'cat',q:'',fs:'',quote:null});
+const clrCar=()=>{NP.distribution_company_id='';NP.carrierName=''};
 let NP=null,DEPS=[],CITIES={},CAR=[],QT=null,QSEQ=0;
 const mx=n=>'MX$ '+nf(n,2),penTxt=n=>'S/ '+nf(n*penRate(),2);
 const initials=n=>String(n).split(/[\s-]+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
 const hue=n=>{let h=0;for(const c of String(n))h=(h*31+c.charCodeAt(0))%360;return h};
 /* --- geografía y cotización --- */
-async function geoDeps(){if(DEPS.length)return;try{DEPS=(await api('geo',{t:'deps'})).departamentos||[]}catch(e){DEPS=[]}if(!DEPS.length)DEPS=MX_ESTADOS.map(n=>({id:null,name:n}))}
-async function geoCities(dep=NP.depId){if(!dep)return [];const k=dep+'|'+NP.rate_type;if(CITIES[k])return CITIES[k];try{CITIES[k]=(await api('geo',{t:'ciudades',dep,rate:NP.rate_type})).ciudades||[]}catch(e){CITIES[k]=[]}return CITIES[k]}
-let SND=null;try{SND=JSON.parse(localStorage.getItem('vx_snd_'+CTA)||'null')}catch(e){}
-const pretty=n=>{const t=String(n||'');return t.length<=4?t.toUpperCase():t.toLowerCase().replace(/(^|[\s-])(\S)/g,(m,a,b)=>a+b.toUpperCase())};
-function cityList(){const l=$('dl-city');if(!l)return;geoCities().then(c=>{l.innerHTML=c.map(x=>`<option value="${esc(x.name)}">`).join('');const inp=$('np-city');if(inp){inp.disabled=!NP.state;inp.placeholder=NP.state?(c.length?'Escriba o elija el municipio':'Escriba el municipio'):'Primero elija el estado'}
-  if(NP.city){NP.cityObj=c.find(x=>nrm(x.name)===nrm(NP.city))||null}carrDraw()})}
+let DEPS_ERR='',GEO_ERR='',SND=null;try{SND=JSON.parse(localStorage.getItem('vx_snd_'+CTA)||'null')}catch(e){}
+const pretty=n=>String(n||'');
+async function geoDeps(){if(DEPS.length)return;try{DEPS=(await api('geo',{t:'deps'})).departamentos||[];DEPS_ERR=DEPS.length?'':'Dropi no devolvió estados'}catch(e){DEPS=[];DEPS_ERR=e.message}if(!DEPS.length)DEPS=MX_ESTADOS.map(n=>({id:null,name:n}))}
+async function geoCities(dep=NP.depId){if(!dep)return [];const k=dep+'|'+NP.rate_type;if(CITIES[k])return CITIES[k];
+  try{const c=(await api('geo',{t:'ciudades',dep,rate:NP.rate_type})).ciudades||[];GEO_ERR=c.length?'':'Dropi no devolvió municipios para este estado';if(c.length)CITIES[k]=c;return c}catch(e){GEO_ERR=e.message;return []}}
+/* Estado y municipio conectados: el municipio es un selector que se llena con los municipios del estado elegido */
+const cityBox=(inner,note)=>`<label class="fl"><span class="req">Municipalidad o alcaldía</span>${inner}</label>${note?`<div class="mut" style="font-size:11.5px;margin-top:4px">${note}</div>`:''}`;
+function cityFree(w,note){w.innerHTML=cityBox(`<input id="np-city" value="${esc(NP.city)}" placeholder="Escriba el municipio" maxlength="80" autocomplete="off">`,note);
+  $('np-city').oninput=e=>{NP.city=e.target.value;NP.cityObj=null;npSum();qDebounce()}}
+async function cityDraw(){
+  const w=$('np-city-wrap');if(!w)return;
+  if(!NP.state){w.innerHTML=cityBox('<select id="np-city" disabled><option>Primero elija el estado</option></select>');return}
+  if(!NP.depId)return cityFree(w,'Sin lista de municipios de Dropi: escríbalo a mano (no se podrá cotizar el flete).');
+  const dep=NP.depId;w.innerHTML=cityBox('<select id="np-city" disabled><option>Cargando municipios de '+esc(NP.state)+'…</option></select>');
+  const list=await geoCities(dep);if(dep!==NP.depId)return; // cambió el estado mientras cargaba
+  if(!list.length)return cityFree(w,'No se pudo cargar la lista de municipios de '+esc(NP.state)+(GEO_ERR?' ('+esc(GEO_ERR)+')':'')+'. Escríbalo a mano.');
+  const cur=list.find(c=>nrm(c.name)===nrm(NP.city));
+  if(NP.city&&!cur){NP.city='';NP.cityObj=null;NP.quote=null;clrCar()} else NP.cityObj=cur||null;
+  w.innerHTML=cityBox(`<select id="np-city"><option value="">Municipalidad o delegación</option>${list.map(c=>`<option value="${esc(c.id)}" ${cur&&String(cur.id)===String(c.id)?'selected':''}>${esc(c.name)}</option>`).join('')}</select>`,list.length+' municipios en '+esc(NP.state));
+  $('np-city').onchange=e=>{const c=list.find(x=>String(x.id)===e.target.value)||null;NP.city=c?c.name:'';NP.cityObj=c;clrCar();npSum();qDebounce()};
+  carrDraw();npSum()}
 const qReady=()=>NP.cityObj&&/^\d{5}$/.test(String(NP.zip_code).replace(/\D/g,''))&&NP.items.length&&NP.items.every(i=>Number(i.qty)>=1&&i.price!==''&&Number(i.price)>=0&&(!i.variations.length||i.variation_id));
 function qDebounce(){clearTimeout(QT);NP.quote=qReady()?{loading:true}:null;carrDraw();npSum();if(qReady())QT=setTimeout(cotizar,650)}
 async function cotizar(){
   const seq=++QSEQ;
   try{const r=await post('cotizar',{cod:NP.rate_type==='CON RECAUDO',city:{id:NP.cityObj.id,cod_dane:NP.cityObj.cod_dane,zip_code:NP.cityObj.zip_code},zip_code:String(NP.zip_code).replace(/\D/g,''),sender_dane:SND&&SND.dane||'',products:NP.items.map(i=>({id:i.id,price:Number(i.price),quantity:Number(i.qty),variation_id:i.variation_id||null}))});
     if(seq!==QSEQ)return;NP.quote={carriers:r.carriers,err:r.quoteError||'',needsSender:!!r.needsSender};
-    const sel=r.carriers.find(c=>c.id&&String(c.id)===String(NP.distribution_company_id));if(NP.distribution_company_id&&(!sel||sel.error))NP.distribution_company_id=''}
+    const chosen=r.carriers.find(c=>(c.id&&String(c.id)===String(NP.distribution_company_id))||(NP.carrierName&&nrm(c.name)===nrm(NP.carrierName)));if((NP.distribution_company_id||NP.carrierName)&&chosen&&chosen.error)clrCar()}
   catch(e){if(seq!==QSEQ)return;NP.quote={err:e.message}}
   carrDraw();npSum()}
-const carrSel=()=>{const id=String(NP.distribution_company_id||'');if(!id)return null;const q=NP.quote&&NP.quote.carriers&&NP.quote.carriers.find(c=>String(c.id)===id);return q||CAR.find(c=>String(c.id)===id)||{id,name:'ID '+id,cost:null}};
+const carrSel=()=>{const id=String(NP.distribution_company_id||''),nm=nrm(NP.carrierName||'');if(!id&&!nm)return null;const all=[...((NP.quote&&NP.quote.carriers)||[]),...CAR];return all.find(c=>(id&&String(c.id)===id)||(nm&&nrm(c.name)===nm))||{id,name:NP.carrierName||'ID '+id,cost:null}};
 /* --- validación --- */
 function npErrors(){
   const e=[],r=(k,l)=>{if(!String(NP[k]).trim())e.push('Falta '+l)};
@@ -445,14 +461,14 @@ function carrDraw(){
   else if(Q&&Q.loading){msg='Cotizando con las transportadoras…';kind='ok'}
   else if(Q&&Q.err)msg='No se pudo cotizar: '+Q.err+(Q.needsSender?'. Dropi pide la ciudad de origen del producto: indíquela abajo.':'. Dropi calculará el flete al crear la orden.');
   const list=(Q&&Q.carriers&&Q.carriers.length)?Q.carriers:CAR.map(c=>({id:c.id,name:c.name,cost:null,error:null}));
-  const row=(id,name,cost,err,auto,tray)=>{const noId=!auto&&!id,on=String(NP.distribution_company_id||'')===String(id||''),dis=!!err||noId,why=err||(noId?'Sin ID de transportadora: Dropi la asignará':'');
-    return `<button type="button" class="crow ${on&&!noId?'on':''} ${dis?'dis':''}" data-car="${esc(id||'')}" ${dis?'disabled':''} title="${esc(why)}"><i class="rd"></i>${auto?`<i class="av" style="background:var(--gsoft);color:var(--g)">${I('truck')}</i>`:`<i class="av" style="background:hsl(${hue(name)} 60% 90%);color:hsl(${hue(name)} 55% 28%)">${esc(initials(pretty(name)))}</i>`}<span class="cn">${esc(auto?name:pretty(name))}${tray?`<small style="color:var(--mut)">${esc(tray)}</small>`:''}${err?`<small>${esc(err)}</small>`:''}</span><span class="cp">${auto?'':cost!=null?`${mx(cost)}<small>≈ ${penTxt(cost)}</small>`:'MX$ - -'}</span></button>`};
+  const row=(id,name,cost,err,auto,tray)=>{const sel=!!(NP.distribution_company_id||NP.carrierName),on=auto?!sel:((id&&String(NP.distribution_company_id||'')===String(id))||(NP.carrierName&&nrm(NP.carrierName)===nrm(name))),dis=!!err,why=err||'';
+    return `<button type="button" class="crow ${on?'on':''} ${dis?'dis':''}" data-car="${esc(id||'')}" data-cname="${esc(auto?'':name)}" ${dis?'disabled':''} title="${esc(why)}"><i class="rd"></i>${auto?`<i class="av" style="background:var(--gsoft);color:var(--g)">${I('truck')}</i>`:`<i class="av" style="background:hsl(${hue(name)} 60% 90%);color:hsl(${hue(name)} 55% 28%)">${esc(initials(pretty(name)))}</i>`}<span class="cn">${esc(auto?name:pretty(name))}${tray?`<small style="color:var(--mut)">${esc(tray)}</small>`:''}${err?`<small>${esc(err)}</small>`:''}</span><span class="cp">${auto?'':cost!=null?`${mx(cost)}<small>≈ ${penTxt(cost)}</small>`:'MX$ - -'}</span></button>`};
   el.innerHTML=`${msg?`<div class="cmsg ${kind}">${kind?'':I('x')+' '}${esc(msg)}</div>`:''}
    <div class="pays"><button type="button" class="pay ${pay==='CON RECAUDO'?'on':''}" data-pay="CON RECAUDO"><i class="rd"></i>Contra Entrega</button><button type="button" class="pay ${pay==='SIN RECAUDO'?'on':''}" data-pay="SIN RECAUDO"><i class="rd"></i>Pago Anticipado</button></div>
    <div class="clist">${row('','Automática (Dropi elige)',null,null,true)}${list.map(c=>row(c.id,c.name,c.cost,c.error,false,c.trayecto)).join('')}</div>
    ${!list.length?'<p class="mut" style="font-size:12px">No hay transportadoras para mostrar. Dropi elige según su configuración.</p>':''}`;
-  el.querySelectorAll('[data-pay]').forEach(b=>b.onclick=()=>{if(NP.rate_type===b.dataset.pay)return;NP.rate_type=b.dataset.pay;CITIES={};NP.distribution_company_id='';cityList();qDebounce()});
-  el.querySelectorAll('[data-car]').forEach(b=>b.onclick=()=>{NP.distribution_company_id=b.dataset.car;carrDraw();npSum()});
+  el.querySelectorAll('[data-pay]').forEach(b=>b.onclick=()=>{if(NP.rate_type===b.dataset.pay)return;NP.rate_type=b.dataset.pay;CITIES={};clrCar();cityDraw();qDebounce()});
+  el.querySelectorAll('[data-car]').forEach(b=>b.onclick=()=>{NP.distribution_company_id=b.dataset.car;NP.carrierName=b.dataset.cname;carrDraw();npSum()});
   const d=$('orig-d');if(d&&Q&&Q.needsSender)d.open=true}
 /* --- ciudad de origen (la pide el cotizador de Dropi) --- */
 function origDraw(){
@@ -525,7 +541,7 @@ function pmodeDraw(){
 }
 async function npEnviar(forzar){
   const b=$('npgo');b.disabled=true;b.innerHTML='Enviando…';
-  const body={...Object.fromEntries(['name','surname','phone','client_email','dni','state','city','colonia','zip_code','dir','rate_type','distribution_company_id','shop_order_id','notes'].map(k=>[k,NP[k]])),
+  const body={...Object.fromEntries(['name','surname','phone','client_email','dni','state','city','colonia','zip_code','dir','rate_type','distribution_company_id','shop_order_id','notes'].map(k=>[k,NP[k]])),carrier_name:NP.carrierName,
     products:NP.items.map(i=>{const v=itemVar(i);return {id:i.id,name:i.name+(v?' ('+v.label+')':''),price:Number(i.price),quantity:Number(i.qty),variation_id:i.variation_id||null}}),forzar};
   try{const r=await post('crear',body);NP.res=r.orden;nuevo()}
   catch(e){
@@ -550,8 +566,8 @@ async function nuevo(){
    <div><div class="card flat"><h3 class="co-t">Información del cliente:</h3>
      <div class="fg2">${T('name','Nombres',{req:1,max:60})}${T('surname','Apellidos',{req:1,max:60})}</div>
      <div class="phone"><span class="flag">🇲🇽 <b>${esc(M.wa||'52')}</b></span>${T('phone','Número de teléfono',{req:1,max:20,mode:'tel',ph:'55 1234 5678'})}<button type="button" class="ic t-b" id="np-fp" title="Huella del cliente: ver su historial por teléfono">${I('finger')}</button></div>
-     <div class="fg2"><label class="fl"><span class="req">Estado</span><select id="np-state"><option value="">Estado</option>${DEPS.map(d=>`<option value="${esc(d.name)}" ${NP.state===d.name?'selected':''}>${esc(d.name)}</option>`).join('')}</select></label>
-      <label class="fl"><span class="req">Municipalidad o alcaldía</span><input id="np-city" list="dl-city" value="${esc(NP.city)}" ${NP.state?'':'disabled'} placeholder="${NP.state?'Escriba o elija el municipio':'Primero elija el estado'}" autocomplete="off" maxlength="80"><datalist id="dl-city"></datalist></label></div>
+     <div class="fg2"><div><label class="fl"><span class="req">Estado</span><select id="np-state"><option value="">Estado</option>${DEPS.map(d=>`<option value="${esc(d.name)}" ${NP.state===d.name?'selected':''}>${esc(d.name)}</option>`).join('')}</select></label>${DEPS_ERR?`<div class="warn" style="font-size:11.5px;margin-top:4px">No se pudieron cargar los estados de Dropi (${esc(DEPS_ERR)}). Se usa una lista local.</div>`:''}</div>
+      <div id="np-city-wrap"></div></div>
      <label class="fl" style="margin-top:12px"><span class="req">Dirección y complementos</span><textarea data-k="dir" rows="2" maxlength="200" placeholder="Calle, número, entre calles, referencias…">${esc(NP.dir)}</textarea></label>
      <div class="fg2" style="margin-top:12px">${T('client_email','Correo electrónico (opcional)',{type:'email',max:100})}${T('zip_code','Código postal',{req:1,max:5,mode:'numeric',ph:'44100'})}</div>
      <div class="fg2" style="margin-top:12px">${T('colonia','Colonia (opcional)',{max:80})}${T('shop_order_id','Referencia de tu tienda (opcional)',{max:60})}</div>
@@ -562,12 +578,11 @@ async function nuevo(){
    <div class="card flat" style="position:sticky;top:70px;align-self:start"><h3 class="co-t">Resumen de la orden:</h3><div id="npsum"></div></div>
   </div>${histHTML}`;
   view.querySelectorAll('[data-k]').forEach(i=>{const h=()=>{NP[i.dataset.k]=i.value;npSum();if(i.dataset.k==='zip_code')qDebounce()};i.oninput=h;i.onchange=h});
-  $('np-state').onchange=e=>{const d=DEPS.find(x=>x.name===e.target.value);NP.state=d?d.name:'';NP.depId=d?d.id:null;NP.city='';NP.cityObj=null;$('np-city').value='';NP.distribution_company_id='';cityList();qDebounce()};
-  $('np-city').oninput=async e=>{NP.city=e.target.value;NP.cityObj=((await geoCities()).find(x=>nrm(x.name)===nrm(NP.city)))||null;npSum();qDebounce()};
+  $('np-state').onchange=e=>{const d=DEPS.find(x=>x.name===e.target.value);NP.state=d?d.name:'';NP.depId=d?d.id:null;NP.city='';NP.cityObj=null;clrCar();cityDraw();qDebounce()};
   $('np-notes').onchange=e=>{NP.notasOn=e.target.checked;$('np-notes-box').style.display=e.target.checked?'':'none'};
   $('np-fp').onclick=async()=>{let t=String(NP.phone).replace(/\D/g,'');if(t.length<8)return modal('<p class="mut">Escriba primero el teléfono del cliente.</p>');
     try{const r=await api('huella',{tel:t}),x=r.perfil;modal(`<h3>Huella del cliente</h3>${x?`<p>${esc(x.cliente)} · ${esc(x.tel)}</p><div class="k5" style="margin-top:10px">${kpi('Pedidos',x.total)}${kpi('Entregados',x.entregados,'','pos')}${kpi('Devueltos',x.devoluciones,'','neg')}${kpi('Cancelados',x.cancelados)}</div><p style="margin-top:12px">Riesgo: <b class="${x.riesgo==='alto'?'neg':x.riesgo==='medio'?'warn':'pos'}">${esc(x.riesgo)}</b></p>`:'<p class="mut">Este teléfono no tiene historial en el período: cliente nuevo.</p>'}`)}catch(e){modal(`<div class="err">${esc(e.message)}</div>`)}};
-  cityList();pmodeDraw();npCart();carrDraw();origDraw();npSum();
+  cityDraw();pmodeDraw();npCart();carrDraw();origDraw();npSum();
 }
 
 addEventListener('storage',ev=>{if(ev.key==='vx_mode'||ev.key==='vx_pen'){srcTxt();render()}});

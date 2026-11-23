@@ -217,6 +217,10 @@ function buildOrderPayload(o) {
   if (o.distribution_company_id) p.distributionCompany = { id: o.distribution_company_id };
   return p;
 }
+// Transportadoras de Dropi México (se pueden ampliar con DROPI_CARRIERS="Veloces,Tiui,..."). Cualquier otra se ignora.
+const MX_CARRIERS = () => (process.env.DROPI_CARRIERS || 'Veloces,Tiui,Ampm,Afimex,Coordi,Quality-post').split(',').map((x) => x.trim()).filter(Boolean);
+const ckey = (n) => norm(n).replace(/[^A-Z0-9]/g, '');
+const isMxCarrier = (n) => MX_CARRIERS().some((c) => ckey(c) === ckey(n));
 function parseQuote(j) {
   let arr = Array.isArray(j) ? j : (j && (j.objects || j.data || j.carriers || j.options || j.result)) || [];
   if (arr && !Array.isArray(arr)) arr = Object.values(arr);
@@ -225,24 +229,19 @@ function parseQuote(j) {
     const id = Number(x.transportadora_id ?? dc.id ?? x.distribution_company_id ?? x.distributionCompanyId ?? x.id), cost = inner.precioEnvio ?? x.precioEnvio ?? x.shipping_cost ?? x.shippingCost ?? x.price ?? x.precio ?? x.cost ?? x.valor ?? x.shipping_amount;
     const name = String(x.transportadora || dc.name || (typeof x.carrier === 'string' ? x.carrier : x.carrier && x.carrier.name) || x.name || '').slice(0, 60);
     return { id: Number.isInteger(id) && id > 0 ? id : null, name: name || 'Transportadora', cost: cost == null || cost === '' ? null : num(cost), trayecto: String(inner.trayecto ?? x.trajectory ?? '').slice(0, 30), error: x.error ? String(x.error).slice(0, 200) : null };
-  });
+  }).filter((c) => isMxCarrier(c.name)).map((c) => ({ ...c, name: MX_CARRIERS().find((m) => ckey(m) === ckey(c.name)) })); // nombre como en Dropi México
 }
-// Lista de transportadoras: servicio oficial /distribution_companies + las que ya aparecen en sus pedidos
+// Transportadoras de México: siempre las de la lista (con su ID si Dropi lo informa: servicio oficial /distribution_companies o sus pedidos)
 async function carriersList() {
   const s = S(); if (s.carCache && Date.now() - s.carCache.ts < 3600000) return s.carCache.data;
-  const m = {};
-  if (DEMO() && !process.env[s.tokenVar]) for (const c of mock.quote(false, 1)) m[c.id] = { id: c.id, name: c.name, n: 0 };
-  {
-    if (!(DEMO() && !process.env[s.tokenVar])) for (const path of ['/integrations/distribution_companies', '/api/distribution_companies']) {
-      try { for (const c of rows(await dropi(path))) { const id = Number(c.id); if (id > 0 && c.name && !c.deleted_at) m[id] = { id, name: String(c.name).slice(0, 60), n: 0 }; } if (Object.keys(m).length) break; } catch (e) { /* prueba la siguiente ruta */ }
-    }
-    for (const o of await allOrders()) {
-      const dc = o.distribution_company || {}, id = Number(dc.id ?? o.distribution_company_id);
-      if (!Number.isInteger(id) || id < 1) continue;
-      (m[id] ||= { id, name: String(dc.name || ('Transportadora ' + id)).slice(0, 60), n: 0 }).n++;
-    }
+  const demo = DEMO() && !process.env[s.tokenVar], found = {}; // ckey -> {id, name, n}
+  const add = (id, name, n) => { if (!isMxCarrier(name)) return; const k = ckey(name); const x = (found[k] ||= { id: null, name: MX_CARRIERS().find((c) => ckey(c) === k), n: 0 }); if (id > 0 && !x.id) x.id = id; x.n += n; };
+  if (demo) for (const c of mock.quote(false, 1)) add(c.id, c.name, 0);
+  else for (const path of ['/integrations/distribution_companies', '/api/distribution_companies']) {
+    try { const l = rows(await dropi(path)); for (const c of l) if (!c.deleted_at) add(Number(c.id), String(c.name || ''), 0); if (l.length) break; } catch (e) { /* prueba la siguiente ruta */ }
   }
-  const data = Object.values(m).sort((a, b) => b.n - a.n || a.name.localeCompare(b.name));
+  try { for (const o of await allOrders()) { const dc = o.distribution_company || {}; add(Number(dc.id ?? o.distribution_company_id), String(dc.name || ''), 1); } } catch (e) { /* sin pedidos */ }
+  const data = MX_CARRIERS().map((c) => found[ckey(c)] || { id: null, name: c, n: 0 });
   s.carCache = { ts: Date.now(), data }; return data;
 }
 // Ciudad de origen (de donde sale el producto): la pide el cotizador. Se busca en el detalle del producto.
@@ -394,13 +393,16 @@ async function route(req, res, q) {
       const demo = DEMO() && !process.env[S().tokenVar];
       if (q.t === 'deps') {
         const raw = demo ? mock.deps() : rows(await dropi('/integrations/department'));
-        return json(res, 200, { departamentos: raw.map((d) => ({ id: d.id, name: String(d.name || d.department || '').slice(0, 60) })).filter((x) => x.name && x.id != null) });
+        return json(res, 200, { departamentos: raw.map((d) => ({ id: d.id, name: String(d.name || d.department || '').slice(0, 60) })).filter((x) => x.name && x.id != null).sort((a, b) => a.name.localeCompare(b.name, 'es')) });
       }
       if (q.t === 'ciudades') {
         const dep = Number(q.dep); if (!Number.isInteger(dep) || dep < 1) return json(res, 400, { error: 'Departamento inválido' });
         const rate = q.rate === 'SIN RECAUDO' ? 'SIN RECAUDO' : 'CON RECAUDO';
         const raw = demo ? mock.cities(dep) : rows(await dropi('/integrations/trajectory/bycity', { method: 'POST', body: { rate_type: rate, department_id: dep } }));
-        return json(res, 200, { ciudades: raw.slice(0, 700).map((c0) => { const c = c0.city || c0; return { id: c.id, name: String(c.name || c.city_name || '').slice(0, 80), cod_dane: String(c.cod_dane ?? ''), zip_code: String(c.zip_code ?? '') }; }).filter((x) => x.name && x.id != null) });
+        const out = raw.map((c0) => { const c = c0.city || c0; return { id: c.id, dep: c.department_id ?? c0.department_id ?? null, name: String(c.name || c.city_name || '').slice(0, 80), cod_dane: String(c.cod_dane ?? ''), zip_code: String(c.zip_code ?? '') }; })
+          .filter((x) => x.name && x.id != null && (x.dep == null || Number(x.dep) === dep)) // solo municipios de ESE estado
+          .sort((a, b) => a.name.localeCompare(b.name, 'es')).slice(0, 800).map(({ dep: _d, ...c }) => c);
+        return json(res, 200, { ciudades: out, departamento: dep });
       }
       return json(res, 400, { error: 'Consulta inválida' });
     }
@@ -424,6 +426,7 @@ async function route(req, res, q) {
       try { list = parseQuote(await dropi(QUOTE_PATH(), { method: 'POST', body: payload })); } catch (e) { return fallback(e.message); }
       if (!list.length) return fallback('Dropi no devolvió tarifas para este envío');
       for (const c of list) if (!c.id) c.id = byName(c.name);
+      const order = MX_CARRIERS().map(ckey); list.sort((a, b) => order.indexOf(ckey(a.name)) - order.indexOf(ckey(b.name)));
       return json(res, 200, { carriers: list, sender: sender || null });
     }
     if (a === 'transportadoras') return json(res, 200, { transportadoras: await carriersList() });
@@ -432,6 +435,11 @@ async function route(req, res, q) {
       if (req.method === 'GET') return json(res, 200, { ordenes: hist.slice(0, 100).map(({ hash, ...x }) => x), demo: DEMO() && !process.env[S().tokenVar] });
       if (req.method !== 'POST') return json(res, 405, { error: 'Método no permitido' });
       const v = validarPedido(body); if (v.error) return json(res, 400, { error: v.error });
+      if (!v.ok.distribution_company_id && body.carrier_name) {
+        const c = isMxCarrier(body.carrier_name) ? (await carriersList().catch(() => [])).find((x) => ckey(x.name) === ckey(body.carrier_name)) : null;
+        if (!c || !c.id) return json(res, 400, { error: 'No encontré el ID de la transportadora ' + String(body.carrier_name).slice(0, 30) + ' en Dropi. Elija «Automática» o cotice para obtener su ID.' });
+        v.ok.distribution_company_id = c.id;
+      }
       const o = v.ok, demo = DEMO() && !process.env[S().tokenVar];
       const hash = crypto.createHash('sha256').update([o.phone, o.state, o.products.map((p) => p.id + ':' + (p.variation_id || 0) + ':' + p.quantity).join(',')].join('|')).digest('hex').slice(0, 24);
       const dup = hist.find((h) => h.hash === hash && Date.now() - h.ts < 180000);

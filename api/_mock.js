@@ -44,8 +44,8 @@ function products(q) {
 const ESTADOS = ['Aguascalientes', 'Baja California', 'Baja California Sur', 'Campeche', 'Chiapas', 'Chihuahua', 'Ciudad de México', 'Coahuila', 'Colima', 'Durango', 'Estado de México', 'Guanajuato', 'Guerrero', 'Hidalgo', 'Jalisco', 'Michoacán', 'Morelos', 'Nayarit', 'Nuevo León', 'Oaxaca', 'Puebla', 'Querétaro', 'Quintana Roo', 'San Luis Potosí', 'Sinaloa', 'Sonora', 'Tabasco', 'Tamaulipas', 'Tlaxcala', 'Veracruz', 'Yucatán', 'Zacatecas'];
 const CIUDADES = { 'Jalisco': ['Guadalajara', 'Zapopan', 'Tlaquepaque', 'Tonalá', 'Tlajomulco de Zúñiga'], 'Ciudad de México': ['Coyoacán', 'Iztapalapa', 'Benito Juárez', 'Cuauhtémoc', 'Miguel Hidalgo', 'Tlalpan'], 'Nuevo León': ['Monterrey', 'San Nicolás de los Garza', 'Guadalupe', 'Apodaca', 'San Pedro Garza García'], 'Puebla': ['Puebla', 'Cholula', 'Atlixco'] };
 const deps = () => ESTADOS.map((name, i) => ({ id: i + 1, name }));
-const cities = (dep) => (CIUDADES[ESTADOS[dep - 1]] || ['Centro', 'Norte', 'Sur']).map((name, i) => ({ id: dep * 100 + i, name, cod_dane: String(dep * 1000 + i), zip_code: '0' + String(1000 + i * 10) }));
-const CARR = [[6, 'Veloces'], [11, 'Tiui'], [12, 'Ampm'], [13, 'Afimex'], [5, 'Coordi'], [14, 'Quality-post']];
+const cities = (dep) => (CIUDADES[ESTADOS[dep - 1]] || ['Centro', 'Norte', 'Sur']).map((name, i) => ({ id: dep * 100 + i, department_id: dep, name, cod_dane: String(dep * 1000 + i), zip_code: '0' + String(1000 + i * 10) }));
+const CARR = [[6, 'Veloces'], [11, 'Tiui'], [12, 'Ampm'], [13, 'Afimex'], [5, 'Coordi'], [14, 'Quality-post']]; // transportadoras de Dropi México
 function quote(cod, cityId) {
   return CARR.map(([id, name], i) => (i === 5 && cityId % 2 === 0 ? { id, name, cost: null, error: 'Sin cobertura en esta zona' } : { id, name, cost: 80 + (cityId % 7) * 6 + i * 7 + (cod ? 15 : 0), error: null }));
 }

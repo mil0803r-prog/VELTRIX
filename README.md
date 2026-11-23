@@ -26,6 +26,7 @@ Guía para agregar otro país: [`docs/PLANTILLA-PANEL-PAIS.md`](docs/PLANTILLA-P
 | `VELTRIX_MXN_PEN` | Opcional: tasa inicial de soles por 1 peso mexicano (por defecto 0.20). Se edita desde el tablero. |
 | `DROPI_API_BASE_<n>` | Opcional: otra base de API para la cuenta n |
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Guardar retiros, favoritos, gestión y registro diario (sin esto usa memoria y se pierde) |
+| `DROPI_CARRIERS` | Opcional: transportadoras de México separadas por coma (por defecto `Veloces,Tiui,Ampm,Afimex,Coordi,Quality-post`). Cualquier otra se ignora. |
 | `DROPI_QUOTE_PATH` | Opcional: ruta del cotizador de flete (por defecto `/integrations/orders/cotizaEnvioTransportadoraV2`). |
 | `DROPI_SENDER_DANE` | Opcional: código DANE/ciudad de origen por defecto para cotizar. El cotizador de Dropi la exige; si no se define, se detecta del detalle del producto o se elige en pantalla. |
 | `DROPI_ORDER_PATH` | Opcional: ruta de Dropi para crear pedidos (por defecto `/integrations/orders/myorders`). |
