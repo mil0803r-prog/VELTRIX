@@ -37,8 +37,8 @@ async function dropi(path, opts = {}) {
     headers: { Accept: 'application/json', 'Content-Type': 'application/json', ...headers },
     body: opts.body ? JSON.stringify(opts.body) : undefined,
   });
-  let r = await call({ Authorization: 'Bearer ' + token });
-  if (r.status === 401 || r.status === 403) r = await call({ 'dropi-integration-key': token });
+  let r = await call({ 'dropi-integration-key': token }); // cabecera oficial de la API de integraciones
+  if (r.status === 401 || r.status === 403) r = await call({ Authorization: 'Bearer ' + token });
   if (!r.ok) {
     let msg = ''; try { const j = await r.json(); msg = String(j.message || j.error || j.msg || '').slice(0, 300); } catch (e) { /* sin cuerpo */ }
     throw Object.assign(new Error('Dropi respondió ' + r.status + (msg ? ': ' + msg : '')), { code: 502, status: r.status });
@@ -181,17 +181,37 @@ function huella(list, tel) {
   const m = {};
   for (const o of list) {
     const p = slim(o); if (!p.tel) continue;
-    const x = (m[p.tel] ||= { tel: p.tel, cliente: p.cliente, total: 0, entregados: 0, devoluciones: 0, cancelados: 0 });
+    const x = (m[p.tel.slice(-10)] ||= { tel: p.tel, cliente: p.cliente, total: 0, entregados: 0, devoluciones: 0, cancelados: 0 });
     x.total++; if (p.grupo === 'entregado') x.entregados++; if (p.grupo === 'devolucion') x.devoluciones++; if (p.grupo === 'cancelado') x.cancelados++;
   }
   const risk = (x) => (x.devoluciones + x.cancelados >= 2 || (x.total >= 2 && x.devoluciones >= x.entregados) ? 'alto' : x.devoluciones + x.cancelados === 1 ? 'medio' : 'bajo');
-  if (tel) { const x = m[String(tel).replace(/\D/g, '')]; return x ? { ...x, riesgo: risk(x) } : null; }
+  if (tel) { const x = m[String(tel).replace(/\D/g, '').slice(-10)]; return x ? { ...x, riesgo: risk(x) } : null; }
   return Object.values(m).filter((x) => x.devoluciones + x.cancelados > 0 || x.total > 1).map((x) => ({ ...x, riesgo: risk(x) }))
     .sort((a, b) => b.devoluciones + b.cancelados - (a.devoluciones + a.cancelados)).slice(0, 100);
 }
 
 // ---------- Subir pedidos a Dropi ----------
 const ORDER_PATH = () => process.env.DROPI_ORDER_PATH || '/integrations/orders/myorders';
+const QUOTE_PATH = () => process.env.DROPI_QUOTE_PATH || '/integrations/orders/cotizaEnvioTransportadoraV2';
+// Cuerpo de "Nueva Orden" segun la documentacion oficial de Dropi (payment_method_id=1, type=FINAL_ORDER, total_order entero, shop_order_id obligatorio).
+function buildOrderPayload(o) {
+  const p = { calculate_costs_and_shiping: true, type: 'FINAL_ORDER', payment_method_id: 1, rate_type: o.rate_type, total_order: Math.round(o.total),
+    state: o.state, city: o.city, name: o.name, surname: o.surname, dir: o.dir, phone: o.phone,
+    shop_order_id: o.shop_order_id || 'VX-' + Date.now(), products: o.products.map((x) => ({ id: x.id, price: x.price, quantity: x.quantity, variation_id: x.variation_id ?? null })) };
+  for (const k of ['client_email', 'dni', 'colonia', 'zip_code', 'notes', 'shop_order_number']) if (o[k] !== '' && o[k] != null) p[k] = o[k];
+  if (o.distribution_company_id) p.distributionCompany = { id: o.distribution_company_id };
+  return p;
+}
+function parseQuote(j) {
+  let arr = Array.isArray(j) ? j : (j && (j.objects || j.data || j.carriers || j.options || j.result)) || [];
+  if (arr && !Array.isArray(arr)) arr = Object.values(arr);
+  return arr.filter((x) => x && typeof x === 'object').map((x) => {
+    const dc = x.distribution_company || x.distributionCompany || x.carrier_data || {};
+    const id = Number(dc.id ?? x.distribution_company_id ?? x.distributionCompanyId ?? x.id), cost = x.shipping_cost ?? x.shippingCost ?? x.price ?? x.precio ?? x.cost ?? x.valor ?? x.shipping_amount;
+    const name = String(dc.name || x.name || (typeof x.carrier === 'string' ? x.carrier : x.carrier && x.carrier.name) || x.transportadora || '').slice(0, 60);
+    return { id: Number.isInteger(id) && id > 0 ? id : null, name: name || 'Transportadora', cost: cost == null || cost === '' ? null : num(cost), error: x.error ? String(x.error).slice(0, 160) : null };
+  });
+}
 function validarPedido(b) {
   const t = (v, max) => String(v ?? '').trim().slice(0, max);
   let phone = String(b.phone || '').replace(/\D/g, '');
@@ -307,11 +327,41 @@ async function route(req, res, q) {
       if (byId !== null) raw = raw.filter((p) => Number(p.id) === byId);
       const img = (p) => { const u = String((p.gallery && p.gallery[0] && p.gallery[0].urlS3) || p.img || ''); return /^https:\/\//.test(u) ? u.slice(0, 300) : ''; };
       return json(res, 200, { productos: raw.slice(0, 20).map((p) => ({ id: p.id, name: String(p.name || '').slice(0, 120), img: img(p), price: num(p.sale_price), suggested: num(p.suggested_price ?? p.sale_price),
+        prov: String((p.user && (p.user.name || p.user.store_name)) || p.supplier_name || '').slice(0, 60), cost: num(p.sale_price),
         variations: (p.variations || []).map((v) => {
           const at = (v.attributes || v.attribute_values || []).map((x) => ({ n: String(x.name || (x.attribute && x.attribute.name) || '').slice(0, 30), v: String(x.value ?? '').slice(0, 40) })).filter((x) => x.v);
           return { id: v.id, label: at.map((x) => (x.n ? x.n + ': ' : '') + x.v).join(' · ') || String(v.label || v.sku || ('Variación ' + v.id)).slice(0, 60),
-            color: (at.find((x) => /color|colour|estilo|modelo|dise/i.test(x.n)) || at[0] || {}).v || '', stock: v.stock == null ? null : num(v.stock), suggested: num(v.suggested_price) };
+            color: (at.find((x) => /color|colour|estilo|modelo|dise/i.test(x.n)) || at[0] || {}).v || '', stock: v.stock == null ? null : num(v.stock), suggested: num(v.suggested_price), cost: num(v.sale_price) };
         }) })) });
+    }
+    if (a === 'geo') { // departamentos y ciudades de Dropi (para cotizar)
+      const demo = DEMO() && !process.env[S().tokenVar];
+      if (q.t === 'deps') {
+        const raw = demo ? mock.deps() : rows(await dropi('/integrations/department'));
+        return json(res, 200, { departamentos: raw.map((d) => ({ id: d.id, name: String(d.name || d.department || '').slice(0, 60) })).filter((x) => x.name && x.id != null) });
+      }
+      if (q.t === 'ciudades') {
+        const dep = Number(q.dep); if (!Number.isInteger(dep) || dep < 1) return json(res, 400, { error: 'Departamento inválido' });
+        const rate = q.rate === 'SIN RECAUDO' ? 'SIN RECAUDO' : 'CON RECAUDO';
+        const raw = demo ? mock.cities(dep) : rows(await dropi('/integrations/trajectory/bycity', { method: 'POST', body: { rate_type: rate, department_id: dep } }));
+        return json(res, 200, { ciudades: raw.slice(0, 700).map((c0) => { const c = c0.city || c0; return { id: c.id, name: String(c.name || c.city_name || '').slice(0, 80), cod_dane: String(c.cod_dane ?? ''), zip_code: String(c.zip_code ?? '') }; }).filter((x) => x.name && x.id != null) });
+      }
+      return json(res, 400, { error: 'Consulta inválida' });
+    }
+    if (a === 'cotizar') { // cotizador de flete por transportadora
+      if (req.method !== 'POST') return json(res, 405, { error: 'Método no permitido' });
+      const cid = Number(body.city && body.city.id), zip = String(body.zip_code || '').replace(/\D/g, '');
+      if (!Number.isInteger(cid) || cid < 1) return json(res, 400, { error: 'Elija la ciudad de destino' });
+      if (S().meta.mon === 'MXN' && !/^\d{5}$/.test(zip)) return json(res, 400, { error: 'Código postal de 5 dígitos' });
+      const prods = (Array.isArray(body.products) ? body.products : []).slice(0, 20).map((p) => ({ id: Number(p.id), quantity: Number(p.quantity), price: Number(p.price), variation_id: p.variation_id ? Number(p.variation_id) : null }));
+      if (!prods.length || prods.some((p) => !(p.id >= 1) || !(p.quantity >= 1) || !(p.price >= 0))) return json(res, 400, { error: 'Productos inválidos' });
+      const cod = !!body.cod, amount = Math.round(prods.reduce((x, p) => x + p.price * p.quantity, 0));
+      if (DEMO() && !process.env[S().tokenVar]) return json(res, 200, { carriers: mock.quote(cod, cid), demo: true });
+      const payload = { EnvioConCobro: cod, amount, ciudad_destino: { id: cid, cod_dane: String(body.city.cod_dane || ''), zip_code: String(body.city.zip_code || '') }, zip_code: zip,
+        products: prods.map((p) => ({ id: p.id, type: p.variation_id ? 'VARIABLE' : 'SIMPLE', quantity: p.quantity, price: p.price, variation_id: p.variation_id })) };
+      if (process.env.DROPI_SENDER_DANE) payload.ciudad_remitente = { cod_dane: process.env.DROPI_SENDER_DANE };
+      const list = parseQuote(await dropi(QUOTE_PATH(), { method: 'POST', body: payload }));
+      return json(res, 200, { carriers: list });
     }
     if (a === 'transportadoras') { // transportadoras que ya aparecen en los pedidos de la cuenta (con su ID)
       const m = {};
@@ -337,9 +387,7 @@ async function route(req, res, q) {
       try {
         if (demo) entry.id = 'DEMO-' + Date.now().toString().slice(-6);
         else {
-          const payload = { type: 'FINAL_ORDER', type_service: 'normal', calculate_costs_and_shiping: true, rate_type: o.rate_type, name: o.name, surname: o.surname, phone: o.phone, dir: o.dir, state: o.state, city: o.city, products: o.products };
-          for (const k of ['client_email', 'dni', 'colonia', 'zip_code', 'notes', 'shop_order_id', 'shop_order_number', 'distribution_company_id']) if (o[k] !== '' && o[k] != null) payload[k] = o[k];
-          const j = await dropi(ORDER_PATH(), { method: 'POST', body: payload });
+          const j = await dropi(ORDER_PATH(), { method: 'POST', body: buildOrderPayload(o) });
           if (j && (j.isSuccess === false || j.success === false)) throw Object.assign(new Error('Dropi rechazó el pedido: ' + String(j.message || 'sin detalle').slice(0, 300)), { code: 422, status: 422 });
           const d = (j && (j.objects || j.data)) || j || {};
           entry.id = String(d.id ?? d.order_id ?? j.id ?? '') || null;
@@ -420,4 +468,4 @@ async function handle(req, res) {
   return als.run(CTAS[c], () => route(req, res, q));
 }
 
-module.exports = { handle, build, groupOf, CTAS, META };
+module.exports = { handle, build, groupOf, CTAS, META, buildOrderPayload, parseQuote };

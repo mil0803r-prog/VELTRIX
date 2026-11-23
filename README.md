@@ -26,6 +26,8 @@ Guía para agregar otro país: [`docs/PLANTILLA-PANEL-PAIS.md`](docs/PLANTILLA-P
 | `VELTRIX_MXN_PEN` | Opcional: tasa inicial de soles por 1 peso mexicano (por defecto 0.20). Se edita desde el tablero. |
 | `DROPI_API_BASE_<n>` | Opcional: otra base de API para la cuenta n |
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Guardar retiros, favoritos, gestión y registro diario (sin esto usa memoria y se pierde) |
+| `DROPI_QUOTE_PATH` | Opcional: ruta del cotizador de flete (por defecto `/integrations/orders/cotizaEnvioTransportadoraV2`). |
+| `DROPI_SENDER_DANE` | Opcional: código de la ciudad del remitente para cotizar (el cotizador de Dropi lo pide en algunos países). |
 | `DROPI_ORDER_PATH` | Opcional: ruta de Dropi para crear pedidos (por defecto `/integrations/orders/myorders`). |
 | `VELTRIX_DEMO` | `1` = datos simulados para cuentas sin token (solo pruebas) |
 
@@ -43,7 +45,10 @@ npm test
 - Los países/monedas por cuenta están en `META` dentro de `api/_dropipanel.js`; el panel los lee de `a=cuentas`.
 - Los endpoints de Dropi usados son solo `/integrations/orders/myorders` y `/integrations/products/index`. Los campos de pedido se leyeron de la guía; **confirme con un token real** que coinciden (ver `slim()` y `costOf()`).
 
-## Subir pedidos a Dropi
+## Subir pedidos a Dropi (pantalla «Crear Orden»)
+
+Tres columnas como la de Dropi: **cliente** (con estado y municipio de Dropi y huella por teléfono), **transportadora** (contra entrega / pago anticipado, con el flete cotizado de cada una) y **resumen** (total a recaudar, precio proveedor, envío y ganancias). Usa la API oficial de integraciones de Dropi: cabecera `dropi-integration-key`, `POST /orders/myorders` (`payment_method_id: 1`, `type: FINAL_ORDER`, `total_order`, `shop_order_id`, `distributionCompany`), `GET /department`, `POST /trajectory/bycity` y `POST /orders/cotizaEnvioTransportadoraV2`.
+
 
 Sección **Subir pedido** (menú lateral, o pestaña dentro de Admin Dropi). Pide lo que exige Dropi: nombre, apellido, teléfono, estado, ciudad, dirección, código postal (5 dígitos en México), tipo de pago (con o sin recaudo) y uno o más productos con cantidad y precio (y variación si el producto la tiene). Opcionales: correo, documento, colonia, notas, referencias de tu tienda y transportadora fija.
 

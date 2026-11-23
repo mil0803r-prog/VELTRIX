@@ -41,4 +41,12 @@ function products(q) {
       gallery: [{ urlS3: 'https://example.com/p' + i + '.png' }],
       variations: i % 3 === 0 ? [['Dorado', 40], ['Azul', 0], ['Rojo', 12], ['Negro', 99], ['Rosada', 5], ['Multicolor', 8]].map(([c, st], j) => ({ id: 1000 * (j + 1) + i, sku: 'SKU' + i + '-' + j, stock: st, sale_price: 90 + i * 15, suggested_price: 150 + i * 20 + j * 5, attributes: [{ name: 'Color', value: c }] })) : [] }));
 }
-module.exports = { orders, products };
+const ESTADOS = ['Aguascalientes', 'Baja California', 'Baja California Sur', 'Campeche', 'Chiapas', 'Chihuahua', 'Ciudad de México', 'Coahuila', 'Colima', 'Durango', 'Estado de México', 'Guanajuato', 'Guerrero', 'Hidalgo', 'Jalisco', 'Michoacán', 'Morelos', 'Nayarit', 'Nuevo León', 'Oaxaca', 'Puebla', 'Querétaro', 'Quintana Roo', 'San Luis Potosí', 'Sinaloa', 'Sonora', 'Tabasco', 'Tamaulipas', 'Tlaxcala', 'Veracruz', 'Yucatán', 'Zacatecas'];
+const CIUDADES = { 'Jalisco': ['Guadalajara', 'Zapopan', 'Tlaquepaque', 'Tonalá', 'Tlajomulco de Zúñiga'], 'Ciudad de México': ['Coyoacán', 'Iztapalapa', 'Benito Juárez', 'Cuauhtémoc', 'Miguel Hidalgo', 'Tlalpan'], 'Nuevo León': ['Monterrey', 'San Nicolás de los Garza', 'Guadalupe', 'Apodaca', 'San Pedro Garza García'], 'Puebla': ['Puebla', 'Cholula', 'Atlixco'] };
+const deps = () => ESTADOS.map((name, i) => ({ id: i + 1, name }));
+const cities = (dep) => (CIUDADES[ESTADOS[dep - 1]] || ['Centro', 'Norte', 'Sur']).map((name, i) => ({ id: dep * 100 + i, name, cod_dane: String(dep * 1000 + i), zip_code: '0' + String(1000 + i * 10) }));
+const CARR = [[6, 'Veloces'], [11, 'Tiui'], [12, 'Ampm'], [13, 'Afimex'], [5, 'Coordi'], [14, 'Quality-post']];
+function quote(cod, cityId) {
+  return CARR.map(([id, name], i) => (i === 5 && cityId % 2 === 0 ? { id, name, cost: null, error: 'Sin cobertura en esta zona' } : { id, name, cost: 80 + (cityId % 7) * 6 + i * 7 + (cod ? 15 : 0), error: null }));
+}
+module.exports = { orders, products, deps, cities, quote };
