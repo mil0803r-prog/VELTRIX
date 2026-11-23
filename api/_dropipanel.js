@@ -45,7 +45,20 @@ async function dropi(path, opts = {}) {
   }
   return r.json();
 }
-const rows = (j) => (Array.isArray(j) ? j : j.objects || j.data || j.orders || []);
+// Extrae la lista de una respuesta de Dropi sin importar si viene como lista, {objects:[..]}, {objects:{cities:[..]}} o un mapa {id:{..}}
+const rows = (j) => {
+  const KEYS = ['objects', 'data', 'orders', 'cities', 'ciudades', 'trajectories', 'trajectory', 'items', 'results', 'result'];
+  const pick = (o, d) => {
+    if (Array.isArray(o)) return o;
+    if (!o || typeof o !== 'object' || d > 3) return null;
+    for (const k of KEYS) if (k in o) { const r = pick(o[k], d + 1); if (r) return r; }
+    for (const v of Object.values(o)) if (Array.isArray(v) && v.length && v[0] && typeof v[0] === 'object') return v;
+    const vals = Object.values(o);
+    if (vals.length && vals.every((v) => v && typeof v === 'object' && !Array.isArray(v)) && vals.some((v) => v.id != null || v.name)) return vals;
+    return null;
+  };
+  return pick(j, 0) || [];
+};
 
 async function allOrders(fresh) {
   const s = S();
@@ -399,10 +412,22 @@ async function route(req, res, q) {
       if (q.t === 'ciudades') {
         const dep = Number(q.dep); if (!Number.isInteger(dep) || dep < 1) return json(res, 400, { error: 'Departamento inválido' });
         const rate = q.rate === 'SIN RECAUDO' ? 'SIN RECAUDO' : 'CON RECAUDO';
-        const raw = demo ? mock.cities(dep) : rows(await dropi('/integrations/trajectory/bycity', { method: 'POST', body: { rate_type: rate, department_id: dep } }));
-        const out = raw.map((c0) => { const c = c0.city || c0; return { id: c.id, dep: c.department_id ?? c0.department_id ?? null, name: String(c.name || c.city_name || '').slice(0, 80), cod_dane: String(c.cod_dane ?? ''), zip_code: String(c.zip_code ?? '') }; })
-          .filter((x) => x.name && x.id != null && (x.dep == null || Number(x.dep) === dep)) // solo municipios de ESE estado
-          .sort((a, b) => a.name.localeCompare(b.name, 'es')).slice(0, 800).map(({ dep: _d, ...c }) => c);
+        const resp = demo ? null : await dropi('/integrations/trajectory/bycity', { method: 'POST', body: { rate_type: rate, department_id: dep } });
+        const raw = demo ? mock.cities(dep) : rows(resp);
+        const seen = new Set(), out = [];
+        for (const c0 of raw) {
+          if (!c0 || typeof c0 !== 'object') continue;
+          const c = (c0.city && typeof c0.city === 'object' ? c0.city : null) || (c0.ciudad && typeof c0.ciudad === 'object' ? c0.ciudad : null) || c0;
+          const id = typeof c0.city === 'string' ? (c0.city_id ?? c0.id) : (c.id ?? c0.city_id ?? c0.id), name = String((typeof c0.city === 'string' ? c0.city : null) || c.name || c.city_name || c.nombre || '').slice(0, 80);
+          const dp = c.department_id ?? c0.department_id ?? (c.department && c.department.id) ?? null;
+          if (!name || id == null || (dp != null && Number(dp) !== dep) || seen.has(String(id))) continue; // solo ESE estado, sin repetir (Dropi repite la ciudad por transportadora)
+          seen.add(String(id)); out.push({ id, name, cod_dane: String(c.cod_dane ?? c0.cod_dane ?? ''), zip_code: String(c.zip_code ?? c0.zip_code ?? '') });
+        }
+        out.sort((x, y) => x.name.localeCompare(y.name, 'es')); out.splice(800);
+        if (!out.length && !demo) {
+          const top = resp && typeof resp === 'object' ? Object.keys(resp).slice(0, 8).join(', ') : typeof resp, first = raw[0] && typeof raw[0] === 'object' ? Object.keys(raw[0]).slice(0, 10).join(', ') : '';
+          return json(res, 502, { error: 'Dropi no devolvió municipios reconocibles para este estado (claves de la respuesta: ' + (top || '—') + (first ? '; campos de cada elemento: ' + first : '') + ')' });
+        }
         return json(res, 200, { ciudades: out, departamento: dep });
       }
       return json(res, 400, { error: 'Consulta inválida' });

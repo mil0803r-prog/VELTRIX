@@ -19,6 +19,11 @@ const srv = http.createServer((req, res) => {
     if (u === '/integrations/trajectory/bycity') {
       const b = JSON.parse(raw || '{}'); seen.bycity.push(b);
       if (b.department_id === 99) return send(500, { message: 'error interno' });
+      const C = (id, name, extra) => ({ id, name, cod_dane: '1' + id, ...extra });
+      if (b.department_id === 21) return send(200, { isSuccess: true, objects: { cities: [C(5, 'LEON'), C(6, 'IRAPUATO')] } }); // objects es un objeto con la lista adentro
+      if (b.department_id === 22) return send(200, { isSuccess: true, objects: { 7: C(7, 'TOLUCA'), 8: C(8, 'METEPEC') } }); // mapa por id
+      if (b.department_id === 23) return send(200, { isSuccess: true, objects: [{ id: 100, city: C(31, 'PUEBLA'), distribution_company: { id: 6 } }, { id: 101, city: C(31, 'PUEBLA'), distribution_company: { id: 11 } }, { id: 102, city_id: 32, city: 'CHOLULA', department_id: 23 }] }); // por transportadora, repetidas
+      if (b.department_id === 24) return send(200, { isSuccess: true, objects: 'ok', status: 200 }); // forma desconocida
       return send(200, { isSuccess: true, objects: [{ id: 1, department_id: 15, name: 'ZAPOPAN', cod_dane: '14120' }, { id: 2, department_id: 15, name: 'GUADALAJARA', cod_dane: '14039' }, { id: 9, department_id: 3, name: 'COYOACAN', cod_dane: '09003' }] });
     }
     if (u === '/integrations/orders/myorders' && req.method === 'POST') { seen.orders.push(JSON.parse(raw || '{}')); return send(200, { isSuccess: true, objects: { id: 555 } }); }
@@ -62,6 +67,12 @@ srv.listen(0, async () => {
     r = await C({ carrier_name: 'SERVIENTREGA' }); assert.equal(r.code, 400, 'una transportadora que no es de México se rechaza');
     r = await C({ distribution_company_id: 6 }); assert.equal(r.code, 200); assert.deepEqual(seen.orders.at(-1).distributionCompany, { id: 6 });
     r = await C({}); assert.equal(r.code, 200); assert.ok(!('distributionCompany' in seen.orders.at(-1)), 'sin transportadora = Dropi elige');
+    // formas distintas de la respuesta de municipios (error real visto: 'raw.map is not a function')
+    const names = async (dep) => (await call({ a: 'geo', c: '1', t: 'ciudades', dep: String(dep) })).body;
+    assert.deepEqual((await names(21)).ciudades.map((c) => c.name), ['IRAPUATO', 'LEON'], 'objects = {cities:[..]}');
+    assert.deepEqual((await names(22)).ciudades.map((c) => c.name), ['METEPEC', 'TOLUCA'], 'objects = mapa por id');
+    assert.deepEqual((await names(23)).ciudades.map((c) => [c.id, c.name]), [[32, 'CHOLULA'], [31, 'PUEBLA']], 'ciudad anidada, sin repetir por transportadora');
+    r = await call({ a: 'geo', c: '1', t: 'ciudades', dep: '24' }); assert.equal(r.code, 502); assert.match(r.body.error, /claves de la respuesta: isSuccess, objects, status/, 'si no reconoce la forma, dice qué campos llegaron');
     console.log('OK real: lista oficial, cotización con ciudad de origen y respaldo cuando Dropi la rechaza');
   } catch (e) { console.error('FALLÓ real:', e.message); process.exitCode = 1; } finally { srv.close(); }
 });
