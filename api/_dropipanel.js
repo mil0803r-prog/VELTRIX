@@ -112,13 +112,13 @@ function slim(o) {
 
 // ---------- Calculos ----------
 function build(list) {
-  const k = { total: list.length, ventas: 0, ventasEntregadas: 0, entregados: 0, devueltos: 0, cancelados: 0, novedad: 0, proceso: 0, utilidad: 0, perdidaDev: 0, valorDevuelto: 0, porCobrar: 0, utilEnCurso: 0 };
+  const k = { total: list.length, ventas: 0, ventasEntregadas: 0, entregados: 0, devueltos: 0, cancelados: 0, novedad: 0, proceso: 0, utilidad: 0, perdidaDev: 0, valorDevuelto: 0, porCobrar: 0, utilEnCurso: 0, fletes: 0, fleteEntregados: 0, nFlete: 0 };
   const tr = {}, zn = {}, dias = {}, pr = {};
   let diasSum = 0, diasN = 0, diasMax = 0; const est = {};
   for (const o of list) {
     const p = slim(o), g = p.grupo;
-    if (g !== 'cancelado') k.ventas += p.total;
-    if (g === 'entregado') { k.entregados++; k.utilidad += p.utilidad; k.ventasEntregadas += p.total; }
+    if (g !== 'cancelado') { k.ventas += p.total; k.fletes += p.flete; k.nFlete++; }
+    if (g === 'entregado') { k.entregados++; k.utilidad += p.utilidad; k.ventasEntregadas += p.total; k.fleteEntregados += p.flete; }
     else if (g === 'devolucion') { k.devueltos++; k.perdidaDev += p.flete; k.valorDevuelto += p.total; }
     else if (g === 'cancelado') k.cancelados++;
     else if (g === 'novedad') { k.novedad++; k.porCobrar += p.total; k.utilEnCurso += p.utilidad; }
@@ -126,13 +126,15 @@ function build(list) {
     const e = (est[p.estado || 'SIN ESTADO'] ||= { estado: p.estado || 'SIN ESTADO', grupo: g, n: 0 }); e.n++;
     let d = null;
     if (g === 'entregado' && o.updated_at) { d = (new Date(o.updated_at) - new Date(o.created_at)) / 864e5; if (d >= 0) { diasSum += d; diasN++; if (d > diasMax) diasMax = d; } }
-    const t = (tr[p.transp] ||= { nombre: p.transp, total: 0, entregados: 0, devoluciones: 0, cancelados: 0, proceso: 0, novedad: 0, recaudo: 0, utilidad: 0, dias: 0, diasN: 0 });
+    const t = (tr[p.transp] ||= { nombre: p.transp, total: 0, entregados: 0, devoluciones: 0, cancelados: 0, proceso: 0, novedad: 0, recaudo: 0, fletes: 0, nf: 0, utilidad: 0, dias: 0, diasN: 0 });
+    if (g !== 'cancelado') { t.fletes += p.flete; t.nf++; }
     if (g === 'cancelado') t.cancelados++; else if (g === 'proceso') t.proceso++; else if (g === 'novedad') t.novedad++;
     if (g === 'entregado') t.recaudo += p.total;
     t.total++; t.utilidad += g === 'entregado' ? p.utilidad : 0;
     if (g === 'entregado') { t.entregados++; if (d != null && d >= 0) { t.dias += d; t.diasN++; } }
     if (g === 'devolucion') t.devoluciones++;
-    const z = (zn[p.depto || 'Sin dato'] ||= { nombre: p.depto || 'Sin dato', total: 0, entregados: 0, devoluciones: 0, utilidad: 0, dias: 0, diasN: 0 });
+    const z = (zn[p.depto || 'Sin dato'] ||= { nombre: p.depto || 'Sin dato', total: 0, entregados: 0, devoluciones: 0, fletes: 0, nf: 0, utilidad: 0, dias: 0, diasN: 0 });
+    if (g !== 'cancelado') { z.fletes += p.flete; z.nf++; }
     if (g === 'entregado') { z.utilidad += p.utilidad; if (d != null && d >= 0) { z.dias += d; z.diasN++; } }
     z.total++; if (g === 'entregado') z.entregados++; if (g === 'devolucion') z.devoluciones++;
     const dd = (dias[p.fecha] ||= { fecha: p.fecha, pedidos: 0, ventas: 0, recaudo: 0, entregados: 0, utilidad: 0 });
@@ -147,11 +149,12 @@ function build(list) {
   k.utilEsperada = Math.round(k.utilEnCurso * (k.efectividad / 100));
   k.diasPromedio = diasN ? Math.round((diasSum / diasN) * 10) / 10 : 0;
   k.diasMax = Math.ceil(diasMax);
+  k.fletePromedio = k.nFlete ? k.fletes / k.nFlete : 0;
   const fin = (x) => ({ ...x, efectividad: eff(x.entregados, x.devoluciones) });
   return {
     kpis: k,
-    transportadoras: Object.values(tr).map((t) => ({ ...fin(t), dias: t.diasN ? Math.round((t.dias / t.diasN) * 10) / 10 : 0 })).sort((a, b) => b.total - a.total),
-    zonas: Object.values(zn).map((z) => ({ ...fin(z), dias: z.diasN ? Math.round((z.dias / z.diasN) * 10) / 10 : null })).sort((a, b) => b.total - a.total),
+    transportadoras: Object.values(tr).map((t) => ({ ...fin(t), dias: t.diasN ? Math.round((t.dias / t.diasN) * 10) / 10 : 0, fleteProm: t.nf ? t.fletes / t.nf : 0 })).sort((a, b) => b.total - a.total),
+    zonas: Object.values(zn).map((z) => ({ ...fin(z), dias: z.diasN ? Math.round((z.dias / z.diasN) * 10) / 10 : null, fleteProm: z.nf ? z.fletes / z.nf : 0 })).sort((a, b) => b.total - a.total),
     estados: Object.values(est).sort((a, b) => b.n - a.n),
     tendencia: Object.values(dias).sort((a, b) => a.fecha.localeCompare(b.fecha)),
     productos: Object.values(pr).map(fin).sort((a, b) => b.unidades - a.unidades).slice(0, 60),

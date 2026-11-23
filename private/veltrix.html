@@ -171,6 +171,12 @@ async function api(a,extra={},opt){const r=await fetch('/api/dropi?'+new URLSear
 const post=(a,b,x)=>api(a,x,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});
 const del=(a,x)=>api(a,x,{method:'DELETE'});
 // ---------- formato y animación de números ----------
+const estCls=(e,g)=>{const s=String(e||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
+  if(/CANCEL/.test(s))return 'e-can';if(/DEVOL.*(TRANS|CAMINO|RUTA)/.test(s))return 'e-devt';if(/DEVOL|DEVUELT|RECHAZ/.test(s))return 'e-dev';if(/ENTREGADO/.test(s))return 'e-ok';
+  if(/NOVEDAD|INCIDENC/.test(s))return 'e-nov';if(/OFICINA/.test(s))return 'e-ofi';if(/INVENTARIO|BODEGA|ALMACEN/.test(s))return 'e-inv';
+  if(/TRANSITO|RUTA|REPARTO|DESPACH|CAMINO|ENVIAD/.test(s))return 'e-ruta';if(/PENDIENTE|GENERAD|PREPAR|RECOLEC|ALISTAD|CONFIRM/.test(s))return 'e-pend';
+  return g==='entregado'?'e-ok':g==='devolucion'?'e-dev':g==='cancelado'?'e-can':g==='novedad'?'e-nov':'e-pend'};
+const estPill=(e,g)=>`<span class="es ${estCls(e,g)}">${esc(e)}</span>`;
 const nf=(n,d,cop)=>{const t=Number(n||0).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});return cop?t.replace(/,/g,'.'):t};
 let CUR={mode:ST.mode==='mxn'?'mxn':'pen',pen:0.2};
 // Todo el sistema trabaja en pesos mexicanos (MXN); aqui se muestra en MXN o convertido a soles (PEN).
@@ -203,10 +209,10 @@ function openAdm(){accSeg('adm-bar',openAdm);const f=$('adm-if'),u='/pedidos-dro
 let LAST=null,busy=false;
 async function fetchAll(per,fresh,only){const list=only?[cuenta(only)]:CU.filter(c=>c.conectada);
   return Promise.all(list.map(c=>api('data',{c:c.n,d:per,...(fresh?{fresh:1}:{})}).then(d=>({c,d})).catch(e=>({c,err:e.message}))))}
-function totals(res){const T={ventasEnt:0,pedidos:0,enCurso:0,entregados:0,devueltos:0,cancelados:0,porCobrar:0,utilEsp:0,perdida:0,util:0,valorDev:0,spark:{}};
+function totals(res){const T={fletes:0,fleteEnt:0,nF:0,ventasEnt:0,pedidos:0,enCurso:0,entregados:0,devueltos:0,cancelados:0,porCobrar:0,utilEsp:0,perdida:0,util:0,valorDev:0,spark:{}};
   for(const r of res){if(!r.d)continue;const k=r.d.kpis,f=1;
     T.ventasEnt+=k.ventasEntregadas*f;T.pedidos+=k.total;T.enCurso+=k.proceso+k.novedad;T.entregados+=k.entregados;T.devueltos+=k.devueltos;T.cancelados+=k.cancelados;
-    T.porCobrar+=k.porCobrar*f;T.utilEsp+=k.utilEsperada*f;T.perdida+=k.perdidaDev*f;T.util+=k.utilidad*f;T.valorDev+=k.valorDevuelto*f;
+    T.fletes+=k.fletes*f;T.fleteEnt+=k.fleteEntregados*f;T.nF+=k.nFlete;T.porCobrar+=k.porCobrar*f;T.utilEsp+=k.utilEsperada*f;T.perdida+=k.perdidaDev*f;T.util+=k.utilidad*f;T.valorDev+=k.valorDevuelto*f;
     for(const d of r.d.tendencia)T.spark[d.fecha]=(T.spark[d.fecha]||0)+d.utilidad*f}
   T.efect=T.entregados+T.devueltos?Math.round(T.entregados/(T.entregados+T.devueltos)*100):0;T.ticket=T.entregados?T.ventasEnt/T.entregados:0;
   T.porEnt=T.entregados?T.util/T.entregados:0;T.neta=T.util-T.perdida;T.costoDev=T.devueltos?T.perdida/T.devueltos:0;return T}
@@ -219,7 +225,7 @@ async function dash(fresh){if(busy)return;busy=true;
   const S=ST.src||'all';seg('db-srcs',[['all','General']].concat(CU.map(c=>[String(c.n),`${esc(c.nombre)}${c.conectada?' · en vivo':''}`])),S,k=>{ST.src=k;save();dash()});
   $('db-per').value=per;
   $('per-name').textContent=S==='all'?'Todas las cuentas':cuenta(Number(S)).nombre;
-  const grid=$('db-grid');if(!grid.children.length)grid.innerHTML=Array.from({length:12},(_,i)=>`<div class="card skel" style="height:116px;--i:${i}"></div>`).join('');
+  const grid=$('db-grid');if(!grid.children.length)grid.innerHTML=Array.from({length:16},(_,i)=>`<div class="card skel" style="height:116px;--i:${i}"></div>`).join('');
   try{
     const res=await fetchAll(per,fresh,S==='all'?0:Number(S));LAST={per,res};
     const T=totals(res);
@@ -234,7 +240,9 @@ async function dash(fresh){if(busy)return;busy=true;
      ['Utilidad esperada',T.utilEsp,m,'de lo que va en curso (estimada)',''],['Utilidad por entregado',T.porEnt,m,'promedio, sin anuncios',''],
      ['Devueltos',T.devueltos,x=>nf(x,0),`${pctDev}% de los que ya tuvieron resultado · ${m(T.valorDev)} en pedidos devueltos`,'neg'],
      ['Descuento por devueltos',T.perdida,x=>'−'+m(x).replace(/^-/,''),`${T.devueltos} devueltos × ${m(T.costoDev)} de costo por devolución`,'neg'],
-     ['Utilidad descontando devueltos',T.neta,m,'utilidad de entregados − descuento por devueltos',T.neta>=0?'pos':'neg'],['Valor de lo devuelto',T.valorDev,m,'lo que se cobraría si no se hubieran devuelto','']];
+     ['Utilidad descontando devueltos',T.neta,m,'utilidad de entregados − descuento por devueltos',T.neta>=0?'pos':'neg'],['Valor de lo devuelto',T.valorDev,m,'lo que se cobraría si no se hubieran devuelto',''],
+     ['Fletes totales',T.fletes,m,T.nF+' pedidos sin contar cancelados',''],['Flete promedio',T.nF?T.fletes/T.nF:0,m,'por pedido',''],
+     ['Fletes de entregados',T.fleteEnt,m,'lo que costó entregar',''],['Peso del flete',T.ventasEnt?T.fleteEnt/T.ventasEnt*100:0,x=>nf(x,1)+'%','fletes ÷ ventas entregadas',T.ventasEnt&&T.fleteEnt/T.ventasEnt>.25?'neg':'']];
     if(grid.querySelector('.skel')||grid.children.length!==K.length)grid.innerHTML=K.map((k,i)=>`<div class="card kpi" style="--i:${i+2}"><div class="l">${k[0]}</div><div class="v"></div><div class="s"></div></div>`).join('');
     [...grid.children].forEach((el,i)=>{const k=K[i],v=el.querySelector('.v');v.className='v '+k[4];countTo(v,k[1],k[2]);el.querySelector('.s').textContent=k[3]});
     countTo($('h-big'),T.util,m,1400);$('h-lbl').textContent='UTILIDAD DE ENTREGADOS · '+(S==='all'?'GENERAL':cuenta(Number(S)).nombre.toUpperCase());
@@ -251,7 +259,7 @@ setInterval(()=>{if(cur==='dash'&&!document.hidden)dash()},60000);
 // ---------- rastreo ----------
 $('rf2').onsubmit=async e=>{e.preventDefault();const q=$('rq').value.trim(),o=$('ras-out');o.innerHTML='<div class="card skel" style="height:110px"></div>';
   const rs=await Promise.all(CU.filter(c=>c.conectada).map(c=>api('rastreo',{c:c.n,q}).then(r=>r.resultados.map(x=>({...x,cta:c}))).catch(()=>[])));const all=rs.flat();
-  o.innerHTML=all.map((p,i)=>`<div class="card flat" style="--i:${i}"><div class="row"><b>Pedido ${esc(p.id)}</b><span class="pill ${esc(p.grupo)}">${esc(p.estado)}</span><span class="mut">${esc(p.cta.nombre)} · ${esc(p.transp)} · guía ${esc(p.guia||'—')}</span><span class="sp"></span><b>${money(p.total,2)}</b></div>
+  o.innerHTML=all.map((p,i)=>`<div class="card flat" style="--i:${i}"><div class="row"><b>Pedido ${esc(p.id)}</b>${estPill(p.estado,p.grupo)}<span class="mut">${esc(p.cta.nombre)} · ${esc(p.transp)} · guía ${esc(p.guia||'—')}</span><span class="sp"></span><b>${money(p.total,2)}</b></div>
    <div class="mut" style="margin-top:6px">${esc(p.cliente)} · ${esc(p.ciudad)}, ${esc(p.depto)} · ${esc(p.prod)}</div>
    <div class="tl">${p.movs.length?p.movs.map(m=>`<div><b>${esc(m.fecha)}</b> ${esc(m.texto)}</div>`).join(''):'<div class="mut">Sin movimientos registrados</div>'}</div></div>`).join('')||'<div class="empty">Sin resultados</div>'};
 // ---------- dinero ----------

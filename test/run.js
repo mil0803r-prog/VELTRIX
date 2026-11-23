@@ -24,7 +24,7 @@ const ck = { cookie: 'vx_s=' + auth.make() };
   r = await call(dropi, { headers: ck, query: { a: 'nada', c: '1' } }); assert.equal(r.code, 404);
   for (const a of ['oficina', 'alertas', 'pagos', 'favs']) { r = await call(dropi, { headers: ck, query: { a, c: '1' } }); assert.equal(r.code, 200, a); }
   r = await call(dropi, { headers: ck, query: { a: 'data', c: '1', d: 'all' } });
-  assert.ok(r.body.estados.length && r.body.zonas[0].utilidad !== undefined && r.body.kpis.diasMax >= 0 && r.body.productos[0].unidades > 0, 'datos del resumen');
+  assert.ok(r.body.estados.length && r.body.zonas[0].utilidad !== undefined && r.body.kpis.diasMax >= 0 && r.body.kpis.fletes > 0 && r.body.kpis.fletePromedio > 0 && r.body.transportadoras[0].fleteProm > 0 && r.body.zonas[0].fleteProm > 0 && r.body.productos[0].unidades > 0, 'datos del resumen');
   const J = { ...ck, 'content-type': 'application/json' };
   r = await call(dropi, { headers: J, method: 'POST', query: { a: 'favs', c: '1' }, body: { op: 'add', item: { name: 'Prod X', prov: 'Prov Y', wa: '52 55 1234 5678' } } });
   assert.equal(r.body.dir['Prov Y'], '525512345678'); assert.equal(r.body.items[0].name, 'Prod X');
