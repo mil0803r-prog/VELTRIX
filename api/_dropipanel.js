@@ -383,6 +383,21 @@ async function route(req, res, q) {
       }
       return json(res, 200, { retiros: req.method === 'POST' ? await store.get('settings', key('retiros'), []) : cur, auto: false });
     }
+    if (a === 'calculos') { // calculadora de precios: cálculos guardados
+      const cur = await store.get('settings', 'calculos', []);
+      if (req.method === 'POST') {
+        const nombre = String(body.nombre || '').trim().slice(0, 60), d = body.datos && typeof body.datos === 'object' ? body.datos : null;
+        if (!nombre || !d) return json(res, 400, { error: 'Falta el nombre o los datos' });
+        const NUM = ['unidades', 'costoUnidad', 'flete', 'entregaDespacho', 'entregaFinal', 'cpa', 'admin', 'fulfillment', 'utilidad', 'pedidosDia', 'objetivo'], datos = {};
+        for (const k of NUM) { const v = Number(d[k]); if (!Number.isFinite(v) || v < 0 || v > 1e9) return json(res, 400, { error: 'Valor inválido en ' + k }); datos[k] = v; }
+        datos.moneda = d.moneda === 'pen' ? 'pen' : 'mxn'; datos.periodo = ['dia', 'semana', 'mes'].includes(d.periodo) ? d.periodo : 'mes'; datos.nombre = String(d.nombre || nombre).slice(0, 80);
+        cur.unshift({ id: Date.now(), nombre, ts: Date.now(), datos });
+        await store.set('settings', 'calculos', cur.slice(0, 50));
+      } else if (req.method === 'DELETE') {
+        const rest = cur.filter((x) => String(x.id) !== String(q.id)); await store.set('settings', 'calculos', rest); return json(res, 200, { calculos: rest });
+      }
+      return json(res, 200, { calculos: req.method === 'POST' ? await store.get('settings', 'calculos', []) : cur });
+    }
     if (a === 'registro') { // registro diario global
       const cur = await store.get('settings', 'registro', {});
       if (req.method === 'POST') {

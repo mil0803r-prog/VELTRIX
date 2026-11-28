@@ -70,3 +70,7 @@ Pestaña **Semáforo** de Admin Dropi («Torre de control»): cada pedido por de
 
 - **Celular (≤ 820 px):** cabecera compacta, barra inferior (Inicio · Admin · Subir · Dinero · Más), botón único de moneda (S/ ⇄ MX$), pestañas en una fila deslizable, tablas como tarjetas, entradas de 16 px (sin zoom en iPhone), ventanas que suben desde abajo y barra fija de ganancias en Subir pedido.
 - **PC:** contenido centrado y con ancho máximo en pantallas grandes; desde 1024 px el panel interior pasa solo al diseño angosto según el espacio disponible.
+
+## Calculadora de precios
+
+Sección **Calculadora**: costos del producto (proveedor, flete con devoluciones, CPA, admin, fulfillment) → precio recomendado, precio para publicar (termina en 9), ganas por venta, precio tachado (x2), punto de equilibrio, semáforo de rentabilidad, escalera x1/x2/x3 y las opciones "tengo pedidos al día, ¿cuánto gano?" / "quiero ganar tanto, ¿cuánto vendo?". "Usar mis datos reales" toma efectividad, flete y CPA de tus últimos 30 días; "Guardar cálculo" guarda hasta 50 por cuenta. Fórmulas en `public/calc.js`.
