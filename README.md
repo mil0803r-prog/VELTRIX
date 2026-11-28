@@ -61,3 +61,12 @@ Sección **Subir pedido** (menú lateral, o pestaña dentro de Admin Dropi). Pid
 - El historial guarda solo ID, fecha, estado de destino, productos y total; **no** guarda nombre, teléfono ni dirección del cliente.
 - Sin token y con `VELTRIX_DEMO=1` los pedidos se simulan y no salen a Dropi.
 - **Antes de usarlo en serio, haga un pedido de prueba con su token** y confirme que Dropi lo acepta: los nombres de los campos siguen la API documentada de Dropi, pero no se probaron contra su cuenta. El flete lo calcula Dropi al crear.
+
+## Semáforo de pedidos (huella del cliente)
+
+Pestaña **Semáforo** de Admin Dropi («Torre de control»): cada pedido por despachar sale como **Se despacha / Confirmar antes / Frenado** con el motivo. Son **reglas automáticas, no inteligencia artificial**: historial del cliente por teléfono (entregas, devoluciones, cancelaciones), dirección con número, el mismo pedido repetido en el día, pago anticipado y devolución de la zona. Tiene botón de WhatsApp para confirmar y «Ocultar nombres». En **Subir pedido** la misma huella aparece en vivo al escribir el teléfono (y en el botón de la huella).
+
+## Celular y escritorio
+
+- **Celular (≤ 820 px):** cabecera compacta, barra inferior (Inicio · Admin · Subir · Dinero · Más), botón único de moneda (S/ ⇄ MX$), pestañas en una fila deslizable, tablas como tarjetas, entradas de 16 px (sin zoom en iPhone), ventanas que suben desde abajo y barra fija de ganancias en Subir pedido.
+- **PC:** contenido centrado y con ancho máximo en pantallas grandes; desde 1024 px el panel interior pasa solo al diseño angosto según el espacio disponible.

@@ -190,6 +190,45 @@ function proveedores(list) {
     .sort((a, b) => b.total - a.total);
 }
 
+// ---------- Semaforo de pedidos (huella del cliente): reglas, no IA ----------
+const sigOf = (o) => (o.orderdetails || []).map((d) => d.product && d.product.id).filter((x) => x != null).sort().join(',');
+function semCtx(all) {
+  const byTel = {}, zonas = {};
+  for (const o of all) {
+    const t = telOf(o).slice(-10); if (t.length < 10) continue;
+    (byTel[t] ||= []).push({ id: o.id, g: groupOf(o), ts: Date.parse(o.created_at) || 0, sig: sigOf(o) });
+  }
+  for (const z of build(all).zonas) { const f = z.entregados + z.devoluciones; zonas[z.nombre] = { fin: f, dev: f ? (z.devoluciones / f) * 100 : 0 }; }
+  return { byTel, zonas };
+}
+// p = {id, tel, dir, depto, pago, ts, sig}. Devuelve estado (despacha | confirmar | frenado), motivos y la huella (historial por teléfono).
+function evaluar(p, ctx) {
+  const m = [], add = (n, t) => m.push({ n, t });
+  const tel = String(p.tel || '').replace(/\D/g, ''), t10 = tel.slice(-10), dir = String(p.dir || '').trim();
+  if (t10.length < 10) add(2, 'Teléfono incompleto');
+  let dirOk = true;
+  if (!dir) { add(2, 'Sin dirección'); dirOk = false; } else {
+    if (!/\d/.test(dir)) { add(1, 'Dirección sin número'); dirOk = false; }
+    if (dir.length < 12) { add(1, 'Dirección muy corta'); dirOk = false; }
+  }
+  if (dirOk) add(0, 'Dirección completa');
+  const h = (ctx.byTel[t10] || []).filter((x) => String(x.id) !== String(p.id));
+  const e = h.filter((x) => x.g === 'entregado').length, d = h.filter((x) => x.g === 'devolucion').length, c = h.filter((x) => x.g === 'cancelado').length;
+  if ((d >= 2 && d >= e) || (d >= 1 && e === 0)) add(2, 'Rechazó ' + d + ' pedido' + (d > 1 ? 's' : '') + ' antes'); // solo devoluciones, o tantas como entregas
+  else if (d >= 1) add(1, 'Tuvo ' + d + ' devolución' + (d > 1 ? 'es' : ''));
+  if (c >= 2) add(1, 'Canceló ' + c + ' pedidos');
+  if (!h.length) add(0, 'Cliente nuevo'); else if (e >= 1 && d === 0) add(0, e >= 3 ? 'Recibe siempre' : 'Ya recibió ' + e + ' pedido' + (e > 1 ? 's' : ''));
+  const near = h.filter((x) => x.g !== 'cancelado' && Math.abs(x.ts - (p.ts || Date.now())) < 864e5);
+  if (p.sig && near.some((x) => x.sig === p.sig)) add(2, 'Mismo pedido dos veces hoy'); else if (near.length) add(1, 'Otro pedido hoy del mismo cliente');
+  const prepago = /SIN/i.test(String(p.pago || ''));
+  if (prepago) add(0, 'Ya pagó: sin recaudo');
+  const z = ctx.zonas[p.depto || 'Sin dato'];
+  if (z && z.fin >= 4 && z.dev > 30 && !prepago) add(1, 'Zona con ' + Math.round(z.dev) + '% de devolución');
+  const max = Math.max(0, ...m.map((x) => x.n)), estado = max === 2 ? 'frenado' : max === 1 ? 'confirmar' : 'despacha';
+  const motivos = (estado === 'despacha' ? m.filter((x) => x.n === 0) : m.filter((x) => x.n >= 1).sort((a, b) => b.n - a.n)).map((x) => x.t).slice(0, 3);
+  return { estado, motivos, huella: { total: h.length, entregados: e, devoluciones: d, cancelados: c } };
+}
+
 function huella(list, tel) {
   const m = {};
   for (const o of list) {
@@ -514,6 +553,19 @@ async function route(req, res, q) {
       return json(res, 200, { resultados: hit.map((o) => ({ ...slim(o), movs: movs(o) })) });
     }
 
+    if (a === 'semaforo') {
+      const all = await allOrders(q.fresh === '1'), ctx = semCtx(all);
+      if (q.tel !== undefined) { // evaluacion de un pedido que aun no existe (pantalla Subir pedido)
+        const tel = String(q.tel || '').replace(/\D/g, '').slice(0, 15);
+        return json(res, 200, evaluar({ id: 'nuevo', tel, dir: String(q.dir || '').slice(0, 200), depto: String(q.depto || '').slice(0, 60), pago: q.rate === 'SIN RECAUDO' ? 'SIN RECAUDO' : 'CON RECAUDO', ts: Date.now(), sig: String(q.sig || '').replace(/[^\d,]/g, '').split(',').filter(Boolean).sort().join(',') }, ctx));
+      }
+      const items = all.filter((o) => slim(o).sinDespachar).map((o) => {
+        const p = slim(o), ev = evaluar({ id: p.id, tel: p.tel, dir: p.dir, depto: p.depto, pago: o.rate_type || '', ts: Date.parse(o.created_at) || 0, sig: sigOf(o) }, ctx);
+        return { id: p.id, fecha: p.fecha, ciudad: p.ciudad, depto: p.depto, cliente: p.cliente, tel: p.tel, estadoDropi: p.estado, total: p.total, ...ev };
+      }).sort((x, y) => ['frenado', 'confirmar', 'despacha'].indexOf(x.estado) - ['frenado', 'confirmar', 'despacha'].indexOf(y.estado) || y.id - x.id).slice(0, 150);
+      const cnt = (k) => items.filter((x) => x.estado === k).length;
+      return json(res, 200, { items, resumen: { total: items.length, despacha: cnt('despacha'), confirmar: cnt('confirmar'), frenado: cnt('frenado') } });
+    }
     if (a === 'oficina') { // pedidos en la oficina de la transportadora (sin filtro de periodo)
       const all = await allOrders(q.fresh === '1');
       const items = all.map(slim).filter((p) => p.ofi).sort((x, y) => y.diasOfi - x.diasOfi).slice(0, 500);
@@ -557,4 +609,4 @@ async function handle(req, res) {
   return als.run(CTAS[c], () => route(req, res, q));
 }
 
-module.exports = { handle, build, groupOf, CTAS, META, buildOrderPayload, parseQuote };
+module.exports = { handle, build, groupOf, CTAS, META, buildOrderPayload, parseQuote, evaluar, semCtx };

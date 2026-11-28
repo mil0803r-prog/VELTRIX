@@ -1,6 +1,6 @@
 <!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Panel Dropi</title><link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<script>(function(){function a(){try{document.documentElement.dataset.theme=localStorage.getItem('vx_theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')}catch(e){}}a();addEventListener('storage',a)})()</script>
+<script>(function(){if(parent!==window)document.documentElement.classList.add('emb');function a(){try{document.documentElement.dataset.theme=localStorage.getItem('vx_theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')}catch(e){}}a();addEventListener('storage',a)})()</script>
 <link rel="preload" as="font" type="font/woff2" href="/inter.woff2" crossorigin>
 <link rel="stylesheet" href="/theme.css">
 <style>
@@ -70,6 +70,7 @@ tr.hot td{background:rgba(190,18,60,.07)}tr.hot:hover td{background:rgba(190,18,
 .rs-box{background:var(--card2);border-radius:12px;padding:12px 14px;margin-bottom:14px}.rs-h{display:flex;justify-content:space-between;font-size:12px;font-weight:700;border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:8px}.rs-p{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;padding:4px 0}.rs-v{font-size:11.5px;color:var(--mut);display:flex;align-items:center;gap:4px;margin-top:2px}.rs-t .kv{font-size:12.5px;padding:7px 0}
 .orig{border:1px dashed var(--line);border-radius:12px;padding:10px 12px;background:var(--card2)}.orig summary{cursor:pointer;font-weight:600;font-size:13px}
 .pcard{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px}.pimg{width:64px;height:64px;border-radius:10px;border:1px solid var(--line);background:var(--solid);object-fit:cover;flex-shrink:0}
+.sem-big{font-size:clamp(24px,3.4vw,40px);font-weight:700;letter-spacing:-.03em;line-height:1.15;margin:8px 0 14px}.sem-big .g{color:var(--c-ok)}.sem-big .a{color:var(--c-nov)}.sem-big .r{color:var(--c-dev)}
 .fgrid{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(235px,1fr))}.fgrid.compact{grid-template-columns:repeat(auto-fill,minmax(185px,1fr))}
 .fcard{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow);transition:.3s var(--ease);animation:rise .5s var(--ease) both}.fcard:hover{transform:translateY(-3px);border-color:var(--gl)}
 .fimg{position:relative;aspect-ratio:1/1;background:var(--card2);display:grid;place-items:center;overflow:hidden;color:var(--mut)}.fimg img{width:100%;height:100%;object-fit:cover}
@@ -81,6 +82,26 @@ tr.hot td{background:rgba(190,18,60,.07)}tr.hot:hover td{background:rgba(190,18,
 .fsales{text-align:right;margin:8px 4px 0}.fsales b{display:block;color:var(--blue);font-size:13px;line-height:1}.fsales small{font-size:11px;color:var(--mut)}.fchart svg{width:100%;height:74px;display:block}.fchart text{font-size:8px;fill:var(--mut)}.frange{text-align:center;font-size:12px;color:var(--mut);margin-top:4px}
 .fcre{font-size:11.5px;color:var(--mut);margin-top:6px}.fsend{border:0;border-top:1px solid var(--line);background:var(--solid);color:var(--g2);font:inherit;font-weight:700;padding:13px;cursor:pointer;display:flex;gap:8px;align-items:center;justify-content:center;transition:.2s}.fsend:hover{background:var(--gsoft)}
 .compact .fname{font-size:14px}.compact .fprice .fp1,.compact .fp2{font-size:14px}.compact .fbody{gap:4px;padding:10px}
+html.emb header h1,html.emb header small,html.emb header .pill{display:none}html.emb header{justify-content:flex-end}
+@media(min-width:1700px){body{max-width:1680px;margin:0 auto}}
+@media(max-width:820px){
+ body{padding:8px 10px 20px}header{gap:8px;margin-bottom:8px}header h1{font-size:18px}header small,header .sp{display:none}header select,header .btn{flex:1;min-height:42px}
+ .tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;top:0;padding:4px;gap:2px;border-radius:12px}.tabs::-webkit-scrollbar{display:none}
+ .tabs button{flex:0 0 auto;scroll-snap-align:start;padding:9px 13px;font-size:13px;min-height:42px;white-space:nowrap}
+ .k5{grid-template-columns:1fr 1fr;gap:10px}.k5 .card{padding:12px}.kpi .v{font-size:19px}.kpi .l{font-size:10px}
+ .btn,.ic,.wab,.fchip,.vopt{min-height:42px}.btn.sm{min-height:36px}.card{padding:14px;border-radius:14px}
+ .chips,#of-ch,#sem-ch,#pchip,#pm-ch{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}.chips>*,#of-ch>*,#sem-ch>*,#pchip>*,#pm-ch>*{flex:0 0 auto}
+ .filters>*{flex:1 1 100%;min-width:0}.arow{padding:10px}.arow .ac{margin-left:auto}.hd{flex-wrap:wrap}.sem-big{font-size:26px}
+ .modal{padding:0;align-items:end}.mb{width:100%;max-width:none;border-radius:18px 18px 0 0;max-height:88vh}
+ .frow{padding:10px}.frow input{width:100%}.sevs{grid-template-columns:1fr}.fgrid{grid-template-columns:1fr}.fimg{aspect-ratio:16/10}.dept{gap:4px}.dept span{font-size:8.5px}
+ html.emb header select,html.emb header .btn{min-height:38px;font-size:14px}
+ /* semáforo: cada pedido como una tarjeta corta (número y estado arriba, motivo debajo) */
+ .tbl.mc.semt tr{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:12px 14px}
+ .tbl.mc.semt td{display:block;border:0;padding:0;text-align:left}.tbl.mc.semt td::before{content:none}
+ .tbl.mc.semt td:nth-child(1){grid-column:1;grid-row:1;font-weight:700;align-self:center}.tbl.mc.semt td:nth-child(5){grid-column:2;grid-row:1;justify-self:end}
+ .tbl.mc.semt td:nth-child(3){grid-column:1/-1;grid-row:2;margin-top:6px;font-weight:600}.tbl.mc.semt td:nth-child(2){grid-column:1/-1;grid-row:3;color:var(--mut);font-size:12px}.tbl.mc.semt td:nth-child(2) div{display:inline;margin-left:4px}
+ .tbl.mc.semt td:nth-child(4){grid-column:1/-1;grid-row:4;margin-top:6px;font-size:13px;min-width:0!important}.tbl.mc.semt td:nth-child(6){grid-column:1/-1;grid-row:5;margin-top:10px}
+}
 @media(max-width:1250px){.co{grid-template-columns:1fr 1fr}.co>div:first-child{grid-column:1/-1}}@media(max-width:820px){.co{grid-template-columns:1fr}.fg2{grid-template-columns:1fr}}
 @media(max-width:1000px){.twocol,.ofgrid{grid-template-columns:1fr}}
 </style></head><body>
@@ -90,7 +111,7 @@ tr.hot td{background:rgba(190,18,60,.07)}tr.hot:hover td{background:rgba(190,18,
 <div class="tabs" id="tabs"></div><div id="view"><div class="empty">Cargando…</div></div>
 <script>
 const CTA=Number(new URLSearchParams(location.search).get('c'))||1,RET=5;
-let M={sym:'$',dec:2,wa:'',mon:'MXN',pen:0.2,base:''},D=null,tab=(['resumen','ofi','prov','fav','nov','rend','pagos'].includes(new URLSearchParams(location.search).get('t'))?new URLSearchParams(location.search).get('t'):'resumen'),FAV={items:[],hide:[],dir:{},msg:''};
+let M={sym:'$',dec:2,wa:'',mon:'MXN',pen:0.2,base:''},D=null,tab=(['resumen','sem','ofi','prov','fav','nov','rend','pagos'].includes(new URLSearchParams(location.search).get('t'))?new URLSearchParams(location.search).get('t'):'resumen'),FAV={items:[],hide:[],dir:{},msg:''};
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const nf=(n,d)=>Number(n||0).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
@@ -106,7 +127,7 @@ async function api(a,extra={},opt){const p=new URLSearchParams({a,c:CTA,d:$('per
 const post=(a,body,extra)=>api(a,extra,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
 const IC={chart:'<path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/>',building:'<rect width="16" height="20" x="4" y="2" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/>',truck:'<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>',bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',trend:'<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',wallet:'<path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>',clock:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',finger:'<path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"/><path d="M14 13.12c0 2.38 0 6.38-1 8.88M17.29 21.02c.12-.6.43-2.3.5-3.02M2 12a10 10 0 0 1 18-6M2 16h.01M21.8 16c.2-2 .131-5.354 0-6M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2M8.65 22c.21-.66.45-1.32.57-2M9 6.8a6 6 0 0 1 9 5.2v2"/>',wa:'<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',pencil:'<path d="M21.17 6.81a1 1 0 0 0-3.99-3.99L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5Z"/>',x:'<path d="M18 6 6 18M6 6l12 12"/>',star:'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',cart:'<circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>',heart:'<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>',plus:'<path d="M5 12h14M12 5v14"/>',send:'<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',alert:'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4M12 17h.01"/>'};
 const I=n=>`<svg class="i" viewBox="0 0 24 24">${IC[n]}</svg>`;
-const TABS=[['resumen','Resumen','chart'],['ofi','Oficina','building'],['prov','Proveedores','truck'],['fav','Favoritos','star'],['nov','Novedades','bell'],['rend','Rendimiento','trend'],['pagos','Pagos','wallet']];
+const TABS=[['resumen','Resumen','chart'],['sem','Semáforo','alert'],['ofi','Oficina','building'],['prov','Proveedores','truck'],['fav','Favoritos','star'],['nov','Novedades','bell'],['rend','Rendimiento','trend'],['pagos','Pagos','wallet']];
 $('tabs').innerHTML=TABS.map(([k,v,i])=>`<button data-t="${k}">${I(i)}${v}</button>`).join('');
 $('tabs').onclick=e=>{const b=e.target.closest('[data-t]');if(b){tab=b.dataset.t;render()}};
 $('ref').onclick=()=>load(true);$('per').onchange=()=>load();
@@ -161,7 +182,7 @@ const srcTxt=()=>{if(M.pais)$('src').textContent='Fuente: Dropi '+M.pais+' · '+
 async function render(){
   document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
   if(!D)return;
-  try{await ({resumen,ofi,prov,fav,nov,rend,pagos}[tab])();view.querySelectorAll('.card').forEach((c,i)=>c.style.setProperty('--i',Math.min(i,14)))}catch(e){view.innerHTML=`<div class="err">${esc(e.message)}</div>`}
+  try{await ({resumen,sem,ofi,prov,fav,nov,rend,pagos}[tab])();view.querySelectorAll('.card').forEach((c,i)=>c.style.setProperty('--i',Math.min(i,14)))}catch(e){view.innerHTML=`<div class="err">${esc(e.message)}</div>`}
 }
 async function loadFav(){try{FAV=await api('favs')}catch(e){}return FAV}
 
@@ -218,7 +239,7 @@ async function resumen(){
     <select id="ft"><option value="">Todas las transportadoras</option>${[...new Set(P.map(p=>p.transp))].sort().map(x=>`<option>${esc(x)}</option>`).join('')}</select>
     <select id="fp"><option value="">Todos los proveedores</option>${Object.keys(pv).sort().map(x=>`<option>${esc(x)}</option>`).join('')}</select><label class="row mut"><input type="checkbox" id="fl"> Solo con retraso</label></div>
    <div class="legend" style="margin:0 0 10px;align-items:center">${ESTADOS.map(([c,l])=>`<span class="es ${c}">${l}</span>`).join('')}<button class="btn sm" id="pcol">Personalizar colores</button></div>
-   <div class="scroll"><table class="tbl"><thead><tr><th>#</th><th>Estado</th><th>Proveedor</th><th>Transportadora</th><th>Guía</th><th>Cliente</th><th>Ciudad</th><th>Dirección</th><th>Total</th><th>Flete</th><th>Utilidad</th><th>Fecha</th><th>Acción</th></tr></thead><tbody id="tb"></tbody></table></div></div>
+   <div class="scroll"><table class="tbl mc" data-mh="Proveedor|Dirección|Fecha"><thead><tr><th>#</th><th>Estado</th><th>Proveedor</th><th>Transportadora</th><th>Guía</th><th>Cliente</th><th>Ciudad</th><th>Dirección</th><th>Total</th><th>Flete</th><th>Utilidad</th><th>Fecha</th><th>Acción</th></tr></thead><tbody id="tb"></tbody></table></div></div>
   ${foot(D.ms,D.cache)}`;
   const late=p=>(p.grupo==='proceso'||p.grupo==='novedad')&&p.dias>=RET;
   const f=()=>{const q=$('fq').value.toLowerCase(),e=$('fe').value,t=$('ft').value,pr=$('fp').value,l=$('fl').checked;
@@ -238,6 +259,24 @@ function coloresModal(){
 }
 async function setWa(prov){const w=prompt('WhatsApp de '+prov+' (con código de país, solo números):');if(!w)return;try{await post('favs',{op:'wa',prov,wa:w});await loadFav()}catch(e){alert(e.message)}}
 
+/* ================= SEMÁFORO (torre de control: huella del cliente) ================= */
+let SM={f:'todos',mask:false};
+const SEMC={despacha:['e-ok','Se despacha'],confirmar:['e-nov','Confirmar antes'],frenado:['e-dev','Frenado']};
+async function sem(){
+  view.innerHTML='<div class="empty">Analizando pedidos por despachar…</div>';
+  const r=await api('semaforo'),R=r.resumen,L=i=>String.fromCharCode(65+i%26)+(i>=26?Math.floor(i/26)+1:'');
+  const draw=()=>{const rows=r.items.map((x,i)=>({...x,_i:i})).filter(x=>SM.f==='todos'||x.estado===SM.f);
+    $('semtb').innerHTML=rows.map(x=>{const nm=SM.mask?'Cliente '+L(x._i):x.cliente,tel=SM.mask?'':x.tel,c=SEMC[x.estado];
+      return `<tr class="${c[0]}"><td data-l="Pedido" class="mono">P-${esc(x.id)}</td><td data-l="Ciudad">${esc(x.ciudad)}<div class="mut" style="font-size:11px">${esc(x.depto)}</div></td><td data-l="Cliente">${esc(nm)}</td><td data-l="Lo que vimos" style="white-space:normal;min-width:200px">${esc(x.motivos.join(' · '))}</td><td data-l="Estado"><span class="es ${c[0]}">${c[1]}</span></td>
+       <td data-l="Acción"><div class="ac"><button class="ic t-b" data-hue="${esc(x.tel)}" title="Huella del cliente">${I('finger')}</button>${x.estado!=='despacha'&&x.tel?`<a class="wab" target="_blank" rel="noopener" title="Confirmar con el cliente" href="${esc(waLink(x.tel,'Hola '+x.cliente+', antes de enviar tu pedido necesitamos confirmar: '+x.motivos.join(', ')+'. ¿Nos ayudas?'))}">${I('wa')} Confirmar</a>`:''}</div></td></tr>`}).join('')||'<tr><td colspan=6 class="empty">No hay pedidos en este grupo</td></tr>';
+    document.querySelectorAll('#sem-ch .fchip').forEach(b=>b.classList.toggle('on',b.dataset.f===SM.f))};
+  view.innerHTML=`<div class="card flat"><div class="hd"><h3>${I('alert')} Torre de control · Semáforo</h3><small>pedidos por despachar, con la huella de cada cliente</small><span class="sp"></span><label class="row mut"><input type="checkbox" id="smask" ${SM.mask?'checked':''}> Ocultar nombres</label></div>
+   <div class="sem-big">${R.total} pedidos. <span class="g">${R.despacha} salen</span>, <span class="a">${R.confirmar} se confirman</span>, <span class="r">${R.frenado} se frenan</span>.</div>
+   <div class="row" id="sem-ch">${[['todos','Todos',R.total],['despacha','Se despacha',R.despacha],['confirmar','Confirmar antes',R.confirmar],['frenado','Frenado',R.frenado]].map(([k,l,n])=>`<button type="button" class="fchip" data-f="${k}">${l} (${n})</button>`).join('')}</div>
+   <div class="scroll" style="margin-top:12px"><table class="tbl mc semt"><thead><tr><th>Pedido</th><th>Ciudad</th><th>Cliente</th><th>Lo que vimos</th><th>Estado</th><th>Acción</th></tr></thead><tbody id="semtb"></tbody></table></div>
+   <p class="mut" style="font-size:12px;margin:12px 0 0">Reglas automáticas (no es inteligencia artificial): historial del cliente por teléfono (entregas, devoluciones, cancelaciones), dirección con número, mismo pedido repetido en el día, pago anticipado y devolución de la zona. Es una ayuda para decidir: el pedido sigue su curso en Dropi.</p></div>${foot(0,Date.now())}`;
+  $('sem-ch').onclick=e=>{const b=e.target.closest('[data-f]');if(b){SM.f=b.dataset.f;draw()}};$('smask').onchange=e=>{SM.mask=e.target.checked;draw()};draw()}
+
 /* ================= OFICINA ================= */
 let OF=null,OS={f:'todos',q:'',tr:'',ord:'dias'};
 const plazo=()=>Number(localStorage.getItem('vx_plazo'))||3;
@@ -255,7 +294,7 @@ function ofiDraw(first){
    <div class="filters"><input id="oq" placeholder="Buscar cliente, guía, ciudad…" value="${esc(OS.q)}"><select id="otr"><option value="">Todas las transportadoras</option>${[...new Set(OF.items.map(p=>p.transp))].sort().map(x=>`<option ${OS.tr===x?'selected':''}>${esc(x)}</option>`).join('')}</select>
     <select id="oord"><option value="dias" ${OS.ord==='dias'?'selected':''}>Más días primero</option><option value="dias-" ${OS.ord==='dias-'?'selected':''}>Menos días primero</option><option value="monto" ${OS.ord==='monto'?'selected':''}>Mayor monto primero</option></select>
     <label class="row mut">Plazo <input id="opl" type="number" min="1" max="60" value="${P}" style="width:70px"> días</label></div>
-   ${rows.length?`<div class="scroll"><table class="tbl"><thead><tr><th>Cliente</th><th>Estado</th><th>Guía</th><th>Ciudad</th><th>Transportadora</th><th>Días</th><th>Monto</th><th>Flete</th><th>Gestión</th><th>Acción</th></tr></thead><tbody>
+   ${rows.length?`<div class="scroll"><table class="tbl mc" data-mh="Ciudad|Flete"><thead><tr><th>Cliente</th><th>Estado</th><th>Guía</th><th>Ciudad</th><th>Transportadora</th><th>Días</th><th>Monto</th><th>Flete</th><th>Gestión</th><th>Acción</th></tr></thead><tbody>
    ${rows.map(p=>{const n=N[p.id]||{};return `<tr class="${estCls(p.estado,p.grupo)} ${p.diasOfi>P?'hot':''}"><td>${esc(p.cliente)}<div class="mut" style="font-size:11px">${esc(p.tel)}</div></td><td>${estPill(p.estado,p.grupo)}</td><td><span class="mono mut">${esc(p.guia)}</span></td><td>${esc(p.ciudad)}</td><td>${esc(p.transp)}</td><td><span class="chip ${p.diasOfi>P?'r':p.diasOfi>1?'a':'g'}">${p.diasOfi} d</span></td><td>${money(p.total)}</td><td>${money(p.flete)}</td>
     <td><select data-g="${esc(p.id)}">${[['sin gestionar','Sin gestionar'],['contactado','Contactado'],['seguimiento','Seguimiento'],['espera','En espera'],['descartado','Descartado']].map(([v,l])=>`<option value="${v}" ${est(p)===v?'selected':''}>${l}</option>`).join('')}</select>${n.fecha&&est(p)==='seguimiento'?`<div class="mut" style="font-size:11px">hasta ${esc(n.fecha)}</div>`:''}</td><td>${acts(p)}</td></tr>`}).join('')}</tbody></table></div>`
    :`<div class="empty">Sin pedidos en oficina con este filtro. Si esperabas ver alguno, depende del texto de estado que devuelve la transportadora ("oficina").</div>`}</div>
@@ -286,7 +325,7 @@ async function prov(){
    <div class="sevs">${cardS('Críticos (' + N*2 + '+ días)','r',crit,'var(--red)')}${cardS('Atención ('+N+'+ días)','a',aten,'var(--amb)')}${cardS('Al día','g',ok,'var(--gl)')}</div>
    <p class="mut" style="margin:12px 0 0;font-size:12px">Haz clic en un proveedor para ver sus pedidos.</p>
    ${!crit.length&&!aten.length?`<div class="empty">Ningún proveedor con pedidos sin despachar hace ${N}+ días.</div>`:''}
-   ${sel?`<div class="scroll" style="margin-top:10px;max-height:260px"><table class="tbl"><thead><tr><th>#</th><th>Estado</th><th>Producto</th><th>Cliente</th><th>Guía</th><th>Días</th></tr></thead><tbody>${sel.items.map(x=>`<tr><td>${esc(x.id)}</td><td>${estPill(x.estado,'proceso')}</td><td>${esc(x.prod)}</td><td>${esc(x.cliente)}</td><td><span class="mono mut">${esc(x.guia)}</span></td><td><span class="chip ${x.dias>=N*2?'r':x.dias>=N?'a':'g'}">${x.dias} d</span></td></tr>`).join('')}</tbody></table></div>`:''}</div>
+   ${sel?`<div class="scroll" style="margin-top:10px;max-height:260px"><table class="tbl mc"><thead><tr><th>#</th><th>Estado</th><th>Producto</th><th>Cliente</th><th>Guía</th><th>Días</th></tr></thead><tbody>${sel.items.map(x=>`<tr><td>${esc(x.id)}</td><td>${estPill(x.estado,'proceso')}</td><td>${esc(x.prod)}</td><td>${esc(x.cliente)}</td><td><span class="mono mut">${esc(x.guia)}</span></td><td><span class="chip ${x.dias>=N*2?'r':x.dias>=N?'a':'g'}">${x.dias} d</span></td></tr>`).join('')}</tbody></table></div>`:''}</div>
   <div class="card flat sec"><div class="hd"><h3>${I('star')} Productos favoritos</h3><small>${fl.length} productos</small><span class="sp"></span><button class="btn sm" id="fmsg">${I('pencil')} Mensaje</button></div>
    <div class="filters" style="margin-top:0"><input id="a-n" placeholder="Producto"><input id="a-p" placeholder="Proveedor"><input id="a-i" placeholder="ID del producto (opcional)" inputmode="numeric" maxlength="12"><input id="a-w" placeholder="WhatsApp del proveedor" inputmode="tel"><button class="btn pri" id="a-b">Agregar</button></div>
    <div class="filters"><input id="sq" placeholder="Buscar producto o proveedor…" value="${esc(PS.fq)}"></div>
@@ -310,7 +349,7 @@ function favList(){const hide=new Set(FAV.hide||[]),man=new Map((FAV.items||[]).
 /* ================= NOVEDADES ================= */
 async function nov(){
   const r=await api('gest');
-  view.innerHTML=`<div class="card flat scroll"><div class="hd"><h3>${I('bell')} Novedades y devoluciones</h3><span class="sp"></span><small>${r.items.length} pedidos</small></div><table class="tbl"><tr><th>Pedido</th><th>Estado</th><th>Cliente</th><th>Flete</th><th>Último movimiento</th><th>Gestión</th><th>Nota</th><th></th><th>Acción</th></tr>
+  view.innerHTML=`<div class="card flat scroll"><div class="hd"><h3>${I('bell')} Novedades y devoluciones</h3><span class="sp"></span><small>${r.items.length} pedidos</small></div><table class="tbl mc" data-mh="Flete"><tr><th>Pedido</th><th>Estado</th><th>Cliente</th><th>Flete</th><th>Último movimiento</th><th>Gestión</th><th>Nota</th><th></th><th>Acción</th></tr>
   ${r.items.map(p=>{const n=r.notas[p.id]||{};return`<tr class="${estCls(p.estado,p.grupo)}"><td>${esc(p.id)}<div class="mut" style="font-size:11px">${esc(p.guia)}</div></td><td>${estPill(p.estado,p.grupo)}</td><td>${esc(p.cliente)}</td><td>${money(p.flete)}</td><td class="mut" style="white-space:normal;min-width:160px">${esc(p.mov)}</td>
   <td><select data-s="${esc(p.id)}">${['pendiente','contactado','reagendado','resuelto'].map(o=>`<option ${n.estado===o?'selected':''}>${o}</option>`).join('')}</select></td>
   <td><input data-n="${esc(p.id)}" value="${esc(n.nota||'')}" size="22" maxlength="300"></td><td><button class="btn sm" data-g="${esc(p.id)}">Guardar</button></td><td>${acts(p)}</td></tr>`}).join('')||'<tr><td colspan=9 class=empty>Nada por gestionar</td></tr>'}</table></div>${foot(D.ms,D.cache)}`;
@@ -338,7 +377,7 @@ async function pagos(){
   <div class="card flat sec"><div class="hd"><h3>${I('wallet')} Control de pagos</h3><span class="sp"></span><select id="pf"><option value="por" ${PG.f==='por'?'selected':''}>Por pagar</option><option value="pag" ${PG.f==='pag'?'selected':''}>Ya pagados</option><option value="todos" ${PG.f==='todos'?'selected':''}>Todos</option></select>
    <button class="btn sm" id="pm">${PG.f==='pag'?'Desmarcar visibles':'Marcar visibles como pagados'}</button></div>
    <p class="mut" style="font-size:12px;margin:-4px 0 10px">Dropi no informa por la API qué pedidos ya le pagaron; márquelos aquí a mano al recibir el depósito.${ent.length<k.entregados?` Se muestran los ${ent.length} entregados más recientes.`:''}</p>
-   <div class="scroll"><table class="tbl"><thead><tr><th></th><th>#</th><th>Fecha</th><th>Cliente</th><th>Transportadora</th><th>Total</th><th>Flete</th><th>Utilidad</th><th>Estado</th></tr></thead><tbody>
+   <div class="scroll"><table class="tbl mc" data-mh="Fecha|Transportadora|Flete"><thead><tr><th></th><th>#</th><th>Fecha</th><th>Cliente</th><th>Transportadora</th><th>Total</th><th>Flete</th><th>Utilidad</th><th>Estado</th></tr></thead><tbody>
    ${rows.slice(0,300).map(p=>`<tr><td><input type="checkbox" data-pp="${esc(p.id)}" ${pg[p.id]?'checked':''}></td><td>${esc(p.id)}</td><td>${esc(p.fecha)}</td><td>${esc(p.cliente)}</td><td>${esc(p.transp)}</td><td>${money(p.total)}</td><td>${money(p.flete)}</td><td class="g">${money(p.utilidad)}</td><td>${pg[p.id]?'<span class="chip g">Pagado</span>':'<span class="chip a">Por pagar</span>'}</td></tr>`).join('')||'<tr><td colspan=9 class="empty">Sin pedidos</td></tr>'}</tbody></table></div></div>${foot(D.ms,D.cache)}`;
   $('pf').onchange=e=>{PG.f=e.target.value;pagos()};
   view.querySelectorAll('[data-pp]').forEach(c=>c.onchange=async()=>{await post('pagos',{ids:[c.dataset.pp],pagado:c.checked});pagos()});
@@ -375,6 +414,11 @@ async function fav(){
    ${L.length?'':'<div class="empty">No tiene productos favoritos en Dropi. Márquelos con el corazón en Dropi y aparecerán aquí con su foto.</div>'}<div class="fgrid" id="fgrid"></div>${foot(0,Date.now())}`;
   $('ffq').oninput=draw;draw()}
 
+// Tablas como tarjetas en celular: cada celda lleva el nombre de su columna
+function mobileTables(){document.querySelectorAll('.tbl.mc').forEach(t=>{const hr=t.querySelector('thead tr')||[...t.querySelectorAll('tr')].find(r=>r.querySelector('th'));if(!hr)return;
+  const h=[...hr.children].map(x=>x.textContent.trim());t.parentElement&&t.parentElement.classList.add('mcw');const mh=(t.dataset.mh||'').split('|');
+  t.querySelectorAll('tr').forEach(tr=>{if(tr===hr||tr.querySelector('th'))return;[...tr.children].forEach((td,i)=>{if(td.dataset.l===undefined&&h[i])td.dataset.l=h[i];if(mh.includes(h[i]))td.classList.add('mh')})})})}
+new MutationObserver(()=>requestAnimationFrame(mobileTables)).observe(view,{childList:true,subtree:true});
 addEventListener('storage',ev=>{if(ev.key==='vx_mode'||ev.key==='vx_pen'){srcTxt();render()}});
 load();
 </script></body></html>

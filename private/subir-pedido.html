@@ -1,6 +1,6 @@
 <!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Subir pedido · VELTRIX</title><link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<script>(function(){function a(){try{document.documentElement.dataset.theme=localStorage.getItem('vx_theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')}catch(e){}}a();addEventListener('storage',a)})()</script>
+<script>(function(){if(parent!==window)document.documentElement.classList.add('emb');function a(){try{document.documentElement.dataset.theme=localStorage.getItem('vx_theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')}catch(e){}}a();addEventListener('storage',a)})()</script>
 <link rel="preload" as="font" type="font/woff2" href="/inter.woff2" crossorigin>
 <link rel="stylesheet" href="/theme.css">
 <style>
@@ -61,7 +61,7 @@ tr.hot td{background:rgba(190,18,60,.07)}tr.hot:hover td{background:rgba(190,18,
 .mb .btn{margin-top:14px;width:100%}.tl{border-left:2px solid var(--line);margin:10px 0 0 6px;padding-left:16px}.tl div{position:relative;padding:4px 0}.tl div::before{content:"";position:absolute;left:-22px;top:10px;width:9px;height:9px;border-radius:50%;background:var(--gl);box-shadow:0 0 0 3px var(--gsoft)}
 .co-h{display:flex;align-items:baseline;gap:12px;margin-bottom:12px}.co-h h2{font-size:22px;font-weight:650;letter-spacing:-.02em}
 .co{display:grid;gap:16px;grid-template-columns:minmax(0,1.15fr) minmax(0,.9fr) minmax(0,.85fr);align-items:start}.co-t{font-size:15px;font-weight:700;margin-bottom:14px}
-.fg2{display:grid;gap:12px;grid-template-columns:1fr 1fr}.phone+.fg2{margin-top:12px}.phone{display:flex;gap:8px;align-items:flex-end;margin-top:12px}.phone .fl{flex:1}.flag{display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--input);border-radius:10px;padding:0 12px;height:40px;white-space:nowrap}
+.fg2{display:grid;gap:12px;grid-template-columns:1fr 1fr}.phone+.fg2,#np-hs+.fg2{margin-top:12px}.phone{display:flex;gap:8px;align-items:flex-end;margin-top:12px}.phone .fl{flex:1}.flag{display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--input);border-radius:10px;padding:0 12px;height:40px;white-space:nowrap}
 .pays{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.pay{display:flex;align-items:center;gap:10px;padding:13px;border:1px solid var(--line);border-radius:12px;background:var(--solid);color:var(--text);font:inherit;cursor:pointer;transition:.2s}.pay:hover{border-color:var(--gl)}.pay.on{border-color:var(--g);background:var(--gsoft);font-weight:600}
 .rd{width:18px;height:18px;border-radius:50%;border:2px solid var(--line);display:inline-block;flex-shrink:0;position:relative;background:var(--solid)}.on>.rd{border-color:var(--g)}.on>.rd::after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--g)}
 .crow{display:flex;align-items:center;gap:12px;width:100%;padding:11px 14px;margin-bottom:8px;border:1px solid var(--line);border-radius:12px;background:var(--card2);color:var(--text);font:inherit;cursor:pointer;text-align:left;transition:.2s}.crow:hover:not(.dis){border-color:var(--gl)}.crow.on{border-color:var(--g);background:var(--gsoft)}.crow.dis{opacity:.55;cursor:not-allowed}
@@ -70,6 +70,7 @@ tr.hot td{background:rgba(190,18,60,.07)}tr.hot:hover td{background:rgba(190,18,
 .rs-box{background:var(--card2);border-radius:12px;padding:12px 14px;margin-bottom:14px}.rs-h{display:flex;justify-content:space-between;font-size:12px;font-weight:700;border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:8px}.rs-p{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;padding:4px 0}.rs-v{font-size:11.5px;color:var(--mut);display:flex;align-items:center;gap:4px;margin-top:2px}.rs-t .kv{font-size:12.5px;padding:7px 0}
 .orig{border:1px dashed var(--line);border-radius:12px;padding:10px 12px;background:var(--card2)}.orig summary{cursor:pointer;font-weight:600;font-size:13px}
 .pcard{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px}.pimg{width:64px;height:64px;border-radius:10px;border:1px solid var(--line);background:var(--solid);object-fit:cover;flex-shrink:0}
+.hs{display:flex;gap:8px;align-items:center;flex-wrap:wrap;width:100%;text-align:left;border:1px dashed var(--line);background:var(--card2);border-radius:10px;padding:8px 10px;margin-top:8px;font:inherit;font-size:12px;color:var(--text);cursor:pointer}
 .fgrid{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(235px,1fr))}.fgrid.compact{grid-template-columns:repeat(auto-fill,minmax(185px,1fr))}
 .fcard{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow);transition:.3s var(--ease);animation:rise .5s var(--ease) both}.fcard:hover{transform:translateY(-3px);border-color:var(--gl)}
 .fimg{position:relative;aspect-ratio:1/1;background:var(--card2);display:grid;place-items:center;overflow:hidden;color:var(--mut)}.fimg img{width:100%;height:100%;object-fit:cover}
@@ -81,6 +82,18 @@ tr.hot td{background:rgba(190,18,60,.07)}tr.hot:hover td{background:rgba(190,18,
 .fsales{text-align:right;margin:8px 4px 0}.fsales b{display:block;color:var(--blue);font-size:13px;line-height:1}.fsales small{font-size:11px;color:var(--mut)}.fchart svg{width:100%;height:74px;display:block}.fchart text{font-size:8px;fill:var(--mut)}.frange{text-align:center;font-size:12px;color:var(--mut);margin-top:4px}
 .fcre{font-size:11.5px;color:var(--mut);margin-top:6px}.fsend{border:0;border-top:1px solid var(--line);background:var(--solid);color:var(--g2);font:inherit;font-weight:700;padding:13px;cursor:pointer;display:flex;gap:8px;align-items:center;justify-content:center;transition:.2s}.fsend:hover{background:var(--gsoft)}
 .compact .fname{font-size:14px}.compact .fprice .fp1,.compact .fp2{font-size:14px}.compact .fbody{gap:4px;padding:10px}
+html.emb header{display:none}
+@media(min-width:1700px){body{max-width:1680px;margin:0 auto}}
+#npbar{display:none}
+@media(max-width:820px){
+ body{padding:8px 10px 20px}header{gap:8px}header h1{font-size:18px}header small,header .sp{display:none}
+ .btn,.ic,.wab,.fchip,.vopt{min-height:44px}.btn.sm{min-height:38px}.card{padding:14px;border-radius:14px}.co{gap:12px}.co-h small{display:none}.co-h h2{font-size:19px}.co-t{margin-bottom:10px}
+ .crow{padding:12px;min-height:54px}.pay{padding:14px 10px}.pcard{padding:12px}.pcard .fl input{width:100%!important}.pcard .row{gap:10px}
+ .fimg{aspect-ratio:16/10}.fchip{white-space:nowrap}#pm-ch{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}#pm-ch>*{flex:0 0 auto}.frow input{width:100%}.fgrid{grid-template-columns:1fr 1fr;gap:10px}.fgrid .fname{font-size:13px}
+ .modal{padding:0;align-items:end}.mb{width:100%;max-width:none;border-radius:18px 18px 0 0;max-height:88vh}
+ #npbar{display:flex;position:sticky;bottom:0;z-index:20;gap:10px;align-items:center;justify-content:space-between;background:var(--side);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line);margin:12px -10px -20px;padding:10px 12px calc(10px + env(safe-area-inset-bottom))}
+ #npbar small{display:block;color:var(--mut);font-size:11px}#npbar b{font-size:16px}
+}
 @media(max-width:1250px){.co{grid-template-columns:1fr 1fr}.co>div:first-child{grid-column:1/-1}}@media(max-width:820px){.co{grid-template-columns:1fr}.fg2{grid-template-columns:1fr}}
 @media(max-width:1000px){.twocol,.ofgrid{grid-template-columns:1fr}}
 
@@ -89,6 +102,7 @@ tr.hot td{background:rgba(190,18,60,.07)}tr.hot:hover td{background:rgba(190,18,
 </style></head><body>
 <header><h1>Subir pedido <span id="pais" class="pill"></span></h1><small>Independiente de Admin Dropi · crea pedidos reales en Dropi</small><span class="sp"></span><div class="seg" id="acc"></div></header>
 <div id="view"><div class="empty">Cargando…</div></div>
+<div id="npbar"><div><small>Ganancias estimadas</small><b id="npbar-g">—</b></div><button type="button" class="btn pri" id="npbar-go">Ir al resumen ↓</button></div>
 <script>
 let CTA=Number(new URLSearchParams(location.search).get('c'))||1;
 const ADD=Number(new URLSearchParams(location.search).get('add'))||0;
@@ -171,7 +185,7 @@ async function cityDraw(){
 const qReady=()=>NP.cityObj&&/^\d{5}$/.test(String(NP.zip_code).replace(/\D/g,''))&&NP.items.length&&NP.items.every(i=>Number(i.qty)>=1&&i.price!==''&&Number(i.price)>=0);
 const qVar=i=>i.variation_id||((i.variations.find(v=>v.stock!==0)||{}).id)||null; // para cotizar: la elegida o, si aún no elige, la primera con stock
 const zipOk=()=>/^\d{5}$/.test(String(NP.zip_code).replace(/\D/g,''));
-function qDebounce(){clearTimeout(QT);NP.quote=qReady()?{loading:true}:null;carrDraw();npSum();if(qReady())QT=setTimeout(cotizar,650)}
+function qDebounce(){huellaAuto();clearTimeout(QT);NP.quote=qReady()?{loading:true}:null;carrDraw();npSum();if(qReady())QT=setTimeout(cotizar,650)}
 async function cotizar(){
   const seq=++QSEQ;
   try{const r=await post('cotizar',{cod:NP.rate_type==='CON RECAUDO',city:{id:NP.cityObj.id,cod_dane:NP.cityObj.cod_dane,zip_code:NP.cityObj.zip_code},zip_code:String(NP.zip_code).replace(/\D/g,''),sender_dane:SND&&SND.dane||'',products:NP.items.map(i=>({id:i.id,price:Number(i.price),quantity:Number(i.qty),variation_id:qVar(i)}))});
@@ -197,6 +211,12 @@ function npErrors(){
 const itemVar=i=>i.variations.find(v=>String(v.id)===String(i.variation_id));
 const itemCost=i=>{const v=itemVar(i);return (v&&v.cost>0?v.cost:i.cost)||0};
 /* --- columna 3: resumen --- */
+const SEMC={despacha:['e-ok','Se despacha'],confirmar:['e-nov','Confirmar antes'],frenado:['e-dev','Frenado']};
+const huellaGet=t=>api('semaforo',{tel:t,dir:NP.dir,rate:NP.rate_type,depto:NP.state,sig:NP.items.map(i=>i.id).join(',')});
+let HT=null;
+function hsDraw(){const el=$('np-hs');if(!el)return;const r=NP.hs;if(!r){el.innerHTML='';return}const c=SEMC[r.estado];el.innerHTML=`<button type="button" class="hs" id="hs-btn"><span class="es ${c[0]}">${c[1]}</span><span class="mut">${esc(r.motivos.join(' · '))}</span></button>`;$('hs-btn').onclick=()=>$('np-fp').click()}
+function huellaAuto(){clearTimeout(HT);const t=String(NP.phone).replace(/\D/g,'');if(t.length<10){NP.hs=null;hsDraw();return}
+  HT=setTimeout(async()=>{try{NP.hs=await huellaGet(t);hsDraw()}catch(e){NP.hs=null;const el=$('np-hs');if(el)el.innerHTML=`<div class="mut" style="font-size:11.5px;margin-top:6px">Huella no disponible (${esc(e.message)})</div>`}},800)}
 function npSum(){
   const el=$('npsum');if(!el)return;const e=npErrors();
   const venta=NP.items.reduce((a,i)=>a+(Number(i.price)||0)*(Number(i.qty)||0),0),prov=NP.items.reduce((a,i)=>a+itemCost(i)*(Number(i.qty)||0),0);
@@ -210,7 +230,7 @@ function npSum(){
    ${e.length?`<div class="err" style="margin-top:12px;font-size:12px"><b>Para enviar falta:</b><br>${e.slice(0,8).map(x=>'• '+esc(x)).join('<br>')}</div>`:'<p class="pos" style="margin:12px 0 0;font-weight:600">✓ Datos completos</p>'}
    <label class="row" style="margin-top:12px;align-items:flex-start;gap:8px"><input type="checkbox" id="npok" ${NP.ok?'checked':''} style="margin-top:3px"><span style="font-size:12px">Revisé los datos. Entiendo que esto <b>crea un pedido real en Dropi</b> que se enviará al cliente.</span></label>
    <button class="btn pri" id="npgo" style="width:100%;margin-top:12px;padding:12px" ${e.length||!NP.ok?'disabled':''}>${I('send')} Enviar al cliente</button><div id="nperr"></div>`;
-  $('npok').onchange=ev=>{NP.ok=ev.target.checked;npSum()};$('npgo').onclick=()=>npEnviar(false)}
+  $('npok').onchange=ev=>{NP.ok=ev.target.checked;npSum()};$('npgo').onclick=()=>npEnviar(false);const bg=$('npbar-g');if(bg){bg.textContent=mx(gan);bg.className=gan>=0?'pos':'neg'}}
 /* --- columna 2: tipo de pago y transportadoras --- */
 function carrDraw(){
   const el=$('carr');if(!el)return;const Q=NP.quote,pay=NP.rate_type;
@@ -314,7 +334,7 @@ async function npEnviar(forzar){
 async function nuevo(){
   await loadFav();await geoDeps();try{CAR=(await api('transportadoras')).transportadoras}catch(e){CAR=[]}let hist=[],demo=false;try{const h=await api('crear');hist=h.ordenes;demo=h.demo}catch(e){}
   const histHTML=`<div class="card flat sec"><div class="hd"><h3>${I('clock')} Pedidos subidos desde VELTRIX</h3><span class="sp"></span><small>${hist.length} registros · sin datos del cliente</small></div>
-   <div class="scroll"><table class="tbl"><thead><tr><th>Fecha</th><th>ID Dropi</th><th>Estado</th><th>Productos</th><th>Total estimado</th><th>Pago</th><th>Resultado</th></tr></thead><tbody>
+   <div class="scroll"><table class="tbl mc"><thead><tr><th>Fecha</th><th>ID Dropi</th><th>Estado</th><th>Productos</th><th>Total estimado</th><th>Pago</th><th>Resultado</th></tr></thead><tbody>
    ${hist.map(h=>`<tr><td>${esc(h.fecha)}</td><td><span class="mono">${esc(h.id||'—')}</span></td><td>${esc(h.estado)}</td><td style="white-space:normal">${h.items.map(i=>esc(i.q+'× '+i.n)).join(', ')}</td><td>${mx(h.total)} <span class="mut">≈ ${penTxt(h.total)}</span></td><td>${h.rate==='CON RECAUDO'?'Contra entrega':'Pago anticipado'}</td>
    <td>${h.demo?'<span class="chip">SIMULADO</span>':h.status==='creado'?'<span class="chip g">Creado</span>':h.status==='incierto'?'<span class="chip a">Verificar en Dropi</span>':'<span class="chip b">Enviando…</span>'}</td></tr>`).join('')||'<tr><td colspan=7 class="empty">Todavía no ha subido pedidos desde aquí</td></tr>'}</tbody></table></div></div>`;
   if(NP&&NP.res){const r=NP.res;
@@ -329,7 +349,7 @@ async function nuevo(){
   <div class="co">
    <div><div class="card flat"><h3 class="co-t">Información del cliente:</h3>
      <div class="fg2">${T('name','Nombres',{req:1,max:60})}${T('surname','Apellidos',{req:1,max:60})}</div>
-     <div class="phone"><span class="flag">🇲🇽 <b>${esc(M.wa||'52')}</b></span>${T('phone','Número de teléfono',{req:1,max:20,mode:'tel',ph:'55 1234 5678'})}<button type="button" class="ic t-b" id="np-fp" title="Huella del cliente: ver su historial por teléfono">${I('finger')}</button></div>
+     <div class="fl" style="margin-top:12px"><span class="req">Número de teléfono</span><div class="phone" style="margin-top:0"><span class="flag">🇲🇽 <b>${esc(M.wa||'52')}</b></span><input data-k="phone" value="${esc(NP.phone)}" placeholder="55 1234 5678" maxlength="20" inputmode="tel" autocomplete="off" style="flex:1;min-width:0"><button type="button" class="ic t-b" id="np-fp" title="Huella del cliente: ver su historial por teléfono">${I('finger')}</button></div></div><div id="np-hs"></div>
      <div class="fg2"><div><label class="fl"><span class="req">Estado</span><select id="np-state"><option value="">Estado</option>${DEPS.map(d=>`<option value="${esc(d.name)}" ${NP.state===d.name?'selected':''}>${esc(d.name)}</option>`).join('')}</select></label>${DEPS_ERR?`<div class="warn" style="font-size:11.5px;margin-top:4px">No se pudieron cargar los estados de Dropi (${esc(DEPS_ERR)}). Se usa una lista local.</div>`:''}</div>
       <div id="np-city-wrap"></div></div>
      <label class="fl" style="margin-top:12px"><span class="req">Dirección y complementos</span><textarea data-k="dir" rows="2" maxlength="200" placeholder="Calle, número, entre calles, referencias…">${esc(NP.dir)}</textarea></label>
@@ -342,12 +362,12 @@ async function nuevo(){
    <div class="card flat" style="position:sticky;top:70px;align-self:start"><h3 class="co-t">Resumen de la orden:</h3><div id="npsum"></div></div>
   </div>${histHTML}`;
   // 'input' y 'change' llegan los dos al escribir: solo se reacciona (y se re-cotiza) si el valor realmente cambió; si no, el re-dibujado se comía el clic en la transportadora
-  view.querySelectorAll('[data-k]').forEach(i=>{const h=()=>{const ch=NP[i.dataset.k]!==i.value;NP[i.dataset.k]=i.value;if(ch){npSum();if(i.dataset.k==='zip_code')qDebounce()}};i.oninput=h;i.onchange=h});
+  view.querySelectorAll('[data-k]').forEach(i=>{const h=()=>{const ch=NP[i.dataset.k]!==i.value;NP[i.dataset.k]=i.value;if(ch){npSum();if(i.dataset.k==='zip_code')qDebounce();else if(['phone','dir'].includes(i.dataset.k))huellaAuto()}};i.oninput=h;i.onchange=h});
   $('np-state').onchange=e=>{const d=DEPS.find(x=>x.name===e.target.value);NP.state=d?d.name:'';NP.depId=d?d.id:null;NP.city='';NP.cityObj=null;clrCar();cityDraw();qDebounce()};
   $('np-notes').onchange=e=>{NP.notasOn=e.target.checked;$('np-notes-box').style.display=e.target.checked?'':'none'};
   $('np-fp').onclick=async()=>{let t=String(NP.phone).replace(/\D/g,'');if(t.length<8)return modal('<p class="mut">Escriba primero el teléfono del cliente.</p>');
-    try{const r=await api('huella',{tel:t}),x=r.perfil;modal(`<h3>Huella del cliente</h3>${x?`<p>${esc(x.cliente)} · ${esc(x.tel)}</p><div class="k5" style="margin-top:10px">${kpi('Pedidos',x.total)}${kpi('Entregados',x.entregados,'','pos')}${kpi('Devueltos',x.devoluciones,'','neg')}${kpi('Cancelados',x.cancelados)}</div><p style="margin-top:12px">Riesgo: <b class="${x.riesgo==='alto'?'neg':x.riesgo==='medio'?'warn':'pos'}">${esc(x.riesgo)}</b></p>`:'<p class="mut">Este teléfono no tiene historial en el período: cliente nuevo.</p>'}`)}catch(e){modal(`<div class="err">${esc(e.message)}</div>`)}};
-  cityDraw();pmodeDraw();npCart();carrDraw();origDraw();npSum();
+    try{const r=await huellaGet(t),h=r.huella,c=SEMC[r.estado];modal(`<h3>Huella digital del cliente</h3><p><span class="es ${c[0]}">${c[1]}</span></p><p style="margin:10px 0">${esc(r.motivos.join(' · ')||'Sin alertas')}</p><div class="k5">${kpi('Pedidos antes',h.total)}${kpi('Entregados',h.entregados,'','pos')}${kpi('Devueltos',h.devoluciones,'','neg')}${kpi('Cancelados',h.cancelados)}</div><p class="mut" style="font-size:12px;margin-top:12px">Reglas automáticas con el historial de este teléfono, la dirección escrita, los productos y la zona. No es inteligencia artificial.</p>`)}catch(e){modal(`<div class="err">${esc(e.message)}</div>`)}};
+  cityDraw();pmodeDraw();npCart();carrDraw();origDraw();npSum();hsDraw();if(NP.phone)huellaAuto();
 }
 
 /* ================= ARRANQUE (independiente de Admin Dropi: no lee pedidos ni usa periodos) ================= */
@@ -361,6 +381,10 @@ async function boot(){
   try{const cu=await api('cuentas');CU=cu.cuentas;const c=CU.find(x=>x.n===CTA)||CU[0];CTA=c.n;M={...c,pen:cu.pen};$('pais').textContent=c.nombre}catch(e){view.innerHTML=`<div class="err">${esc(e.message)}</div>`;return}
   accDraw();await nuevo();
   if(ADD&&!boot.done){boot.done=true;npResolveId(ADD)}}
+function mobileTables(){document.querySelectorAll('.tbl.mc').forEach(t=>{const hr=t.querySelector('thead tr');if(!hr)return;const h=[...hr.children].map(x=>x.textContent.trim());t.parentElement&&t.parentElement.classList.add('mcw');
+  t.querySelectorAll('tbody tr').forEach(tr=>[...tr.children].forEach((td,i)=>{if(td.dataset.l===undefined&&h[i])td.dataset.l=h[i]}))})}
+new MutationObserver(()=>requestAnimationFrame(mobileTables)).observe(view,{childList:true,subtree:true});
+$('npbar-go').onclick=()=>{const e=$('npsum');if(e)e.scrollIntoView({behavior:'smooth',block:'start'})};
 addEventListener('storage',ev=>{if((ev.key==='vx_mode'||ev.key==='vx_pen')&&NP&&!NP.res){carrDraw();npSum();npCart();pmodeDraw()}});
 boot();
 </script></body></html>

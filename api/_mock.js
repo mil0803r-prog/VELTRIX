@@ -23,7 +23,8 @@ function orders(n) {
     out.push({
       id: 10000 * n + i, status, created_at: created.toISOString(),
       updated_at: status === 'EN OFICINA' ? new Date(now - Math.floor(R() * 9) * 864e5).toISOString() : new Date(created.getTime() + (2 + R() * 6) * 864e5).toISOString(),
-      address: 'Calle ' + (1 + Math.floor(R() * 80)) + ' #' + (10 + Math.floor(R() * 90)) + '-' + (1 + Math.floor(R() * 60)) + ', Col. Centro',
+      address: i % 11 === 0 ? 'Av. Principal esquina con la iglesia' : i % 17 === 0 ? 'Calle 5' : 'Calle ' + (1 + Math.floor(R() * 80)) + ' #' + (10 + Math.floor(R() * 90)) + '-' + (1 + Math.floor(R() * 60)) + ', Col. Centro',
+      rate_type: i % 9 === 0 ? 'SIN RECAUDO' : 'CON RECAUDO',
       total_order: price * qty + ship, shipping_amount: ship,
       name: 'Cliente', surname: String(i), phone: '52' + String(10000000 + Math.floor(R() * 60) * 91731 % 89999999).padStart(10, '5'),
       state: k.deptos[Math.floor(R() * k.deptos.length)], city: 'Ciudad ' + (1 + Math.floor(R() * 9)),
@@ -33,6 +34,8 @@ function orders(n) {
       guia_movements: status === 'NOVEDAD' ? [{ description: 'Cliente no responde', created_at: created.toISOString() }] : [],
     });
   }
+  // un cliente que repite el mismo pedido el mismo dia (para el semaforo)
+  for (const i of [5, 28, 51, 74]) { const a = out[i], b = out[i - 1]; a.phone = b.phone; a.orderdetails = b.orderdetails; a.status = 'PENDIENTE'; b.status = 'PENDIENTE'; a.created_at = new Date(now - 2 * 36e5).toISOString(); b.created_at = new Date(now - 5 * 36e5).toISOString(); }
   return out;
 }
 function products(q) {
